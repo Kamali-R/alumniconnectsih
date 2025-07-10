@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import axios from 'axios';
+import './Signup.css'; // External CSS for better styling
 
 const Signup = () => {
   const [form, setForm] = useState({ name: '', email: '', password: '' });
@@ -14,42 +15,44 @@ const Signup = () => {
     try {
       const response = await axios.post('http://localhost:5000/api/signup', form);
       setMessage(response.data.message || 'Signup successful!');
+      setForm({ name: '', email: '', password: '' }); // Clear form after success
     } catch (err) {
       setMessage(err.response?.data?.message || 'Signup failed.');
     }
   };
 
   return (
-    <div style={{ maxWidth: 400, margin: 'auto' }}>
-      <h2>Sign Up</h2>
-      <form onSubmit={handleSubmit}>
+    <div className="signup-container">
+      <h2>Join Alumni Connect</h2>
+      <p className="subtitle">Reconnect. Collaborate. Grow.</p>
+      <form className="signup-form" onSubmit={handleSubmit}>
         <input
           type="text"
           name="name"
-          placeholder="Name"
+          placeholder="Full Name"
           value={form.name}
           onChange={handleChange}
           required
-        /><br /><br />
+        />
         <input
           type="email"
           name="email"
-          placeholder="Email"
+          placeholder="Email Address"
           value={form.email}
           onChange={handleChange}
           required
-        /><br /><br />
+        />
         <input
           type="password"
           name="password"
-          placeholder="Password"
+          placeholder="Create Password"
           value={form.password}
           onChange={handleChange}
           required
-        /><br /><br />
+        />
         <button type="submit">Sign Up</button>
+        {message && <p className="message">{message}</p>}
       </form>
-      <p>{message}</p>
     </div>
   );
 };
