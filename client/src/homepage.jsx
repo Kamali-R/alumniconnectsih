@@ -1,170 +1,129 @@
-import React from "react";
+import React from 'react';
 
-const HomePage = () => (
-  <>
-    <style>{`
-      * { box-sizing: border-box; }
-      body {
-        margin: 0;
-        font-family: 'Segoe UI', sans-serif;
-        background-color: #EAE6F8;
-      }
-      .navbar {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        background: #fff;
-        padding: 18px 40px;
-        box-shadow: 0 4px 20px rgba(44, 62, 80, 0.08);
-        border-radius: 0 0 18px 18px;
-      }
-      .logo-title {
-        display: flex;
-        align-items: center;
-        gap: 14px;
-      }
-      .logo {
-        width: 42px;
-        height: 42px;
-        background: #B76E79;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 1.8rem;
-        color: #fff;
-        font-weight: bold;
-        box-shadow: 0 2px 8px rgba(183, 110, 121, 0.15);
-      }
-      .site-name {
-        font-size: 1.7rem;
-        color: #2C3E50;
-        font-weight: 700;
-        letter-spacing: 1px;
-      }
-      .nav-links {
-        display: flex;
-        align-items: center;
-        gap: 28px;
-      }
-      .nav-links a {
-        text-decoration: none;
-        color: #2E2E2E;
-        font-weight: 600;
-        font-size: 1.05rem;
-        transition: color 0.2s;
-      }
-      .nav-links a:hover {
-        color: #B76E79;
-      }
-      .register-btn {
-        margin-left: 30px;
-        padding: 9px 26px;
-        background: #2C3E50;
-        color: #fff;
-        border: none;
-        border-radius: 7px;
-        font-size: 1rem;
-        font-weight: 600;
-        cursor: pointer;
-        transition: background 0.3s;
-      }
-      .register-btn:hover {
-        background: #B76E79;
-      }
-      .hero-section {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        min-height: 78vh;
-        background: linear-gradient(120deg, #eae6f8 60%, #fff 100%);
-        padding: 40px 0 0 0;
-      }
-      .hero-title {
-        font-size: 2.6rem;
-        color: #2C3E50;
-        font-weight: 800;
-        text-align: center;
-        margin-bottom: 14px;
-        letter-spacing: 1px;
-      }
-      .hero-subtitle {
-        font-size: 1.25rem;
-        color: #5a5a5a;
-        text-align: center;
-        margin-bottom: 32px;
-        max-width: 520px;
-      }
-      .cta-btn {
-        padding: 14px 38px;
-        background: #B76E79;
-        color: #fff;
-        border: none;
-        border-radius: 8px;
-        font-size: 1.1rem;
-        font-weight: 700;
-        cursor: pointer;
-        transition: background 0.3s;
-        box-shadow: 0 2px 12px rgba(183, 110, 121, 0.13);
-      }
-      .cta-btn:hover {
-        background: #2C3E50;
-      }
-      .decorative-shape {
-        position: absolute;
-        z-index: 0;
-        opacity: 0.13;
-      }
-      .shape1 {
-        top: 100px;
-        left: 40px;
-        width: 120px;
-        height: 120px;
-        background: #B76E79;
-        border-radius: 50%;
-      }
-      .shape2 {
-        bottom: 70px;
-        right: 60px;
-        width: 90px;
-        height: 90px;
-        background: #2C3E50;
-        border-radius: 50%;
-      }
-      @media (max-width: 600px) {
-        .navbar { flex-direction: column; gap: 18px; padding: 18px 10px; }
-        .hero-title { font-size: 2rem; }
-        .hero-section { padding: 20px 0; }
-      }
-    `}</style>
+const AlumniHomePage = () => {
+  return (
+    <div style={{ fontFamily: 'Segoe UI, sans-serif', background: '#F8F9FC', minHeight: '100vh' }}>
+      {/* Navbar */}
+      <header style={{
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        padding: '20px 60px',
+        backgroundColor: '#fff',
+        boxShadow: '0 2px 10px rgba(0,0,0,0.05)',
+      }}>
+        <h2 style={{ margin: 0, color: '#007bff' }}>Alumni<span style={{ color: '#000' }}>Connect</span></h2>
+        <nav style={{ display: 'flex', gap: '30px', alignItems: 'center' }}>
+          <a href="#" style={navLinkStyle}>Dashboard</a>
+          <a href="#" style={navLinkStyle}>Profile</a>
+          <a href="#" style={navLinkStyle}>Events</a>
+          <a href="#" style={navLinkStyle}>Opportunities</a>
+          <a href="#" style={navLinkStyle}>Mentorship</a>
+          <button style={logoutBtnStyle}>Logout</button>
+        </nav>
+      </header>
 
-    <div className="navbar">
-      <div className="logo-title">
-        <div className="logo">AC</div>
-        <span className="site-name">Alumni Connect</span>
-      </div>
-      <div className="nav-links">
-        <a href="#">Home</a>
-        <a href="#">About Us</a>
-        <a href="#">Contact Us</a>
-        <button className="register-btn">Register / Login</button>
-      </div>
+      {/* Welcome Card */}
+      <main style={{ padding: '40px 60px' }}>
+        <h1 style={{ fontSize: '32px', marginBottom: '20px' }}>Dashboard</h1>
+        <div style={welcomeCard}>
+          <h2 style={{ margin: 0 }}>Welcome back, Sarah!</h2>
+          <p style={{ margin: '10px 0' }}>You have 3 new connection requests and 2 upcoming events this week.</p>
+          <button style={notificationBtn}>View Notifications</button>
+        </div>
+
+        {/* Stat Cards */}
+        <div style={statsGrid}>
+          <div style={{ ...statCard, borderLeft: '6px solid #007bff' }}>
+            <div style={iconBox}>👥</div>
+            <div>
+              <h4>Network Connections</h4>
+              <p style={statNumber}>128</p>
+            </div>
+          </div>
+
+          <div style={{ ...statCard, borderLeft: '6px solid #6f42c1' }}>
+            <div style={iconBox}>📅</div>
+            <div>
+              <h4>Upcoming Events</h4>
+              <p style={statNumber}>5</p>
+            </div>
+          </div>
+
+          <div style={{ ...statCard, borderLeft: '6px solid #28a745' }}>
+            <div style={iconBox}>💼</div>
+            <div>
+              <h4>Job Opportunities</h4>
+              <p style={statNumber}>12</p>
+            </div>
+          </div>
+
+          <div style={{ ...statCard, borderLeft: '6px solid #6610f2' }}>
+            <div style={iconBox}>⏰</div>
+            <div>
+              <h4>Mentorship Hours</h4>
+              <p style={statNumber}>24</p>
+            </div>
+          </div>
+        </div>
+      </main>
     </div>
+  );
+};
 
-    <div className="hero-section">
-      <div className="hero-title">Welcome to Alumni Connect</div>
-      <div className="hero-subtitle">
-        Reconnect, network, and grow with your alumni community.<br />
-        Stay updated, share your journey, and discover opportunities together.
-      </div>
-      <button className="cta-btn">Join the Community</button>
-    </div>
+// Style Objects
+const navLinkStyle = { textDecoration: 'none', color: '#2C3E50', fontWeight: 500 };
+const logoutBtnStyle = {
+  backgroundColor: '#007bff',
+  border: 'none',
+  borderRadius: 6,
+  color: '#fff',
+  padding: '8px 18px',
+  cursor: 'pointer'
+};
 
-    {/* Decorative shapes */}
-    <div className="decorative-shape shape1" style={{position:'fixed'}}></div>
-    <div className="decorative-shape shape2" style={{position:'fixed'}}></div>
-  </>
-);
+const welcomeCard = {
+  background: 'linear-gradient(to right, #5B86E5, #8E54E9)',
+  color: '#fff',
+  padding: '30px',
+  borderRadius: '10px',
+  marginBottom: '40px'
+};
 
-export default HomePage;
+const notificationBtn = {
+  backgroundColor: '#fff',
+  color: '#5B86E5',
+  padding: '10px 20px',
+  border: 'none',
+  borderRadius: '6px',
+  fontWeight: 'bold',
+  cursor: 'pointer'
+};
+
+const statsGrid = {
+  display: 'grid',
+  gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
+  gap: '20px'
+};
+
+const statCard = {
+  backgroundColor: '#fff',
+  padding: '20px',
+  borderRadius: '10px',
+  display: 'flex',
+  alignItems: 'center',
+  gap: '15px',
+  boxShadow: '0 2px 10px rgba(0, 0, 0, 0.05)'
+};
+
+const iconBox = {
+  fontSize: '30px'
+};
+
+const statNumber = {
+  fontSize: '24px',
+  fontWeight: 'bold',
+  marginTop: '5px'
+};
+
+export default AlumniHomePage;
