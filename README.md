@@ -52,3 +52,39 @@ Copy code
 { "message": "User already exists" }
 
 
+Step 1: Signup Page
+HTML form with:
+
+Name
+
+Email
+
+Password
+
+Role (dropdown or input)
+
+“Send OTP” button
+
+On clicking Send OTP:
+
+Send form data (except OTP) to backend API (/api/send-otp)
+
+Backend sends a 6-digit OTP to the user's email using NodeMailer
+
+Store the OTP temporarily in your DB or in memory (like Redis for prod, or an object for now)
+
+🔹 Step 2: OTP Verification Page
+HTML form with:
+
+6 input boxes for OTP
+
+“Verify OTP” button
+
+On clicking Verify OTP:
+
+Collect the 6 digits, send to backend API (/api/verify-otp)
+
+Backend verifies and if correct, completes the signup and stores the user in DB
+
+
+
