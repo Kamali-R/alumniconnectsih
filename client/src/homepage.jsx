@@ -17,8 +17,8 @@ const AlumniHomePage = () => {
       {/* Hero Section */}
       <section style={heroSection}>
         <div style={heroContent}>
-          <h1 style={{ fontSize: '38px', marginBottom: 10 }}>Connect with your college community like never before</h1>
-          <p style={{ fontSize: '18px', color: '#E0E7FF' }}>Build lasting relationships, explore opportunities, and stay informed with AlumniConnect.</p>
+          <h1 style={{ fontSize: '38px', marginBottom: 10 }}>Connect with your ABC University community</h1>
+          <p style={{ fontSize: '18px', color: '#E0E7FF' }}>Empowering alumni and students to grow, collaborate, and stay informed together.</p>
           <div style={{ marginTop: 20 }}>
             <button style={buttonStyle}>Get Started</button>
             <button style={{ ...buttonStyle, background: '#111827', marginLeft: 10 }}>Learn More</button>
@@ -28,30 +28,10 @@ const AlumniHomePage = () => {
       </section>
 
       {/* Roles Section */}
-      <section style={sectionStyle}>
-        <h2 style={sectionTitle}>Who Benefits from AlumniConnect?</h2>
-        <div style={cardGrid}>
-          {roles.map((role, i) => (
-            <div key={i} style={card}>
-              <h4>{role.title}</h4>
-              <p>{role.description}</p>
-            </div>
-          ))}
-        </div>
-      </section>
+      <Section title="Who Benefits from AlumniConnect?" items={roles} />
 
       {/* Features Section */}
-      <section style={sectionStyle}>
-        <h2 style={sectionTitle}>Special Features</h2>
-        <div style={cardGrid}>
-          {features.map((f, i) => (
-            <div key={i} style={card}>
-              <h4>{f.title}</h4>
-              <p>{f.description}</p>
-            </div>
-          ))}
-        </div>
-      </section>
+      <Section title="Special Features" items={features} />
 
       {/* About Section */}
       <section style={aboutSection}>
@@ -59,27 +39,17 @@ const AlumniHomePage = () => {
           <h2 style={sectionTitle}>About Alumni Connect</h2>
           <p>Our mission is to empower alumni and students to collaborate, network, and grow together.</p>
           <div style={statsGrid}>
-            <div><h3>10,000+</h3><p>Users</p></div>
-            <div><h3>500+</h3><p>Events</p></div>
-            <div><h3>2,000+</h3><p>Jobs Posted</p></div>
-            <div><h3>95%</h3><p>Satisfaction Rate</p></div>
+            <div><h3>5,000+</h3><p>Alumni</p></div>
+            <div><h3>1,200+</h3><p>Students</p></div>
+            <div><h3>30+</h3><p>Countries Reached</p></div>
+            <div><h3>90%</h3><p>Satisfaction Rate</p></div>
           </div>
         </div>
         <img src="https://via.placeholder.com/250x200" alt="Community Illustration" />
       </section>
 
       {/* Testimonials */}
-      <section style={sectionStyle}>
-        <h2 style={sectionTitle}>What Our Users Say</h2>
-        <div style={cardGrid}>
-          {testimonials.map((t, i) => (
-            <div key={i} style={card}>
-              <p>"{t.feedback}"</p>
-              <p><strong>- {t.name}</strong></p>
-            </div>
-          ))}
-        </div>
-      </section>
+      <Section title="What Our Users Say" items={testimonials} isTestimonial />
 
       {/* Contact Section */}
       <section style={sectionStyle}>
@@ -124,6 +94,29 @@ const AlumniHomePage = () => {
   );
 };
 
+const Section = ({ title, items, isTestimonial }) => (
+  <section style={sectionStyle}>
+    <h2 style={sectionTitle}>{title}</h2>
+    <div style={cardGrid}>
+      {items.map((item, i) => (
+        <div key={i} style={card}>
+          {isTestimonial ? (
+            <>
+              <p>"{item.feedback}"</p>
+              <p><strong>- {item.name}</strong></p>
+            </>
+          ) : (
+            <>
+              <h4>{item.title}</h4>
+              <p>{item.description}</p>
+            </>
+          )}
+        </div>
+      ))}
+    </div>
+  </section>
+);
+
 const headerStyle = {
   display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '20px 60px', backgroundColor: '#fff', boxShadow: '0 2px 8px rgba(0,0,0,0.05)'
 };
@@ -158,7 +151,9 @@ const features = [
   { title: 'Job Postings', description: 'Share and explore career opportunities.' },
   { title: 'Events', description: 'Join webinars, reunions, and virtual meetups.' },
   { title: 'Secure Profiles', description: 'Protect your information while networking.' },
-  { title: 'Message Board', description: 'Engage in community discussions and announcements.' }
+  { title: 'Message Board', description: 'Engage in community discussions and announcements.' },
+  { title: 'Resume Builder', description: 'Create polished resumes with our easy-to-use tool.' },
+  { title: 'Resource Library', description: 'Access helpful guides, tips, and templates.' }
 ];
 
 const testimonials = [
