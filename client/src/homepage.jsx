@@ -1,5 +1,5 @@
 import React from 'react';
-import logo from './logo.png'; // Place your logo in src and update the path if needed
+import logo from './logo.jpeg'; // Place your logo in src and update the path if needed
 
 const HomePage = () => {
   const styles = {
