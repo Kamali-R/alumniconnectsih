@@ -1,174 +1,118 @@
-# alumni-connect
-Web application to connect alumni and students
+A web application to connect students and alumni through a verified registration system with email OTP authentication.
 
-alumni-connect/
-├── client/             → frontend folder
-├── server/             → backend folder
-│   ├── README.md       
-│   ├── index.js
-│   ├── routes/
-│   ├── controllers/
-│   └── ...
-└── ...
-
-
-inside server folder ------ cd server
-
-npm init -y                           # Initialize the Node.js project
-npm install express mongoose dotenv cors jsonwebtoken bcryptjs  # Install dependencies
-npm install --save-dev nodemon       # Install nodemon for dev
-
-npm run dev
-
-npm install moongose dotenv
-
-create a new .env file in server
-
-# server/.env
-MONGO_URI=mongodb+srv://jeyadharani:dharani%40123@alumnicluster.kw3egk4.mongodb.net/alumniDB?retryWrites=true&w=majority
-PORT=5000
-
-Open the Postman desktop app (or Postman Web)
-
-Skip login if prompted, or sign in if you prefer
-
-2. Test the “Health‑check” Route
-Create a new request
-
-Method: GET
-
-URL: http://localhost:5000/
-
-Hit Send
-• Success response (first time):
-
-json
-Copy code
-{ "message": "User registered successfully" }
-• If already exists:
-
-json
-Copy code
-{ "message": "User already exists" }
-
-
-Step 1: Signup Page
-HTML form with:
-
-Name
-
-Email
-
-Password
-
-Role (dropdown or input)
-
-“Send OTP” button
-
-On clicking Send OTP:
-
-Send form data (except OTP) to backend API (/api/send-otp)
-
-Backend sends a 6-digit OTP to the user's email using NodeMailer
-
-Store the OTP temporarily in your DB or in memory (like Redis for prod, or an object for now)
-
-🔹 Step 2: OTP Verification Page
-HTML form with:
-
-6 input boxes for OTP
-
-“Verify OTP” button
-
-On clicking Verify OTP:
-
-Collect the 6 digits, send to backend API (/api/verify-otp)
-
-Backend verifies and if correct, completes the signup and stores the user in DB
-
-Features Implemented
-📦 User Registration with name, email, password, and role
-
-🔐 Password Hashing using bcrypt
-
-📧 Email OTP Verification via Gmail SMTP
-
-✅ Mongoose/MongoDB Integration
-
-📮 API Testing with Postman
-
-🌱 Professional project structure using Express
-
-🧾 Technologies Used
+⚙️ Technologies Used
 Node.js & Express.js
 
-MongoDB + Mongoose
+MongoDB & Mongoose
 
-Nodemailer for Email
+Nodemailer (for OTP emails)
 
-dotenv for environment variables
+dotenv (for environment variables)
 
-bcryptjs for password hashing
+bcryptjs (for secure password hashing)
 
-📁 Project Folder Structure
-pgsql
+Postman (for API testing)
+
+🚀 How to Run This Project (Backend Setup)
+✅ Step 1: Clone the Repository
+bash
+Copy code
+git clone https://github.com/your-username/alumni-connect.git
+✅ Step 2: Move into Server Directory
+bash
+Copy code
+cd alumni-connect/server
+✅ Step 3: Initialize the Project (if not already)
+bash
+Copy code
+npm init -y
+✅ Step 4: Install Required Dependencies
+bash
+Copy code
+npm install express mongoose dotenv cors bcryptjs nodemailer jsonwebtoken
+✅ Step 5: Install Dev Dependency (nodemon for development)
+bash
+Copy code
+npm install --save-dev nodemon
+🗂 Folder Structure
+bash
 Copy code
 server/
-│
-├── controllers/
-│   └── authController.js       # Handles OTP logic
-│
-├── models/
-│   └── User.js                 # User schema
-│
-├── routes/
-│   └── authRoutes.js           # Route definitions
-│
-├── utils/
-│   └── otpUtils.js             # OTP generation & storage (to be added soon)
-│
-├── .env                        # Environment variables
-├── server.js                   # Entry point
+├── controllers/       # Business logic (e.g., authController.js)
+├── models/            # MongoDB schemas (e.g., User.js)
+├── routes/            # API routes (e.g., authRoutes.js)
+├── utils/             # Helper functions (e.g., otpUtils.js)
+├── .env               # Environment variables
+├── server.js          # App entry point
 └── package.json
-🛠️ Environment Variables in .env
+🔐 Step 6: Create .env File
+Inside the server folder, create a file named .env and paste this:
+
 env
 Copy code
-MONGO_URI=mongodb+srv://<username>:<password>@cluster.mongodb.net/alumniDB
+MONGO_URI=your_mongo_uri_here
 PORT=5000
 EMAIL_USER=your_email@gmail.com
 EMAIL_PASS=your_app_password
-🧪 API Endpoints (Postman Testing)
-Send OTP
-POST /api/send-otp
+Replace the values with your actual MongoDB URI, email, and Gmail app password.
 
+🧪 Step 7: Test the API with Postman
+🛠️ Start the server
+bash
+Copy code
+npm run dev
+If configured properly, you'll see:
+
+pgsql
+Copy code
+✅ Connected to MongoDB
+🚀 Server running on port 5000
+📮 Step 8: Use Postman to Test APIs
+🧾 1. Health Check (GET)
+http
+Copy code
+GET http://localhost:5000/
+✅ Response:
+json
+Copy code
+{ "message": "API is running" }
+📧 2. Send OTP (Signup)
+http
+Copy code
+POST http://localhost:5000/api/send-otp
+✅ Body (JSON):
 json
 Copy code
 {
   "name": "JD",
-  "email": "your_email@gmail.com",
+  "email": "user@gmail.com",
   "password": "123456",
   "role": "student"
 }
-Verify OTP
-POST /api/verify-otp
+This sends a 6-digit OTP to your email.
 
+🔐 3. Verify OTP
+http
+Copy code
+POST http://localhost:5000/api/verify-otp
+✅ Body (JSON):
 json
 Copy code
 {
-  "email": "your_email@gmail.com",
+  "email": "user@gmail.com",
   "otp": "123456"
 }
-💻 Commands to Set Up
-1. Initialize and Install Dependencies
-bash
+✅ Success Response:
+json
 Copy code
-npm init -y
-npm install express mongoose dotenv cors bcryptjs nodemailer
-2. Create .env file and add credentials
-3. Run the server
-bash
-Copy code
-node server.js
+{ "message": "User registered successfully" }
+✍️ Frontend Form Flow (To Be Connected)
+Step 1: Signup Form
+Name, Email, Password, Role, [Send OTP]
 
+Sends to /api/send-otp
 
+Step 2: OTP Verification Form
+6 input boxes for OTP, [Verify OTP]
 
+Sends to /api/verify-otp
