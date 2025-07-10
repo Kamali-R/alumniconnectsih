@@ -86,5 +86,89 @@ Collect the 6 digits, send to backend API (/api/verify-otp)
 
 Backend verifies and if correct, completes the signup and stores the user in DB
 
+Features Implemented
+📦 User Registration with name, email, password, and role
+
+🔐 Password Hashing using bcrypt
+
+📧 Email OTP Verification via Gmail SMTP
+
+✅ Mongoose/MongoDB Integration
+
+📮 API Testing with Postman
+
+🌱 Professional project structure using Express
+
+🧾 Technologies Used
+Node.js & Express.js
+
+MongoDB + Mongoose
+
+Nodemailer for Email
+
+dotenv for environment variables
+
+bcryptjs for password hashing
+
+📁 Project Folder Structure
+pgsql
+Copy code
+server/
+│
+├── controllers/
+│   └── authController.js       # Handles OTP logic
+│
+├── models/
+│   └── User.js                 # User schema
+│
+├── routes/
+│   └── authRoutes.js           # Route definitions
+│
+├── utils/
+│   └── otpUtils.js             # OTP generation & storage (to be added soon)
+│
+├── .env                        # Environment variables
+├── server.js                   # Entry point
+└── package.json
+🛠️ Environment Variables in .env
+env
+Copy code
+MONGO_URI=mongodb+srv://<username>:<password>@cluster.mongodb.net/alumniDB
+PORT=5000
+EMAIL_USER=your_email@gmail.com
+EMAIL_PASS=your_app_password
+🧪 API Endpoints (Postman Testing)
+Send OTP
+POST /api/send-otp
+
+json
+Copy code
+{
+  "name": "JD",
+  "email": "your_email@gmail.com",
+  "password": "123456",
+  "role": "student"
+}
+Verify OTP
+POST /api/verify-otp
+
+json
+Copy code
+{
+  "email": "your_email@gmail.com",
+  "otp": "123456"
+}
+💻 Commands to Set Up
+1. Initialize and Install Dependencies
+bash
+Copy code
+npm init -y
+npm install express mongoose dotenv cors bcryptjs nodemailer
+2. Create .env file and add credentials
+3. Run the server
+bash
+Copy code
+node server.js
+
 
 
