@@ -55,41 +55,6 @@ const AlumniHomePage = () => {
         </div>
       </section>
 
-      {/* Pricing */}
-      <section style={pricingSectionStyle}>
-        <h2 style={sectionTitle}>Simple Pricing</h2>
-        <div style={pricingGrid}>
-          {[1, 2, 3].map((plan) => (
-            <div key={plan} style={pricingCard}>
-              <h3>Plan {plan}</h3>
-              <p style={{ fontSize: 24, fontWeight: 'bold' }}>$0/month</p>
-              <ul>
-                <li>Profile Listing</li>
-                <li>Event Access</li>
-                <li>Job Boards</li>
-              </ul>
-              <button style={planBtnStyle}>Get Started</button>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* App Available Section */}
-      <section style={downloadAppSection}>
-        <div>
-          <h2 style={{ color: '#fff' }}>Download the Alumni Connect App</h2>
-          <p style={{ color: '#fff' }}>Access your alumni network anytime, anywhere.</p>
-          <button style={{ ...planBtnStyle, backgroundColor: '#fff', color: '#6A11CB' }}>
-            Download Now
-          </button>
-        </div>
-        <img
-          src="https://cdn-icons-png.flaticon.com/512/1828/1828506.png"
-          alt="app"
-          style={{ height: 200 }}
-        />
-      </section>
-
       {/* Contact CTA */}
       <section style={contactSectionStyle}>
         <h2>Say Hello To The Alumni Collaboration Hub.</h2>
@@ -98,23 +63,23 @@ const AlumniHomePage = () => {
 
       {/* Footer */}
       <footer style={footerStyle}>
-        <div>
+        <div style={{ flex: 1 }}>
           <h3>Alumni Connect</h3>
           <p>Building bridges between past and present students.</p>
         </div>
-        <div>
+        <div style={{ flex: 1 }}>
           <h4>Quick Links</h4>
-          <a href="#" style={footerLink}>Privacy</a><br />
-          <a href="#" style={footerLink}>Terms</a><br />
+          <a href="#" style={footerLink}>Privacy Policy</a><br />
+          <a href="#" style={footerLink}>Terms & Conditions</a><br />
           <a href="#" style={footerLink}>Help</a>
         </div>
-        <div>
+        <div style={{ flex: 1 }}>
           <h4>Subscribe</h4>
           <input placeholder="Email Address" style={subscribeInput} />
         </div>
-        <p style={{ textAlign: 'center', marginTop: 30, fontSize: 14, color: '#999' }}>
+        <div style={{ width: '100%', textAlign: 'center', marginTop: 30, fontSize: 14, color: '#999' }}>
           © 2025 Alumni Connect. All rights reserved.
-        </p>
+        </div>
       </footer>
     </div>
   );
@@ -175,43 +140,6 @@ const featureCard = {
 const featureIcon = {
   fontSize: 40,
   marginBottom: 10
-};
-
-const pricingSectionStyle = {
-  padding: '60px 40px',
-  textAlign: 'center',
-  background: '#fff'
-};
-const pricingGrid = {
-  display: 'flex',
-  justifyContent: 'center',
-  gap: 30,
-  marginTop: 30
-};
-const pricingCard = {
-  width: 220,
-  background: '#F4F4F4',
-  padding: 30,
-  borderRadius: 10,
-  boxShadow: '0 2px 10px rgba(0,0,0,0.06)',
-  textAlign: 'center'
-};
-const planBtnStyle = {
-  backgroundColor: '#6A11CB',
-  color: '#fff',
-  padding: '10px 20px',
-  border: 'none',
-  borderRadius: 6,
-  marginTop: 15,
-  cursor: 'pointer'
-};
-
-const downloadAppSection = {
-  display: 'flex',
-  justifyContent: 'space-around',
-  alignItems: 'center',
-  padding: '60px 40px',
-  background: 'linear-gradient(to right, #6A11CB, #2575FC)'
 };
 
 const contactSectionStyle = {
