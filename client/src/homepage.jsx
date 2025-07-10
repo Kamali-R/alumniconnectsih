@@ -29,7 +29,7 @@ const AlumniHomePage = () => {
         </p>
       </section>
 
-      {/* Features */}
+      {/* User Roles Features */}
       <section style={featuresSectionStyle}>
         <h2 style={sectionTitle}>Why Choose Alumni Connect?</h2>
         <div style={statsGrid}>
@@ -59,6 +59,20 @@ const AlumniHomePage = () => {
         </div>
       </section>
 
+      {/* Top Features */}
+      <section style={topFeatureSection}>
+        <h2 style={{ textAlign: 'center', fontSize: '28px', marginBottom: '30px' }}>Top Features</h2>
+        <div style={topFeaturesGrid}>
+          {topFeatures.map((feature, index) => (
+            <div key={index} style={topFeatureCard}>
+              <img src="https://cdn-icons-png.flaticon.com/512/929/929426.png" alt="feature-icon" style={{ width: '50px', marginBottom: '10px' }} />
+              <h4 style={{ marginBottom: '10px' }}>{feature.title}</h4>
+              <p>{feature.description}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
       {/* Footer */}
       <footer style={footerStyle}>
         <div style={{ flex: 1 }}>
@@ -82,6 +96,14 @@ const AlumniHomePage = () => {
     </div>
   );
 };
+
+// Top Features Data
+const topFeatures = [
+  { title: 'Easy to Use', description: 'Stay informed and connected through this modern alumni platform.' },
+  { title: 'Secure Profiles', description: 'Stay informed and connected through this modern alumni platform.' },
+  { title: 'Job Posts', description: 'Stay informed and connected through this modern alumni platform.' },
+  { title: 'Event Invites', description: 'Stay informed and connected through this modern alumni platform.' }
+];
 
 // Style Objects
 const navLinkStyle = { textDecoration: 'none', color: '#2C3E50', fontWeight: 500 };
@@ -127,6 +149,26 @@ const statCard = {
 
 const iconBox = {
   fontSize: '30px'
+};
+
+const topFeatureSection = {
+  background: '#f9fbfd',
+  padding: '60px 40px'
+};
+
+const topFeaturesGrid = {
+  display: 'grid',
+  gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+  gap: '20px',
+  justifyItems: 'center'
+};
+
+const topFeatureCard = {
+  background: '#fff',
+  padding: '20px',
+  borderRadius: '12px',
+  boxShadow: '0 2px 12px rgba(0,0,0,0.08)',
+  textAlign: 'center'
 };
 
 const footerStyle = {
