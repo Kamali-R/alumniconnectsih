@@ -1,32 +1,45 @@
+// server/routes/authRoutes.js
 import express from 'express';
 import bcrypt from 'bcryptjs';
 import User from '../models/User.js';
 
-
 const router = express.Router();
 
-// @route   POST /api/register
-// @desc    Register new user
-// @access  Public
+// POST /api/register
 router.post('/register', async (req, res) => {
   try {
-    console.log('📥 Request received:', req.body); // Add this line
+    const { name, email, password, role } = req.body;
 
-    const { name, email, password } = req.body;
-
-    // Check required fields
-    if (!name || !email || !password) {
+    // 1. Check required fields
+    if (!name || !email || !password || !role) {
       return res.status(400).json({ message: 'All fields are required' });
     }
 
-    // TODO: Add logic to check if user already exists, hash password, save user, etc.
+    // 2. Check if user already exists
+    const existing = await User.findOne({ email });
+    if (existing) {
+      return res.status(400).json({ message: 'User already exists' });
+    }
 
-    res.status(201).json({ message: 'User registered successfully' });
-  } catch (error) {
-    console.error('❌ Registration Error:', error.message);
-    res.status(500).json({ message: 'Server error' });
+    // 3. Hash the password
+    const salt      = await bcrypt.genSalt(10);
+    const hashedPwd = await bcrypt.hash(password, salt);
+
+    // 4. Create & save the user
+    const newUser = new User({
+      name,
+      email,
+      password: hashedPwd,
+      role
+    });
+    await newUser.save();
+
+    // 5. Return success
+    return res.status(201).json({ message: 'User registered successfully' });
+  } catch (err) {
+    console.error('Registration Error:', err);
+    return res.status(500).json({ message: 'Server error' });
   }
 });
-
 
 export default router;
