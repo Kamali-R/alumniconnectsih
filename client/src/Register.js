@@ -1,7 +1,6 @@
-// src/components/Register.js
 import React, { useState } from 'react';
 import axios from 'axios';
-import './Signup.css'; // Make sure the path is correct based on your folder structure
+import './Styles/Signup.css';
 
 const Register = ({ onOtpSent, setUserData }) => {
   const [form, setForm] = useState({
@@ -11,20 +10,29 @@ const Register = ({ onOtpSent, setUserData }) => {
     role: '',
   });
   const [message, setMessage] = useState('');
+  const [loading, setLoading] = useState(false);
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const sendOtpRequest = async () => {
     try {
+      setLoading(true);
       await axios.post('http://localhost:5000/api/send-otp', form);
-      setUserData(form); // Pass user info to OTP page
-      onOtpSent();       // Navigate to OTP form
+      setUserData(form);
+      setMessage('');
+      onOtpSent();
     } catch (error) {
       setMessage(error.response?.data?.message || 'Failed to send OTP.');
+    } finally {
+      setLoading(false);
     }
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    sendOtpRequest();
   };
 
   return (
@@ -33,38 +41,50 @@ const Register = ({ onOtpSent, setUserData }) => {
       <p className="subtitle">Enter your details to continue</p>
 
       <form className="signup-form" onSubmit={handleSubmit}>
-        <input
-          name="name"
-          placeholder="Full Name"
-          value={form.name}
-          onChange={handleChange}
-          required
-        />
-        <input
-          name="email"
-          type="email"
-          placeholder="Email"
-          value={form.email}
-          onChange={handleChange}
-          required
-        />
-        <input
-          name="password"
-          type="password"
-          placeholder="Password"
-          value={form.password}
-          onChange={handleChange}
-          required
-        />
-        <select name="role" value={form.role} onChange={handleChange} required>
-          <option value="">Select Role</option>
-          <option value="student">Student</option>
-          <option value="alumni">Alumni</option>
-          <option value="faculty">Faculty</option>
-        </select>
+  <input
+    name="name"
+    className="form-field"
+    placeholder="Full Name"
+    value={form.name}
+    onChange={handleChange}
+    required
+  />
+  <input
+    name="email"
+    type="email"
+    className="form-field"
+    placeholder="Email"
+    value={form.email}
+    onChange={handleChange}
+    required
+  />
+  <input
+    name="password"
+    type="password"
+    className="form-field"
+    placeholder="Password"
+    value={form.password}
+    onChange={handleChange}
+    required
+  />
+  <select
+    name="role"
+    className="form-field select-role"
+    value={form.role}
+    onChange={handleChange}
+    required
+  >
+    <option value="">Select Role</option>
+    <option value="student">Student</option>
+    <option value="alumni">Alumni</option>
+    
+  </select>
 
-        <button type="submit">Send OTP</button>
-      </form>
+  <button type="submit" disabled={loading}>
+    {loading ? 'Sending OTP...' : 'Send OTP'}
+  </button>
+</form>
+
 
       {message && <p className="error-message">{message}</p>}
     </div>
