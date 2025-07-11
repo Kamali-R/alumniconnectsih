@@ -1,9 +1,13 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+/* Smooth scrolling for anchor links */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Background image styling */
 .bg-cover {
   background-size: cover;
-}
-.bg-center {
-  background-position: center;
+  background-repeat: no-repeat;
 }

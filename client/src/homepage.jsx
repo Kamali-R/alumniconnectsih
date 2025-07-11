@@ -60,7 +60,7 @@ const AlumniConnect = () => {
       </nav>
 
       {/* Hero Section with background image */}
-      <section id="home" className="py-12 bg-[url('./hero-bg.png')] bg-cover bg-center">
+      <section id="home" className="py-12 bg-[url('./hero-bg.jpg')] bg-cover bg-center">
         <div className="max-w-5xl mx-auto px-4">
           <div className="flex flex-col md:flex-row items-center">
             <div className="md:w-1/2 mb-8 md:mb-0 md:pr-8 bg-white bg-opacity-90 p-6 rounded-lg">
