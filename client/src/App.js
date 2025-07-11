@@ -1,23 +1,17 @@
-import logo from './logo.svg';
+// src/App.js
+import React, { useState } from 'react';
+import Register from './Register';
+import VerifyOtp from './VerifyOtp';
 import './App.css';
 
 function App() {
+  const [step, setStep] = useState(1);
+  const [userData, setUserData] = useState(null);
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+    <div className="app">
+      {step === 1 && <Register onOtpSent={() => setStep(2)} setUserData={setUserData} />}
+      {step === 2 && <VerifyOtp userData={userData} />}
     </div>
   );
 }

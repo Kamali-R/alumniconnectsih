@@ -1,5 +1,8 @@
 {
   "dependencies": {
-    "nodemailer": "^7.0.5"
+    "bcryptjs": "^3.0.2",
+    "jsonwebtoken": "^9.0.2",
+    "nodemailer": "^7.0.5",
+    "otp-generator": "^4.0.1"
   }
 }
