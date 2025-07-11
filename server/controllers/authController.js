@@ -38,7 +38,7 @@ export const verifyOtp = async (req, res) => {
   await newUser.save();
   await Otp.deleteMany({ email }); // cleanup
 
-  res.status(201).json({ message: 'User registered successfully' });
+  res.status(201).json({ message: 'Email verified successfully' });
 };
 
 export const login = async (req, res) => {
