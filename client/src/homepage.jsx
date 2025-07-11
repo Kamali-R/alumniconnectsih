@@ -59,19 +59,25 @@ const AlumniConnect = () => {
         </div>
       </nav>
 
-      {/* Hero Section with background image */}
-      <section id="home" className="py-12 bg-[url('./hero-bg.jpg')] bg-cover bg-center">
-        <div className="max-w-5xl mx-auto px-4">
-          <div className="flex flex-col md:flex-row items-center">
-            <div className="md:w-1/2 mb-8 md:mb-0 md:pr-8 bg-white bg-opacity-90 p-6 rounded-lg">
-              <h1 className="text-3xl font-bold text-gray-900 mb-4">Connect with your university community</h1>
-              <p className="text-gray-600 mb-6">Alumni Connect brings together students and alumni to foster mentorship, networking, and lifelong connections.</p>
-              <button className="bg-indigo-600 text-white hover:bg-indigo-700 px-4 py-2 rounded">Get Started</button>
-            </div>
-            <div className="md:w-1/2"></div>
-          </div>
-        </div>
-      </section>
+     {/* Hero Section with background image */}
+<section id="home" className="py-16 bg-[url('./hero-bg.jpg')] bg-cover bg-center">
+  <div className="max-w-5xl mx-auto px-4">
+    <div className="flex flex-col md:flex-row items-center">
+      <div className="md:w-1/2 mb-8 md:mb-0 md:pr-8 bg-white bg-opacity-90 p-8 rounded-lg shadow-md">
+        <h1 className="text-4xl font-bold text-gray-900 mb-6 leading-tight">
+          Connect with your university community
+        </h1>
+        <p className="text-gray-700 mb-8 text-lg">
+          Alumni Connect brings together students and alumni to foster mentorship, networking, and lifelong connections.
+        </p>
+        <button className="bg-indigo-600 text-white hover:bg-indigo-700 px-6 py-3 rounded-lg text-lg font-medium transition duration-300 transform hover:scale-105">
+          Get Started
+        </button>
+      </div>
+      <div className="md:w-1/2"></div>
+    </div>
+  </div>
+</section>
 
       {/* Features Section */}
       <section id="features" className="py-8 bg-white">
