@@ -1,22 +1,52 @@
-import React from 'react';
-import logo from './logo.svg';
 // src/App.js
 import React, { useState } from 'react';
-import Register from './Register';
-import VerifyOtp from './VerifyOtp';
-import './App.css';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import Login from './pages/Login'; // Update the path if you moved it to pages/Login
+import './App.css';
+
+import Register from './Register';         // Adjust path if inside /pages or /components
+import VerifyOtp from './VerifyOtp';       // Adjust path if needed
+import Login from './Login';         // This is the new styled login you wanted
 
 function App() {
-  const [step, setStep] = useState(1);
-  const [userData, setUserData] = useState(null);
+  const [userData, setUserData] = useState(null); // Pass from register to verify
 
   return (
-    <div className="app">
-      {step === 1 && <Register onOtpSent={() => setStep(2)} setUserData={setUserData} />}
-      {step === 2 && <VerifyOtp userData={userData} />}
-    </div>
+    <Router>
+      <div className="App">
+        <Routes>
+          {/* Default Home */}
+          <Route
+            path="/"
+            element={
+              <div className="text-center mt-20">
+                <h2 className="text-2xl font-bold">Welcome to Alumni Connect</h2>
+                <p className="text-gray-600">Visit <code>/register</code> or <code>/login</code></p>
+              </div>
+            }
+          />
+
+          {/* Login page */}
+          <Route path="/login" element={<Login />} />
+
+          {/* Registration page */}
+          <Route
+            path="/register"
+            element={
+              <Register
+                onOtpSent={() => window.location.replace('/verify')}
+                setUserData={setUserData}
+              />
+            }
+          />
+
+          {/* OTP Verification */}
+          <Route
+            path="/verify"
+            element={<VerifyOtp userData={userData} />}
+          />
+        </Routes>
+      </div>
+    </Router>
   );
 }
 
