@@ -12,7 +12,10 @@
     "jsonwebtoken": "^9.0.2",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
+<<<<<<< HEAD
     "react-router-dom": "^7.6.3",
+=======
+>>>>>>> 60365b5ce0fb37987d151ca9dfcf7ae67d2a201d
     "react-scripts": "^5.0.1",
     "web-vitals": "^2.1.4"
   },
