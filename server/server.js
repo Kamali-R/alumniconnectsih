@@ -3,7 +3,7 @@ import mongoose from 'mongoose';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import authRoutes from './routes/authRoutes.js';
-
+import protectedRoutes from './routes/protectedRoutes.js';
 dotenv.config();
 
 const app = express();
@@ -12,6 +12,8 @@ app.use(express.json());
 
 // ✅ Middleware should come after app is defined
 app.use('/api', authRoutes);
+
+app.use('/api', protectedRoutes);
 
 app.get('/', (req, res) => {
   res.send('API is running...');
