@@ -1,7 +1,7 @@
 // src/App.js
 import React, { useState } from 'react';
-import Register from './components/Register';
-import VerifyOtp from './components/VerifyOtp';
+import Register from './Register';
+import VerifyOtp from './VerifyOtp';
 import './App.css';
 
 function App() {
