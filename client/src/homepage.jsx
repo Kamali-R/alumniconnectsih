@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import './index.css';
 // Import your logo image (make sure to add this file to your project)
-import logo from './logo.jpeg'; 
+import logo from './logo.png'; 
 
 const AlumniConnect = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -250,5 +250,4 @@ const AlumniConnect = () => {
     </div>
   );
 };
-
 export default AlumniConnect;
