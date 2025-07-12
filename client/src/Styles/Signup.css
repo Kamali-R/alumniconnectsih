@@ -235,4 +235,20 @@ body {
     transform: translateY(0);
   }
 }
+.signin-link {
+  margin-top: 18px;
+  font-size: 14px;
+  color: #444;
+}
+
+.signin-link a {
+  color: #004080;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.signin-link a:hover {
+  text-decoration: underline;
+}
+
 
