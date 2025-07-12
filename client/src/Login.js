@@ -1,58 +1,153 @@
-// src/pages/Login.js
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
+import axios from 'axios';
 
 const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPwd, setShowPwd] = useState(false);
+  const [message, setMessage] = useState('');
 
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
-    // handle login logic here
-    console.log('Logging in with', { email, password });
+
+    try {
+      const response = await axios.post('http://localhost:5000/api/login', {
+        email,
+        password,
+      });
+
+      setMessage(response.data.message); // "Login successful"
+      
+      // OPTIONAL: save token or navigate
+      // localStorage.setItem('token', response.data.token);
+      // navigate('/dashboard');
+    } catch (error) {
+      if (error.response) {
+        setMessage(error.response.data.message); // "User not found" or "Invalid credentials"
+      } else {
+        setMessage("Something went wrong. Please try again.");
+      }
+    }
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-white">
-      <div className="w-full max-w-md p-8 shadow-lg rounded-lg border border-gray-200">
-        <h2 className="text-2xl font-bold mb-1">Login</h2>
-        <p className="text-sm text-gray-500 mb-6">to get started</p>
+    <div style={{
+      height: '100vh',
+      width: '100vw',
+      backgroundColor: '#ffffff',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+    }}>
+      <div style={{
+        width: '400px',
+        padding: '40px',
+        borderRadius: '10px',
+        boxShadow: '0 10px 30px rgba(0,0,0,0.1)',
+        backgroundColor: '#fff',
+      }}>
+        <div style={{ textAlign:'center',marginBottom: '30px' }}>
+          <h2 style={{ fontSize: '22px', fontWeight: '600', margin: 0 }}>
+            Login <span style={{ fontWeight: '500' }}>to get started</span>
+          </h2>
+        </div>
 
-        <form onSubmit={handleLogin} className="space-y-4">
-          <input
-            type="email"
-            placeholder="Enter your email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className="w-full p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-            required
-          />
+        <form onSubmit={handleLogin}>
+          <div style={{ marginBottom: '20px' }}>
+            <input
+              type="email"
+              placeholder="Enter your email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+              style={{
+                width: '100%',
+                padding: '12px',
+                fontSize: '16px',
+                borderRadius: '6px',
+                border: '1px solid #ccc',
+              }}
+            />
+          </div>
 
-          <input
-            type="password"
-            placeholder="Password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className="w-full p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-            required
-          />
+          <div style={{ marginBottom: '10px' }}>
+            <input
+              type={showPwd ? 'text' : 'password'}
+              placeholder="Password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              style={{
+                width: '100%',
+                padding: '12px',
+                fontSize: '16px',
+                borderRadius: '6px',
+                border: '1px solid #ccc',
+              }}
+            />
+          </div>
 
-          <div className="text-right text-sm text-blue-600 hover:underline cursor-pointer">
-            Forgot Password?
+          <div style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            marginBottom: '25px',
+            flexWrap: 'nowrap',
+          }}>
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              whiteSpace: 'nowrap',
+              gap: '6px',
+            }}>
+              <input
+                type="checkbox"
+                onChange={() => setShowPwd(!showPwd)}
+                style={{ transform: 'scale(1.2)' }}
+              />
+              <label style={{ fontSize: '14px', margin: 0 }}>Show Password</label>
+            </div>
+
+            <Link to="/forgot-password" style={{ fontSize: '14px', color: '#1a3eea' }}>
+              Forgot Password?
+            </Link>
           </div>
 
           <button
             type="submit"
-            className="w-full bg-blue-600 text-white py-3 rounded hover:bg-blue-700"
+            style={{
+              width: '100%',
+              padding: '14px',
+              backgroundColor: '#0024ff',
+              color: 'white',
+              fontWeight: 'bold',
+              borderRadius: '6px',
+              border: 'none',
+              fontSize: '16px',
+              cursor: 'pointer',
+            }}
           >
             Continue
           </button>
 
-          <div className="text-center text-sm text-gray-600 mt-2">
-            New User?{' '}
-            <span className="text-blue-600 hover:underline cursor-pointer">
-              Register
-            </span>
-          </div>
+          {message && (
+            <p style={{
+              color: message.toLowerCase().includes('successful') ? 'green' : 'red',
+              textAlign: 'center',
+              marginTop: '15px'
+            }}>
+              {message}
+            </p>
+          )}
+
+          <p style={{
+            textAlign: 'center',
+            marginTop: '20px',
+            fontSize: '14px'
+          }}>
+            Don't have an account? <Link to="/register" style={{ color: '#1a3eea', fontWeight: 'bold' }}>Sign Up</Link>
+          </p>
         </form>
       </div>
     </div>
