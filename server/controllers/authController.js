@@ -6,21 +6,29 @@ import jwt from 'jsonwebtoken';
 
 // STEP 1: Send OTP
 export const sendOtp = async (req, res) => {
-  const { name, email, password, role } = req.body;
+  const { name, email, password, role, purpose } = req.body;
 
-  if (!name || !email || !password || !role)
-    return res.status(400).json({ message: 'All fields are required' });
+  if (!email)
+    return res.status(400).json({ message: 'Email is required' });
 
-  const existing = await User.findOne({ email });
-  if (existing) return res.status(400).json({ message: 'User already exists' });
+  if (purpose === 'register') {
+    if (!name || !password || !role)
+      return res.status(400).json({ message: 'All fields are required for registration' });
+
+    const existing = await User.findOne({ email });
+    if (existing) return res.status(400).json({ message: 'User already exists' });
+  } else if (purpose === 'reset') {
+    const user = await User.findOne({ email });
+    if (!user) return res.status(404).json({ message: 'User not found' });
+  }
 
   const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
+  await Otp.deleteMany({ email });
 
-  await Otp.deleteMany({ email }); // remove old OTPs
   const otp = new Otp({ email, otp: otpCode });
   await otp.save();
 
-  await sendEmail(email, 'Verify your email (OTP)', `Your OTP is: ${otpCode}`);
+  await sendEmail(email, 'Your OTP Code', `Your OTP is: ${otpCode}`);
 
   res.status(200).json({ message: 'OTP sent to your email' });
 };
@@ -81,4 +89,41 @@ export const login = async (req, res) => {
     console.error('Login error:', err);
     res.status(500).json({ message: 'Server error' });
   }
+};
+
+// 🔁 Send OTP for Forgot Password (reuse sendEmail)
+export const forgotPassword = async (req, res) => {
+  const { email } = req.body;
+
+  if (!email) return res.status(400).json({ message: 'Email is required' });
+
+  const user = await User.findOne({ email });
+  if (!user) return res.status(404).json({ message: 'User not found' });
+
+  const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
+
+  await Otp.deleteMany({ email }); // Remove old OTPs
+  const otp = new Otp({ email, otp: otpCode });
+  await otp.save();
+
+  await sendEmail(email, 'Reset your password', `Your OTP is: ${otpCode}`);
+  res.status(200).json({ message: 'OTP sent to your email' });
+};
+
+// ✅ Reset Password using OTP
+export const resetPassword = async (req, res) => {
+  const { email, otp, newPassword } = req.body;
+
+  if (!email || !otp || !newPassword)
+    return res.status(400).json({ message: 'All fields are required' });
+
+  const otpRecord = await Otp.findOne({ email, otp });
+  if (!otpRecord)
+    return res.status(400).json({ message: 'Invalid or expired OTP' });
+
+  const hashedPwd = await bcrypt.hash(newPassword, 10);
+  await User.updateOne({ email }, { password: hashedPwd });
+  await Otp.deleteMany({ email });
+
+  res.status(200).json({ message: 'Password reset successful' });
 };
