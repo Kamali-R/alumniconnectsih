@@ -12,6 +12,8 @@ html {
   background-repeat: no-repeat;
 }
 
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+main {
+  overflow-y: auto;
+}
+
+/* Fix for any potential overflow issues */

@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import axios from 'axios';
-import { Link } from 'react-router-dom'; // ✅ Add this
+import { Link, useNavigate } from 'react-router-dom';
 import './Styles/Signup.css';
 
-const Register = ({ onOtpSent, setUserData }) => {
+const Register = () => {
   const [form, setForm] = useState({
     name: '',
     email: '',
@@ -12,30 +12,30 @@ const Register = ({ onOtpSent, setUserData }) => {
   });
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  const sendOtpRequest = async () => {
+  const handleSubmit = async (e) => {
+    e.preventDefault();
     try {
       setLoading(true);
-      await axios.post('http://localhost:5000/api/send-otp', form);
-      setUserData(form);
-      setMessage('');
-      onOtpSent();
+      const response = await axios.post('http://localhost:5000/api/send-otp', form);
+      
+      if (response.data.success) {
+        // Pass user data to verify-otp page via state
+        navigate('/verify-otp', { state: { userData: form } });
+      } else {
+        setMessage(response.data.message || 'Failed to send OTP.');
+      }
     } catch (error) {
       setMessage(error.response?.data?.message || 'Failed to send OTP.');
     } finally {
       setLoading(false);
     }
   };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    sendOtpRequest();
-  };
-
   return (
     <div className="signup-container">
       <h2>Register to Alumni Connect</h2>

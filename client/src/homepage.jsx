@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import './index.css';
+import { Link } from 'react-router-dom';
 // Import your logo image (make sure to add this file to your project)
 import logo from './logo.png'; 
 
@@ -107,9 +108,11 @@ return (
         <p className="text-gray-600 mb-6">
           Alumni Connect brings together students and alumni to foster mentorship, networking, and lifelong connections.
         </p>
-        <button className="bg-indigo-600 text-white hover:bg-indigo-700 px-4 py-2 rounded mx-auto"> {/* Added mx-auto */}
-          Get Started
-        </button>
+        <Link to="/register">
+  <button className="bg-indigo-600 text-white hover:bg-indigo-700 px-4 py-2 rounded mx-auto">
+    Get Started
+  </button>
+</Link>
       </div>
     </div>
   </div>
