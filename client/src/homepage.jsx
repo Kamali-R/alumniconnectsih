@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import './index.css';
 // Import your logo image (make sure to add this file to your project)
 import logo from './logo.png'; 
+import { Link } from 'react-router-dom';
 
 const AlumniConnect = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -107,9 +108,14 @@ return (
         <p className="text-gray-600 mb-6">
           Alumni Connect brings together students and alumni to foster mentorship, networking, and lifelong connections.
         </p>
-        <button className="bg-indigo-600 text-white hover:bg-indigo-700 px-4 py-2 rounded mx-auto"> {/* Added mx-auto */}
-          Get Started
-        </button>
+        <div className="flex justify-center">
+  <Link to="/register">
+    <button className="bg-indigo-600 text-white hover:bg-indigo-700 px-6 py-2 rounded">
+      Get Started
+    </button>
+  </Link>
+</div>
+
       </div>
     </div>
   </div>
