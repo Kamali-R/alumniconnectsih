@@ -9,8 +9,9 @@ function App() {
     <Router>
       <Routes>
         <Route path="/" element={<HomePage />} />
-        <Route path="/register" element={<Register />} />
-        <Route path="/verify-otp" element={<VerifyOtp />} />
+        <Route path="/Register" element={<Register />} />
+        <Route path="/verifyOtp" element={<VerifyOtp />} />
+        {/* Optional if you've created this */}
       </Routes>
     </Router>
   );
