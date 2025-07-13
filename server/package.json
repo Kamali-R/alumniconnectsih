@@ -13,12 +13,8 @@
     "dotenv": "^17.2.0",
     "express": "^5.1.0",
     "jsonwebtoken": "^9.0.2",
-<<<<<<< HEAD
-    "mongoose": "^8.16.3",
-=======
     "mongoose": "^8.16.2",
     "moongose": "^1.0.0",
->>>>>>> bf8f7f73ed65247dec2f4e4f8080ff92e84d3de5
     "nodemailer": "^7.0.5",
     "otp-generator": "^4.0.1"
   },
@@ -28,15 +24,8 @@
     "globals": "^16.3.0",
     "nodemon": "^3.1.10"
   },
-<<<<<<< HEAD
-  "description": "",
-  "keywords": [],
-  "author": "",
-  "license": "ISC"
-=======
   "keywords": [],
   "author": "",
   "license": "ISC",
   "description": ""
->>>>>>> bf8f7f73ed65247dec2f4e4f8080ff92e84d3de5
 }

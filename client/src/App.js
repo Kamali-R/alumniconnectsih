@@ -1,59 +1,40 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { useState } from 'react';  // ✅ You forgot to import useState
 import HomePage from './homepage';
 import Register from './Register';
 import VerifyOtp from './VerifyOtp';
+import Login from './Login';
 import './index.css';
 
-import Register from './Register';         // Adjust path if inside /pages or /components
-import VerifyOtp from './VerifyOtp';       // Adjust path if needed
-import Login from './Login';         // This is the new styled login you wanted
-
 function App() {
-  const [userData, setUserData] = useState(null); // Pass from register to verify
+  const [userData, setUserData] = useState(null); // For passing data from Register to VerifyOtp
 
   return (
     <Router>
       <div className="App">
         <Routes>
           {/* Default Home */}
-          <Route
-            path="/"
-            element={
-              <div className="text-center mt-20">
-                <h2 className="text-2xl font-bold">Welcome to Alumni Connect</h2>
-                <p className="text-gray-600">Visit <code>/register</code> or <code>/login</code></p>
-              </div>
-            }
-          />
+         <Route path="/" element={<HomePage />} />
 
-          {/* Login page */}
-          <Route path="/login" element={<Login />} />
 
-          {/* Registration page */}
+          {/* Login */}
+          <Route path="/Login" element={<Login />} />
+
+          {/* Register */}
           <Route
-            path="/register"
+            path="/Register"
             element={
               <Register
-                onOtpSent={() => window.location.replace('/verify')}
+                onOtpSent={() => window.location.replace('/VerifyOtp')}
                 setUserData={setUserData}
               />
             }
           />
 
-          {/* OTP Verification */}
-          <Route
-            path="/verify"
-            element={<VerifyOtp userData={userData} />}
-          />
+          {/* Verify OTP */}
+          <Route path="/VerifyOtp" element={<VerifyOtp userData={userData} />} />
         </Routes>
       </div>
-  return (
-    <Router>
-      <Routes>
-        <Route path="/" element={<HomePage />} />
-        <Route path="/register" element={<Register />} />
-        <Route path="/verify-otp" element={<VerifyOtp />} />
-      </Routes>
     </Router>
   );
 }
