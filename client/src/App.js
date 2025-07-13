@@ -9,12 +9,15 @@ function App() {
     <Router>
       <Routes>
         <Route path="/" element={<HomePage />} />
-        <Route path="/Register" element={<Register />} />
-        <Route path="/verifyOtp" element={<VerifyOtp />} />
-        {/* Optional if you've created this */}
+        <Route path="/register" element={<Register />} />
+        <Route path="/verify-otp" element={<VerifyOtp />} />
       </Routes>
     </Router>
   );
 }
 
+<<<<<<< HEAD
 export default App;
+=======
+export default App;
+>>>>>>> bf8f7f73ed65247dec2f4e4f8080ff92e84d3de5
