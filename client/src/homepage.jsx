@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import './index.css';
 // Import your logo image (make sure to add this file to your project)
 import logo from './logo.png'; 
-
+import { Link } from 'react-router-dom';
 const AlumniConnect = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [contactForm, setContactForm] = useState({
@@ -48,7 +48,9 @@ return (
           <a href="#home" className="text-gray-700 hover:text-indigo-600 text-sm">Home</a>
           <a href="#features" className="text-gray-700 hover:text-indigo-600 text-sm">Features</a>
           <a href="#contact" className="text-gray-700 hover:text-indigo-600 text-sm">Contact</a>
-          <button className="bg-indigo-600 text-white px-3 py-1.5 rounded text-sm">Login</button>
+          <Link to="/register" className="bg-indigo-600 text-white px-3 py-1.5 rounded text-sm hover:bg-indigo-700">
+  Login
+</Link>
         </div>
         <button 
           onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
@@ -107,9 +109,11 @@ return (
         <p className="text-gray-600 mb-6">
           Alumni Connect brings together students and alumni to foster mentorship, networking, and lifelong connections.
         </p>
-        <button className="bg-indigo-600 text-white hover:bg-indigo-700 px-4 py-2 rounded mx-auto"> {/* Added mx-auto */}
-          Get Started
-        </button>
+        <Link to="/register">
+  <button className="bg-indigo-600 text-white hover:bg-indigo-700 px-4 py-2 rounded mx-auto">
+    Get Started
+  </button>
+</Link>
       </div>
     </div>
   </div>
