@@ -1,7 +1,8 @@
-// src/App.js
-import React, { useState } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import './App.css';
+import HomePage from './homepage';
+import Register from './Register';
+import VerifyOtp from './VerifyOtp';
+import './index.css';
 
 import Register from './Register';         // Adjust path if inside /pages or /components
 import VerifyOtp from './VerifyOtp';       // Adjust path if needed
@@ -46,6 +47,13 @@ function App() {
           />
         </Routes>
       </div>
+  return (
+    <Router>
+      <Routes>
+        <Route path="/" element={<HomePage />} />
+        <Route path="/register" element={<Register />} />
+        <Route path="/verify-otp" element={<VerifyOtp />} />
+      </Routes>
     </Router>
   );
 }
