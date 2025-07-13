@@ -1,19 +1,15 @@
-// src/App.js
-import React, { useState } from 'react';
-import Register from './Register';
-import VerifyOtp from './VerifyOtp';
-import './App.css';
+// App.js
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import HomePage from './homepage';
+import './index.css';
 
 function App() {
-  const [step, setStep] = useState(1);
-  const [userData, setUserData] = useState(null);
-
   return (
-    <div className="app">
-      {step === 1 && <Register onOtpSent={() => setStep(2)} setUserData={setUserData} />}
-      {step === 2 && <VerifyOtp userData={userData} />}
-    </div>
+    <Router>
+      <Routes>
+        <Route path="/" element={<HomePage />} />
+      </Routes>
+    </Router>
   );
 }
-
 export default App;
