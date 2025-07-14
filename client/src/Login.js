@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link,useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
 const Login = () => {
+  const navigate = useNavigate();
+
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPwd, setShowPwd] = useState(false);
@@ -105,36 +107,30 @@ const Login = () => {
     height: '20px',
   }}
 >
-  <input
-    type="checkbox"
-    onChange={() => setShowPwd(!showPwd)}
-    style={{
-      width: '16px',
-      height: '16px',
-      margin: 0,
-      padding: 0,
-      position: 'relative',
-      top: '1px',
-    }}
-  />
-  <label
-    style={{
-      fontSize: '14px',
-      margin: 0,
-      padding: 0,
-    }}
-  >
-    Show Password
-  </label>
 </div>
 
 
 
-          <Link to="/forgot-password" style={{ fontSize: '14px', color: '#1a3eea' }}>
-            Forgot Password?
-          </Link>
-        </div>
+       <Link
+  to={email ? "/forgot-password" : "#"}
+  state={email ? { email } : null}
+  onClick={(e) => {
+    if (!email) {
+      e.preventDefault(); // stop navigation
+      document.querySelector('input[type="email"]').reportValidity();
+    }
+  }}
+  style={{
+    fontSize: '14px',
+    color: '#1a3eea',
+    cursor: 'pointer',
+  }}
+>
+  Forgot Password?
+</Link>
 
+
+        </div>
         <button
           type="submit"
           style={{
