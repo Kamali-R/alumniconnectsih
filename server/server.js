@@ -25,6 +25,17 @@ app.use('/api', protectedRoutes);
 app.get('/', (req, res) => {
   res.send('API is running...');
 });
+// ✅ Google OAuth Routes
+app.get('/api/google',
+  passport.authenticate('google', { scope: ['profile', 'email'] })
+);
+
+app.get('/api/google/callback',
+  passport.authenticate('google', {
+    successRedirect: 'http://localhost:3000/dashboard',
+    failureRedirect: 'http://localhost:3000/login'
+  })
+);
 
 
 

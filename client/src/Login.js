@@ -189,8 +189,9 @@ const Login = () => {
       fontWeight: '500',
     }}
     onClick={() => {
-  window.location.href = 'http://localhost:5000/auth/google';
+  window.location.href = 'http://localhost:5000/api/google';
 }}
+
   >
     <img
   src="https://developers.google.com/identity/images/g-logo.png"
