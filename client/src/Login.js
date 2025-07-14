@@ -209,7 +209,7 @@ const Login = () => {
           fontSize: '14px'
         }}>
           Don't have an account?{' '}
-          <Link to="/register" style={{ color: '#1a3eea', fontWeight: 'bold' }}>
+          <Link to="/Register" style={{ color: '#1a3eea', fontWeight: 'bold' }}>
             Sign Up
           </Link>
         </p>
