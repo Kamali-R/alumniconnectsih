@@ -62,42 +62,41 @@ return (
     </nav>
 
     {/* Mobile menu dropdown */}
-    {mobileMenuOpen && (
-      <div className="md:hidden fixed right-4 top-16 bg-white shadow-lg rounded-md z-50 w-48">
-        <div className="py-1">
-          <a 
-            href="#home" 
-            onClick={() => setMobileMenuOpen(false)}
-            className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-          >
-            Home
-          </a>
-          <a 
-            href="#features" 
-            onClick={() => setMobileMenuOpen(false)}
-            className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-          >
-            Features
-          </a>
-          <a 
-            href="#contact" 
-            onClick={() => setMobileMenuOpen(false)}
-            className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-          >
-            Contact
-          </a>
-          <button 
-            onClick={() => {
-              setMobileMenuOpen(false);
-              // Add your login logic here
-            }}
-            className="w-full text-left px-4 py-2 text-sm bg-indigo-600 text-white hover:bg-indigo-700"
-          >
-            Login
-          </button>
-        </div>
-      </div>
-    )}
+{mobileMenuOpen && (
+  <div className="md:hidden fixed right-4 top-16 bg-white shadow-lg rounded-md z-50 w-56 border border-gray-200">
+    <div className="py-2">
+      <a 
+        href="#home" 
+        onClick={() => setMobileMenuOpen(false)}
+        className="block px-4 py-3 text-sm text-gray-700 hover:bg-indigo-50 hover:text-indigo-600 transition-colors duration-200"
+      >
+        Home
+      </a>
+      <a 
+        href="#features" 
+        onClick={() => setMobileMenuOpen(false)}
+        className="block px-4 py-3 text-sm text-gray-700 hover:bg-indigo-50 hover:text-indigo-600 transition-colors duration-200"
+      >
+        Features
+      </a>
+      <a 
+        href="#contact" 
+        onClick={() => setMobileMenuOpen(false)}
+        className="block px-4 py-3 text-sm text-gray-700 hover:bg-indigo-50 hover:text-indigo-600 transition-colors duration-200"
+      >
+        Contact
+      </a>
+      <div className="border-t border-gray-200 my-1"></div>
+      <Link 
+        to="/Login" 
+        onClick={() => setMobileMenuOpen(false)}
+        className="block px-4 py-3 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 rounded-md mx-2 mt-1 transition-colors duration-200"
+      >
+        Login
+      </Link>
+    </div>
+  </div>
+)}
      {/* Hero Section with background image */}
 <section id="home" className="pt-20 py-12 bg-[url('./hero-bg.jpg')] bg-cover bg-center">
   <div className="max-w-7xl mx-auto px-4">
