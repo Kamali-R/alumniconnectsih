@@ -1,17 +1,40 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { useState } from 'react';  // ✅ You forgot to import useState
 import HomePage from './homepage';
 import Register from './Register';
 import VerifyOtp from './VerifyOtp';
+import Login from './Login';
 import './index.css';
 
 function App() {
+  const [userData, setUserData] = useState(null); // For passing data from Register to VerifyOtp
+
   return (
     <Router>
-      <Routes>
-        <Route path="/" element={<HomePage />} />
-        <Route path="/register" element={<Register />} />
-        <Route path="/verify-otp" element={<VerifyOtp />} />
-      </Routes>
+      <div className="App">
+        <Routes>
+          {/* Default Home */}
+         <Route path="/" element={<HomePage />} />
+
+
+          {/* Login */}
+          <Route path="/Login" element={<Login />} />
+
+          {/* Register */}
+          <Route
+            path="/Register"
+            element={
+              <Register
+                onOtpSent={() => window.location.replace('/VerifyOtp')}
+                setUserData={setUserData}
+              />
+            }
+          />
+
+          {/* Verify OTP */}
+          <Route path="/VerifyOtp" element={<VerifyOtp userData={userData} />} />
+        </Routes>
+      </div>
     </Router>
   );
 }
