@@ -2,23 +2,33 @@ import express from 'express';
 import mongoose from 'mongoose';
 import cors from 'cors';
 import dotenv from 'dotenv';
+import passport from 'passport'; // 👈 NEW
+import './config/googleAuth.js'; // 👈 NEW - Load Google OAuth Strategy
+
 import authRoutes from './routes/authRoutes.js';
 import protectedRoutes from './routes/protectedRoutes.js';
+
 dotenv.config();
 
 const app = express();
 app.use(cors());
 app.use(express.json());
 
-// ✅ Middleware should come after app is defined
-app.use('/api', authRoutes);
+// ✅ Initialize Passport middleware
+app.use(passport.initialize());
 
+// ✅ Routes
+app.use('/api', authRoutes);
 app.use('/api', protectedRoutes);
 
+// ✅ Root Route
 app.get('/', (req, res) => {
   res.send('API is running...');
 });
 
+
+
+// ✅ Mongo Connection
 const PORT = process.env.PORT || 5000;
 const MONGO_URI = process.env.MONGO_URI;
 

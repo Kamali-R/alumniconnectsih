@@ -188,7 +188,9 @@ const Login = () => {
       color: '#000', // text color
       fontWeight: '500',
     }}
-    onClick={() => alert('Google login not yet implemented')}
+    onClick={() => {
+  window.location.href = 'http://localhost:5000/auth/google';
+}}
   >
     <img
   src="https://developers.google.com/identity/images/g-logo.png"
