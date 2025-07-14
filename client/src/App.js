@@ -1,21 +1,23 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import { useState } from 'react';  // ✅ You forgot to import useState
+import { useState } from 'react';
+
 import HomePage from './homepage';
 import Register from './Register';
 import VerifyOtp from './VerifyOtp';
 import Login from './Login';
+import Blank from './Blank'; // ✅ Import the new blank page
+
 import './index.css';
 
 function App() {
-  const [userData, setUserData] = useState(null); // For passing data from Register to VerifyOtp
+  const [userData, setUserData] = useState(null); // Used to pass data between Register & VerifyOtp
 
   return (
     <Router>
       <div className="App">
         <Routes>
           {/* Default Home */}
-         <Route path="/" element={<HomePage />} />
-
+          <Route path="/" element={<HomePage />} />
 
           {/* Login */}
           <Route path="/Login" element={<Login />} />
@@ -33,6 +35,9 @@ function App() {
 
           {/* Verify OTP */}
           <Route path="/VerifyOtp" element={<VerifyOtp userData={userData} />} />
+
+          {/* ✅ Blank page after Google Sign-In */}
+          <Route path="/blank" element={<Blank />} />
         </Routes>
       </div>
     </Router>

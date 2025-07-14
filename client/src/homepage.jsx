@@ -1,9 +1,12 @@
+import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
 import React, { useState } from 'react';
 import './index.css';
 // Import your logo image (make sure to add this file to your project)
 import logo from './logo.png'; 
 import { Link } from 'react-router-dom';
 const AlumniConnect = () => {
+  const navigate = useNavigate();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [contactForm, setContactForm] = useState({
     firstName: '',
@@ -12,11 +15,18 @@ const AlumniConnect = () => {
     message: ''
   });
 
-  const handleContactSubmit = (e) => {
-    e.preventDefault();
-    alert('Thank you for your message!');
+  const handleContactSubmit = async (e) => {
+  e.preventDefault();
+
+  try {
+    await axios.post('http://localhost:5000/api/contact', contactForm); // ✅ Send to backend
+    alert('Message sent successfully!');
     setContactForm({ firstName: '', lastName: '', email: '', message: '' });
-  };
+  } catch (error) {
+    console.error('Error sending message:', error);
+    alert('Failed to send message. Please try again.');
+  }
+};
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
