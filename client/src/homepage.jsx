@@ -48,7 +48,7 @@ return (
           <a href="#home" className="text-gray-700 hover:text-indigo-600 text-sm">Home</a>
           <a href="#features" className="text-gray-700 hover:text-indigo-600 text-sm">Features</a>
           <a href="#contact" className="text-gray-700 hover:text-indigo-600 text-sm">Contact</a>
-          <Link to="/register" className="bg-indigo-600 text-white px-3 py-1.5 rounded text-sm hover:bg-indigo-700">
+          <Link to="/Login" className="bg-indigo-600 text-white px-3 py-1.5 rounded text-sm hover:bg-indigo-700">
   Login
 </Link>
         </div>
