@@ -105,34 +105,24 @@ const Login = () => {
     height: '20px',
   }}
 >
-  <input
-    type="checkbox"
-    onChange={() => setShowPwd(!showPwd)}
-    style={{
-      width: '16px',
-      height: '16px',
-      margin: 0,
-      padding: 0,
-      position: 'relative',
-      top: '1px',
-    }}
-  />
-  <label
-    style={{
-      fontSize: '14px',
-      margin: 0,
-      padding: 0,
-    }}
-  >
-    Show Password
-  </label>
+ 
 </div>
 
 
 
-          <Link to="/forgot-password" style={{ fontSize: '14px', color: '#1a3eea' }}>
-            Forgot Password?
-          </Link>
+         <Link
+  to="/password"
+  style={{ color: '#1a3eea' }}
+  onClick={(e) => {
+    if (!email) {
+      e.preventDefault();
+      document.querySelector('input[type="email"]').reportValidity();
+    }
+  }}
+>
+  Forgot Password?
+</Link>
+
         </div>
 
         <button

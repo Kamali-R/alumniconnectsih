@@ -1,19 +1,16 @@
-// server/config/googleAuth.js
-
 import passport from "passport";
 import { Strategy as GoogleStrategy } from "passport-google-oauth20";
 import dotenv from "dotenv";
 dotenv.config();
 
-// ✅ Use correct path to User model
-import User from "../models/User.js";
+import User from "../models/User.js"; // ✅ Make sure this is the correct path
 
 passport.use(
   new GoogleStrategy(
     {
       clientID: process.env.GOOGLE_CLIENT_ID,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-      callbackURL: "http://localhost:5000/api/google/callback",
+      callbackURL: "http://localhost:5000/api/google/callback", // ✅ Must match Google Console
     },
     async (accessToken, refreshToken, profile, done) => {
       try {
