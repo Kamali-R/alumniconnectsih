@@ -1,10 +1,12 @@
 import express from 'express';
 import passport from 'passport';
 import jwt from 'jsonwebtoken';
+import { verifyResetOtp } from '../controllers/authController.js';
 import {
   sendOtp,
   verifyOtp,
   login,
+  
   resetPassword,   // ✅ New controller
 } from '../controllers/authController.js';
 
@@ -16,7 +18,12 @@ router.post('/verify-otp', verifyOtp);
 router.post('/login', login);
 
 // ✅ Forgot Password Routes
-router.post('/forgot-password', sendOtp); // Same as sendOtp
+router.post('/forgot-password', (req, res) => {
+  // Add "purpose": "reset" to distinguish reset OTP flow
+  req.body.purpose = 'reset';
+  sendOtp(req, res);
+});
+router.post('/verify-reset-otp', verifyResetOtp);
 router.post('/reset-password', resetPassword); // Handles OTP + new password
 
 // Google OAuth Routes

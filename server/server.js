@@ -23,7 +23,7 @@ app.use(passport.initialize());
 app.use('/api', authRoutes);
 app.use('/api', protectedRoutes);
 app.use('/api', contactRoutes); // ✅ Added this line
-
+app.use('/api/auth', authRoutes);
 // ✅ Root Route
 app.get('/', (req, res) => {
   res.send('API is running...');
