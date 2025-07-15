@@ -24,59 +24,63 @@ const VerifyOtp = () => {
     }
   };
 
-  const handleVerify = async (e) => {
-    e.preventDefault();
-    const fullOtp = otp.join('');
+ const handleVerify = async (e) => {
+  e.preventDefault();
+  const fullOtp = otp.join('');
+  
+  try {
+    setLoading(true);
+    const response = await axios.post('http://localhost:5000/api/verify-otp', {
+      ...userData,
+      otp: fullOtp,
+      purpose: 'register' // Add this for signup flow
+    });
     
-    try {
-      setLoading(true);
-      const response = await axios.post('http://localhost:5000/api/verify-otp', {
-        ...userData,
-        otp: fullOtp
-      });
-      
-      setMessage({ 
-        text: response.data.message || 'Verification successful!', 
-        type: 'success' 
-      });
-      setShowResend(false);
-      
-      // Redirect to home/dashboard after 2 seconds
-      setTimeout(() => {
-        navigate('/');
-      }, 2000);
-      
-    } catch (error) {
-      setMessage({ 
-        text: error.response?.data?.message || 'OTP verification failed.', 
-        type: 'error' 
-      });
-      setShowResend(true);
-    } finally {
-      setLoading(false);
-    }
-  };
+    setMessage({ 
+      text: response.data.message || 'Verification successful!', 
+      type: 'success' 
+    });
+    setShowResend(false);
+    
+    // Redirect to home/dashboard after 2 seconds
+    setTimeout(() => {
+      navigate('/');
+    }, 2000);
+    
+  } catch (error) {
+    setMessage({ 
+      text: error.response?.data?.message || 'OTP verification failed.', 
+      type: 'error' 
+    });
+    setShowResend(true);
+  } finally {
+    setLoading(false);
+  }
+};
 
-  const handleResend = async () => {
-    try {
-      setLoading(true);
-      await axios.post('http://localhost:5000/api/send-otp', userData);
-      setOtp(['', '', '', '', '', '']);
-      inputsRef.current[0].focus();
-      setMessage({ 
-        text: 'OTP resent successfully!', 
-        type: 'success' 
-      });
-      setShowResend(false);
-    } catch (error) {
-      setMessage({ 
-        text: error.response?.data?.message || 'Failed to resend OTP.', 
-        type: 'error' 
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
+const handleResend = async () => {
+  try {
+    setLoading(true);
+    await axios.post('http://localhost:5000/api/send-otp', {
+      ...userData,
+      purpose: 'register' // Add this for signup flow
+    });
+    setOtp(['', '', '', '', '', '']);
+    inputsRef.current[0].focus();
+    setMessage({ 
+      text: 'OTP resent successfully!', 
+      type: 'success' 
+    });
+    setShowResend(false);
+  } catch (error) {
+    setMessage({ 
+      text: error.response?.data?.message || 'Failed to resend OTP.', 
+      type: 'error' 
+    });
+  } finally {
+    setLoading(false);
+  }
+};
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
