@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link,useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
 const Login = () => {
+  const navigate = useNavigate();
+
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPwd, setShowPwd] = useState(false);
@@ -105,26 +107,30 @@ const Login = () => {
     height: '20px',
   }}
 >
- 
 </div>
 
 
 
-         <Link
-  to="/password"
-  style={{ color: '#1a3eea' }}
+       <Link
+  to={email ? "/forgot-password" : "#"}
+  state={email ? { email } : null}
   onClick={(e) => {
     if (!email) {
-      e.preventDefault();
+      e.preventDefault(); // stop navigation
       document.querySelector('input[type="email"]').reportValidity();
     }
+  }}
+  style={{
+    fontSize: '14px',
+    color: '#1a3eea',
+    cursor: 'pointer',
   }}
 >
   Forgot Password?
 </Link>
 
-        </div>
 
+        </div>
         <button
           type="submit"
           style={{
@@ -178,10 +184,7 @@ const Login = () => {
       color: '#000', // text color
       fontWeight: '500',
     }}
-    onClick={() => {
-  window.location.href = 'http://localhost:5000/api/google';
-}}
-
+    onClick={() => alert('Google login not yet implemented')}
   >
     <img
   src="https://developers.google.com/identity/images/g-logo.png"
@@ -211,5 +214,4 @@ const Login = () => {
   </div>
 );
 };
-
 export default Login;

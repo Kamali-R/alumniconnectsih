@@ -13,7 +13,7 @@ const Register = () => {
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({});
   const navigate = useNavigate();
-
+  
   const validateForm = () => {
     const newErrors = {};
     if (!form.name.trim()) newErrors.name = 'Name is required';
