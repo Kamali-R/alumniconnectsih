@@ -1,6 +1,10 @@
-import React, { useState } from 'react';
+
+import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate,useLocation, Link } from 'react-router-dom';
+
+
+
 
 const Register = () => {
   const [form, setForm] = useState({
@@ -13,6 +17,18 @@ const Register = () => {
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({});
   const navigate = useNavigate();
+  const location = useLocation(); 
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const error = params.get('error');
+
+    if (error === 'not_found') {
+      setMessage({
+        text: 'No account found for this Google email. Please complete your signup.',
+        type: 'error',
+      });
+    }
+  }, [location.search]);
   
   const validateForm = () => {
     const newErrors = {};
