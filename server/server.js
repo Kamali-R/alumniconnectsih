@@ -19,6 +19,7 @@ const app = express();
 // ✅ Middleware
 app.use(cors());
 app.use(express.json());
+
 app.use(
   session({
     secret: process.env.SESSION_SECRET, // ✅ This should now work
@@ -34,6 +35,7 @@ app.use(passport.initialize());
 app.use(passport.session());
 
 // ✅ Initialize Passport middleware
+
 app.use(passport.initialize());
 
 // ✅ FIXED: Clean route structure - avoid duplicate prefixes
@@ -46,7 +48,12 @@ app.get('/', (req, res) => {
   res.send('API is running...');
 });
 
-// ✅ REMOVED: Duplicate Google OAuth routes (they're already in authRoutes.js)
+
+// ✅ Google OAuth Routes
+app.get(
+  '/api/google',
+  passport.authenticate('google', { scope: ['profile', 'email'] })
+);
 
 app.get('/auth/google/callback',
   passport.authenticate('google', {
@@ -68,6 +75,9 @@ app.get('/auth/google/callback',
 
 
 // ✅ Mongo Connection
+
+// ✅ REMOVED: Duplicate Google OAuth routes (they're already in authRoutes.js)
+
 // ✅ MongoDB Connection
 const PORT = process.env.PORT || 5000;
 const MONGO_URI = process.env.MONGO_URI;
