@@ -168,34 +168,36 @@ const Login = () => {
         {/* ✅ Google Sign-in Button */}
 <div style={{ marginTop: '20px', textAlign: 'center' }}>
   <button
-    type="button"
-    style={{
-      padding: '12px',
-      width: '100%',
-      backgroundColor: '#f5f5f5', // light gray background
-      border: '1px solid #ccc',
-      borderRadius: '6px',
-      fontSize: '16px',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      gap: '10px',
-      cursor: 'pointer',
-      color: '#000', // text color
-      fontWeight: '500',
-    }}
-    onClick={() => alert('Google login not yet implemented')}
-  >
-    <img
-  src="https://developers.google.com/identity/images/g-logo.png"
-  alt="Google"
-  width="20"
-  height="20"
-  style={{ marginRight: '8px' }}
-/>
+  type="button"
+  style={{
+    padding: '12px',
+    width: '100%',
+    backgroundColor: '#f5f5f5',
+    border: '1px solid #ccc',
+    borderRadius: '6px',
+    fontSize: '16px',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: '10px',
+    cursor: 'pointer',
+    color: '#000',
+    fontWeight: '500',
+  }}
+  onClick={() => {
+    window.location.href = 'http://localhost:5000/api/google';
+  }}
+>
+  <img
+    src="https://developers.google.com/identity/images/g-logo.png"
+    alt="Google"
+    width="20"
+    height="20"
+    style={{ marginRight: '8px' }}
+  />
+  Sign in with Google
+</button>
 
-    Sign in with Google
-  </button>
 </div>
 
 

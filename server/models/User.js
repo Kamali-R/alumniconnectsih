@@ -12,7 +12,7 @@ const userSchema = new mongoose.Schema({
   },
   password: {
     type: String,
-    required: true,
+    required: true, // ✅ Required for local sign-up
   },
   role: {
     type: String,
@@ -23,11 +23,15 @@ const userSchema = new mongoose.Schema({
     type: Boolean,
     default: false,
   },
-  otp: {
+  otp: String,
+  otpExpiry: Date,
+  authProvider: {
     type: String,
+    default: 'local',
   },
-  otpExpiry: {
+  lastLogin: {
     type: Date,
+    default: Date.now,
   }
 }, { timestamps: true });
 
