@@ -1,32 +1,28 @@
 import express from 'express';
 import passport from 'passport';
 import jwt from 'jsonwebtoken';
-import { verifyResetOtp } from '../controllers/authController.js';
 import {
   sendOtp,
   verifyOtp,
   login,
-  
-  resetPassword,   // ✅ New controller
+  verifyResetOtp,
+  resetPassword,
+  forgotPassword // ✅ Import the dedicated forgot password function
 } from '../controllers/authController.js';
 
 const router = express.Router();
 
-// Existing OTP & login routes
+// ✅ Registration & Login Routes
 router.post('/send-otp', sendOtp);
 router.post('/verify-otp', verifyOtp);
 router.post('/login', login);
 
-// ✅ Forgot Password Routes
-router.post('/forgot-password', (req, res) => {
-  // Add "purpose": "reset" to distinguish reset OTP flow
-  req.body.purpose = 'reset';
-  sendOtp(req, res);
-});
+// ✅ FIXED: Password Reset Routes
+router.post('/forgot-password', forgotPassword); // Use dedicated function
 router.post('/verify-reset-otp', verifyResetOtp);
-router.post('/reset-password', resetPassword); // Handles OTP + new password
+router.post('/reset-password', resetPassword);
 
-// Google OAuth Routes
+// ✅ Google OAuth Routes
 router.get('/google', passport.authenticate('google', { scope: ['profile', 'email'] }));
 
 router.get('/google/callback',

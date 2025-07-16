@@ -2,22 +2,23 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 
 const PasswordResetFlow = () => {
-    const navigate = useNavigate();
+  const navigate = useNavigate();
   const [currentStep, setCurrentStep] = useState(1);
   const location = useLocation();
-const [email, setEmail] = useState(location.state?.email || '');
-
+  const [email, setEmail] = useState(location.state?.email || '');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [verificationCode, setVerificationCode] = useState(['', '', '', '', '', '']);
   const verificationInputs = useRef([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState('');
 
   // DeepSeek color palette
   const colors = {
-    primary: '#1768AC',       // DeepSeek primary blue
-    primaryLight: '#1E88E5',  // Lighter blue
-    primaryDark: '#0D47A1',   // Darker blue
+    primary: '#1768AC',
+    primaryLight: '#1E88E5',
+    primaryDark: '#0D47A1',
     backgroundLight: '#E3F2FD',
     background: '#FFFFFF',
     success: '#4CAF50',
@@ -50,33 +51,128 @@ const [email, setEmail] = useState(location.state?.email || '');
   // Handle step navigation
   const goToStep = (step) => {
     setCurrentStep(step);
+    setError('');
   };
 
   // Handle form submissions
-  const handleResetRequest = (e) => {
+  const handleResetRequest = async (e) => {
     e.preventDefault();
-    goToStep(2);
-    navigate('/VerifyOtp', { state: { email } });
-  };
-
-  const handleVerificationSubmit = (e) => {
-    e.preventDefault();
-    goToStep(3);
-  };
-
-  const handleNewPasswordSubmit = (e) => {
-    e.preventDefault();
-    if (password === confirmPassword) {
-      goToStep(4);
-    } else {
-      setPasswordMatch({
-        match: false,
-        message: "Passwords don't match",
-        visible: true
+    setIsLoading(true);
+    setError('');
+    
+    try {
+      const response = await fetch('http://localhost:5000/api/forgot-password', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email }),
       });
+
+      const data = await response.json();
+      
+      if (response.ok) {
+        goToStep(2);
+      } else {
+        setError(data.message || 'Failed to send OTP');
+      }
+    } catch (error) {
+      console.error('Error:', error);
+      setError('Failed to connect to server');
+    } finally {
+      setIsLoading(false);
     }
   };
+const handleVerificationSubmit = async (e) => {
+  e.preventDefault();
+  setIsLoading(true);
+  setError('');
+  
+  // Validate OTP format
+  const otp = verificationCode.join('');
+  if (!/^\d{6}$/.test(otp)) {
+    setError('Please enter a valid 6-digit code');
+    setIsLoading(false);
+    return;
+  }
 
+  try {
+    const response = await fetch('http://localhost:5000/api/verify-reset-otp', { // Changed endpoint
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ 
+        email: email.trim(), 
+        otp 
+      }),
+    });
+
+    const data = await response.json();
+    
+    if (!response.ok) {
+      throw new Error(data.message || 'OTP verification failed');
+    }
+
+    // On success, move to password reset step
+    goToStep(3);
+  } catch (error) {
+    console.error('Verification error:', error);
+    setError(error.message || 'Failed to verify OTP. Please try again.');
+    // Clear OTP fields on error
+    setVerificationCode(['', '', '', '', '', '']);
+    if (verificationInputs.current[0]) {
+      verificationInputs.current[0].focus();
+    }
+  } finally {
+    setIsLoading(false);
+  }
+};
+const handleNewPasswordSubmit = async (e) => {
+  e.preventDefault();
+  
+  if (password !== confirmPassword) {
+    setPasswordMatch({
+      match: false,
+      message: "Passwords don't match",
+      visible: true
+    });
+    return;
+  }
+
+  setIsLoading(true);
+  setError('');
+  
+  try {
+    console.log('Submitting password reset for:', email); // Debug log
+    const response = await fetch('http://localhost:5000/api/reset-password', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ 
+        email: email.trim(),
+        newPassword: password,
+        confirmPassword 
+      }),
+    });
+
+    const data = await response.json();
+    console.log('Reset response:', data); // Debug log
+    
+    if (!response.ok) {
+      throw new Error(data.message || 'Password reset failed');
+    }
+
+    // On success, move to completion step
+    goToStep(4);
+  } catch (error) {
+    console.error('Password reset error:', error);
+    setError(error.message || 'Failed to reset password. Please try again.');
+  } finally {
+    setIsLoading(false);
+  }
+};
   // Handle verification code input
   const handleVerificationInput = (e, index) => {
     const newCode = [...verificationCode];
@@ -131,14 +227,14 @@ const [email, setEmail] = useState(location.state?.email || '');
     } else if (strength <= 50) {
       setPasswordStrength({
         width: `${strength}%`,
-        color: '#FF9800', // orange
+        color: '#FF9800',
         text: 'Fair',
         textColor: '#FF9800'
       });
     } else if (strength <= 75) {
       setPasswordStrength({
         width: `${strength}%`,
-        color: '#FFC107', // yellow
+        color: '#FFC107',
         text: 'Good',
         textColor: '#FFC107'
       });
@@ -178,9 +274,29 @@ const [email, setEmail] = useState(location.state?.email || '');
   }, [password, confirmPassword]);
 
   // Resend verification code
-  const handleResendCode = () => {
+  const handleResendCode = async () => {
     setVerificationCode(['', '', '', '', '', '']);
     verificationInputs.current[0].focus();
+    setError('');
+    
+    try {
+      const response = await fetch('http://localhost:5000/api/forgot-password', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email }),
+      });
+
+      const data = await response.json();
+      
+      if (!response.ok) {
+        setError(data.message || 'Failed to resend OTP');
+      }
+    } catch (error) {
+      console.error('Error:', error);
+      setError('Failed to resend OTP');
+    }
   };
 
   // Helper function to update checkmark
@@ -224,6 +340,13 @@ const [email, setEmail] = useState(location.state?.email || '');
           className="bg-white rounded-xl p-8 shadow-lg transition-all duration-300 ease-in-out"
           style={{ boxShadow: '0 10px 25px rgba(0, 0, 0, 0.05)' }}
         >
+          {/* Error Display */}
+          {error && (
+            <div className="mb-4 p-3 rounded-lg text-center" style={{ backgroundColor: '#FFEBEE', color: colors.error }}>
+              {error}
+            </div>
+          )}
+
           {/* Logo Placeholder */}
           <div className="flex justify-center mb-6">
             <svg className="w-12 h-12" fill={colors.primary} viewBox="0 0 20 20">
@@ -257,19 +380,30 @@ const [email, setEmail] = useState(location.state?.email || '');
                 
                 <button 
                   type="submit" 
-                  className="w-full text-white py-3 rounded-lg font-medium transition-all duration-300 ease-in-out hover:translate-y-[-2px] hover:shadow-lg"
+                  className="w-full text-white py-3 rounded-lg font-medium transition-all duration-300 ease-in-out hover:translate-y-[-2px] hover:shadow-lg flex items-center justify-center"
                   style={{ 
                     background: `linear-gradient(to right, ${colors.primary}, ${colors.primaryLight})`,
                     boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)'
                   }}
+                  disabled={isLoading}
                 >
-                  Send OTP
+                  {isLoading ? (
+                    <>
+                      <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      Sending...
+                    </>
+                  ) : (
+                    'Send OTP'
+                  )}
                 </button>
               </form>
               
               <div className="mt-6 text-center">
                 <a 
-                  href="#" 
+                  href="/login" 
                   className="text-sm hover:underline"
                   style={{ color: colors.primary }}
                 >
@@ -281,60 +415,71 @@ const [email, setEmail] = useState(location.state?.email || '');
           
           {/* Step 2: Verification Code */}
           {currentStep === 2 && (
-            <div className="animate-fadeIn">
-              <h2 className="text-2xl font-bold text-center mb-2" style={{ color: colors.text }}>Check Your Email</h2>
-              <p className="text-center mb-6" style={{ color: colors.textLight }}>
-                We've sent a verification code to <span className="font-medium">{email}</span>
-              </p>
-              
-              <form onSubmit={handleVerificationSubmit}>
-                <div className="mb-6">
-                  <label htmlFor="verification-code" className="block text-sm font-medium mb-1" style={{ color: colors.text }}>
-                    Verification Code
-                  </label>
-                  <div className="flex justify-between gap-2">
-                    {[0, 1, 2, 3, 4, 5].map((index) => (
-                      <input 
-                        key={index}
-                        type="text" 
-                        maxLength="1"
-                        value={verificationCode[index]}
-                        onChange={(e) => handleVerificationInput(e, index)}
-                        onKeyDown={(e) => handleVerificationKeyDown(e, index)}
-                        ref={(el) => (verificationInputs.current[index] = el)}
-                        className="w-full px-0 py-3 text-center text-xl rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500" 
-                        required
-                      />
-                    ))}
-                  </div>
-                </div>
-                
-                <button 
-                  type="submit" 
-                  className="w-full text-white py-3 rounded-lg font-medium transition-all duration-300 ease-in-out hover:translate-y-[-2px] hover:shadow-lg"
-                  style={{ 
-                    background: `linear-gradient(to right, ${colors.primary}, ${colors.primaryLight})`,
-                    boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)'
-                  }}
-                >
-                  Verify Code
-                </button>
-              </form>
-              
-              <div className="mt-6 text-center">
-                <p className="text-sm mb-2" style={{ color: colors.textLight }}>Didn't receive the code?</p>
-                <a 
-                  href="#" 
-                  onClick={handleResendCode}
-                  className="text-sm hover:underline"
-                  style={{ color: colors.primary }}
-                >
-                  Resend Code
-                </a>
-              </div>
-            </div>
-          )}
-          
+  <div className="animate-fadeIn">
+    <h2 className="text-2xl font-bold text-center mb-2" style={{ color: colors.text }}>Check Your Email</h2>
+    <p className="text-center mb-6" style={{ color: colors.textLight }}>
+      We've sent a verification code to <span className="font-medium">{email}</span>
+    </p>
+    
+    <form onSubmit={handleVerificationSubmit}>
+      <div className="mb-6">
+        <label htmlFor="verification-code" className="block text-sm font-medium mb-1" style={{ color: colors.text }}>
+          Verification Code
+        </label>
+        <div className="flex justify-between gap-2">
+          {[0, 1, 2, 3, 4, 5].map((index) => (
+            <input 
+              key={index}
+              type="text" 
+              maxLength="1"
+              value={verificationCode[index]}
+              onChange={(e) => handleVerificationInput(e, index)}
+              onKeyDown={(e) => handleVerificationKeyDown(e, index)}
+              ref={(el) => (verificationInputs.current[index] = el)}
+              className="w-full px-0 py-3 text-center text-xl rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500" 
+              required
+              disabled={isLoading}
+            />
+          ))}
+        </div>
+      </div>
+      
+      <button 
+        type="submit" 
+        className="w-full text-white py-3 rounded-lg font-medium transition-all duration-300 ease-in-out hover:translate-y-[-2px] hover:shadow-lg flex items-center justify-center"
+        style={{ 
+          background: `linear-gradient(to right, ${colors.primary}, ${colors.primaryLight})`,
+          boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)'
+        }}
+        disabled={isLoading}
+      >
+        {isLoading ? (
+          <>
+            <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            Verifying...
+          </>
+        ) : (
+          'Verify Code'
+        )}
+      </button>
+    </form>
+    
+    <div className="mt-6 text-center">
+      <p className="text-sm mb-2" style={{ color: colors.textLight }}>Didn't receive the code?</p>
+      <button 
+        onClick={handleResendCode}
+        className="text-sm hover:underline"
+        style={{ color: colors.primary }}
+        disabled={isLoading}
+      >
+        {isLoading ? 'Sending...' : 'Resend Code'}
+      </button>
+    </div>
+  </div>
+)}
           {/* Step 3: Create New Password */}
           {currentStep === 3 && (
             <div className="animate-fadeIn">
@@ -452,13 +597,24 @@ const [email, setEmail] = useState(location.state?.email || '');
                 
                 <button 
                   type="submit" 
-                  className="w-full text-white py-3 rounded-lg font-medium transition-all duration-300 ease-in-out hover:translate-y-[-2px] hover:shadow-lg"
+                  className="w-full text-white py-3 rounded-lg font-medium transition-all duration-300 ease-in-out hover:translate-y-[-2px] hover:shadow-lg flex items-center justify-center"
                   style={{ 
                     background: `linear-gradient(to right, ${colors.primary}, ${colors.primaryLight})`,
                     boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)'
                   }}
+                  disabled={isLoading}
                 >
-                  Reset Password
+                  {isLoading ? (
+                    <>
+                      <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      Resetting...
+                    </>
+                  ) : (
+                    'Reset Password'
+                  )}
                 </button>
               </form>
             </div>
@@ -470,7 +626,7 @@ const [email, setEmail] = useState(location.state?.email || '');
               <div className="flex justify-center mb-6">
                 <div 
                   className="rounded-full p-3"
-                  style={{ backgroundColor: `${colors.success}20` }} // 20% opacity
+                  style={{ backgroundColor: `${colors.success}20` }}
                 >
                   <svg className="w-12 h-12" fill="none" stroke={colors.success} viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
@@ -484,7 +640,7 @@ const [email, setEmail] = useState(location.state?.email || '');
               </p>
               
               <button 
-                onClick={() => goToStep(1)}
+                onClick={() => navigate('/login')}
                 className="w-full text-white py-3 rounded-lg font-medium transition-all duration-300 ease-in-out hover:translate-y-[-2px] hover:shadow-lg"
                 style={{ 
                   background: `linear-gradient(to right, ${colors.primary}, ${colors.primaryLight})`,

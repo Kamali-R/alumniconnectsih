@@ -10,13 +10,16 @@ import './config/googleAuth.js'; // Load Google OAuth Strategy
 
 import authRoutes from './routes/authRoutes.js';
 import protectedRoutes from './routes/protectedRoutes.js';
-import contactRoutes from './routes/contactRoutes.js'; // ✅ Added this line
+import contactRoutes from './routes/contactRoutes.js';
 
 dotenv.config();
 
 const app = express();
+
+// ✅ Middleware
 app.use(cors());
 app.use(express.json());
+
 app.use(
   session({
     secret: process.env.SESSION_SECRET, // ✅ This should now work
@@ -32,17 +35,19 @@ app.use(passport.initialize());
 app.use(passport.session());
 
 // ✅ Initialize Passport middleware
+=======
 app.use(passport.initialize());
 
-// ✅ Routes
+// ✅ FIXED: Clean route structure - avoid duplicate prefixes
 app.use('/api', authRoutes);
 app.use('/api', protectedRoutes);
-app.use('/api', contactRoutes); // ✅ Added this line
-app.use('/api/auth', authRoutes);
+app.use('/api', contactRoutes);
+
 // ✅ Root Route
 app.get('/', (req, res) => {
   res.send('API is running...');
 });
+
 
 // ✅ Google OAuth Routes
 app.get(
@@ -70,6 +75,10 @@ app.get('/auth/google/callback',
 
 
 // ✅ Mongo Connection
+=======
+// ✅ REMOVED: Duplicate Google OAuth routes (they're already in authRoutes.js)
+
+// ✅ MongoDB Connection
 const PORT = process.env.PORT || 5000;
 const MONGO_URI = process.env.MONGO_URI;
 
