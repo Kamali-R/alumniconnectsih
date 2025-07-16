@@ -10,11 +10,13 @@ import './config/googleAuth.js'; // Load Google OAuth Strategy
 
 import authRoutes from './routes/authRoutes.js';
 import protectedRoutes from './routes/protectedRoutes.js';
-import contactRoutes from './routes/contactRoutes.js'; // ✅ Added this line
+import contactRoutes from './routes/contactRoutes.js';
 
 dotenv.config();
 
 const app = express();
+
+// ✅ Middleware
 app.use(cors());
 app.use(express.json());
 app.use(
@@ -34,21 +36,17 @@ app.use(passport.session());
 // ✅ Initialize Passport middleware
 app.use(passport.initialize());
 
-// ✅ Routes
+// ✅ FIXED: Clean route structure - avoid duplicate prefixes
 app.use('/api', authRoutes);
 app.use('/api', protectedRoutes);
-app.use('/api', contactRoutes); // ✅ Added this line
-app.use('/api/auth', authRoutes);
+app.use('/api', contactRoutes);
+
 // ✅ Root Route
 app.get('/', (req, res) => {
   res.send('API is running...');
 });
 
-// ✅ Google OAuth Routes
-app.get(
-  '/api/google',
-  passport.authenticate('google', { scope: ['profile', 'email'] })
-);
+// ✅ REMOVED: Duplicate Google OAuth routes (they're already in authRoutes.js)
 
 app.get('/auth/google/callback',
   passport.authenticate('google', {
@@ -70,6 +68,7 @@ app.get('/auth/google/callback',
 
 
 // ✅ Mongo Connection
+// ✅ MongoDB Connection
 const PORT = process.env.PORT || 5000;
 const MONGO_URI = process.env.MONGO_URI;
 
