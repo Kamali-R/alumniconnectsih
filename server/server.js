@@ -5,15 +5,21 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import passport from 'passport';
 import jwt from 'jsonwebtoken'; // Add this line
+
 import './config/googleAuth.js'; // Load Google OAuth Strategy
+
 import authRoutes from './routes/authRoutes.js';
 import protectedRoutes from './routes/protectedRoutes.js';
 import contactRoutes from './routes/contactRoutes.js';
+
 dotenv.config();
+
 const app = express();
+
 // ✅ Middleware
 app.use(cors());
 app.use(express.json());
+
 app.use(
   session({
     secret: process.env.SESSION_SECRET, // ✅ This should now work
@@ -22,12 +28,15 @@ app.use(
     cookie: { secure: false }, // set to true only if using HTTPS
   })
 );
+
+
 // ✅ Initialize Passport session support
 app.use(passport.initialize());
 app.use(passport.session());
 
 // ✅ Initialize Passport middleware
 app.use(passport.initialize());
+
 // ✅ FIXED: Clean route structure - avoid duplicate prefixes
 app.use('/api', authRoutes);
 app.use('/api', protectedRoutes);
@@ -80,3 +89,4 @@ mongoose
   .catch((err) => {
     console.error('❌ MongoDB connection failed:', err.message);
   });
+  
