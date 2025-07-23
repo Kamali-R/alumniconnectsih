@@ -35,7 +35,6 @@ app.use(passport.initialize());
 app.use(passport.session());
 
 // ✅ Initialize Passport middleware
-=======
 app.use(passport.initialize());
 
 // ✅ FIXED: Clean route structure - avoid duplicate prefixes
@@ -75,7 +74,7 @@ app.get('/auth/google/callback',
 
 
 // ✅ Mongo Connection
-=======
+
 // ✅ REMOVED: Duplicate Google OAuth routes (they're already in authRoutes.js)
 
 // ✅ MongoDB Connection
