@@ -35,6 +35,7 @@ app.use(passport.initialize());
 app.use(passport.session());
 
 // ✅ Initialize Passport middleware
+
 app.use(passport.initialize());
 
 // ✅ FIXED: Clean route structure - avoid duplicate prefixes
