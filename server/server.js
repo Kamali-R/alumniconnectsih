@@ -10,6 +10,9 @@ import './config/googleAuth.js'; // Load Google OAuth Strategy
 import authRoutes from './routes/authRoutes.js';
 import protectedRoutes from './routes/protectedRoutes.js';
 import contactRoutes from './routes/contactRoutes.js';
+import studentProfileRoutes from './routes/studentProfileRoutes.js';
+
+
 
 // Load environment variables
 dotenv.config();
@@ -44,6 +47,8 @@ app.use(passport.session());
 app.use('/api', authRoutes);
 app.use('/api', protectedRoutes);
 app.use('/api', contactRoutes);
+// Add this after your other route imports
+app.use('/api', studentProfileRoutes);
 
 // Health Check
 app.get('/', (req, res) => {
