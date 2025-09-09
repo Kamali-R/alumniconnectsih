@@ -4,13 +4,13 @@ import mongoose from 'mongoose';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import passport from 'passport';
-import jwt from 'jsonwebtoken'; // Add this line
+import jwt from 'jsonwebtoken'; // ✅ JWT for token generation
 
-import './config/googleAuth.js'; // Load Google OAuth Strategy
-
+import alumniRoutes from './routes/alumniRoutes.js';
 import authRoutes from './routes/authRoutes.js';
 import protectedRoutes from './routes/protectedRoutes.js';
 import contactRoutes from './routes/contactRoutes.js';
+import './config/googleAuth.js'; // ✅ Google OAuth setup
 
 dotenv.config();
 
@@ -22,32 +22,27 @@ app.use(express.json());
 
 app.use(
   session({
-    secret: process.env.SESSION_SECRET, // ✅ This should now work
+    secret: process.env.SESSION_SECRET,
     resave: false,
     saveUninitialized: false,
-    cookie: { secure: false }, // set to true only if using HTTPS
+    cookie: { secure: false }, // ✅ Use true only in HTTPS
   })
 );
 
-
-// ✅ Initialize Passport session support
+// ✅ Passport initialization
 app.use(passport.initialize());
 app.use(passport.session());
 
-// ✅ Initialize Passport middleware
-
-app.use(passport.initialize());
-
-// ✅ FIXED: Clean route structure - avoid duplicate prefixes
+// ✅ API Routes
 app.use('/api', authRoutes);
 app.use('/api', protectedRoutes);
 app.use('/api', contactRoutes);
+app.use('/api', alumniRoutes); // ✅ Alumni routes added here
 
 // ✅ Root Route
 app.get('/', (req, res) => {
   res.send('API is running...');
 });
-
 
 // ✅ Google OAuth Routes
 app.get(
@@ -55,9 +50,10 @@ app.get(
   passport.authenticate('google', { scope: ['profile', 'email'] })
 );
 
-app.get('/auth/google/callback',
+app.get(
+  '/auth/google/callback',
   passport.authenticate('google', {
-    successRedirect: 'http://localhost:3000/',   // 👈 Frontend page to redirect after login
+    successRedirect: 'http://localhost:3000/', // 👈 Redirect after login
     failureRedirect: 'http://localhost:3000/Register'
   }),
   (req, res) => {
@@ -69,24 +65,25 @@ app.get('/auth/google/callback',
       { expiresIn: '1h' }
     );
 
+    // ✅ Send token to frontend via URL param
     res.redirect(`http://localhost:3000/dashboard?token=${token}`);
   }
 );
 
-
-// ✅ Mongo Connection
-
-// ✅ REMOVED: Duplicate Google OAuth routes (they're already in authRoutes.js)
-
-// ✅ MongoDB Connection
+// ✅ Connect to MongoDB
 const PORT = process.env.PORT || 5000;
 const MONGO_URI = process.env.MONGO_URI;
 
 mongoose
-  .connect(MONGO_URI)
+  .connect(MONGO_URI, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+  })
   .then(() => {
     console.log('✅ MongoDB Connected');
-    app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
+    app.listen(PORT, () => {
+      console.log(`🚀 Server running on port ${PORT}`);
+    });
   })
   .catch((err) => {
     console.error('❌ MongoDB connection failed:', err.message);
