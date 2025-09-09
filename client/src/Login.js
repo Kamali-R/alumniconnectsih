@@ -2,36 +2,45 @@ import React, { useState } from 'react';
 import { Link,useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
-const Login = () => {
+const Login = ({ setIsAuthenticated }) => {
   const navigate = useNavigate();
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [showPwd, setShowPwd] = useState(false);
+  // eslint-disable-next-line no-unused-vars
+const [showPwd, setShowPwd] = useState(false);
   const [message, setMessage] = useState('');
 
   const handleLogin = async (e) => {
-    e.preventDefault();
+  e.preventDefault();
 
-    try {
-      const response = await axios.post('http://localhost:5000/api/login', {
-        email,
-        password,
-      });
+  try {
+    const response = await axios.post('http://localhost:5000/api/login', {
+      email,
+      password,
+    });
 
-      setMessage(response.data.message); // "Login successful"
-      
-      // OPTIONAL: save token or navigate
-      // localStorage.setItem('token', response.data.token);
-      // navigate('/dashboard');
-    } catch (error) {
-      if (error.response) {
-        setMessage(error.response.data.message); // "User not found" or "Invalid credentials"
-      } else {
-        setMessage("Something went wrong. Please try again.");
-      }
+    setMessage(response.data.message); // "Login successful"
+    
+    // Save token if provided
+    if (response.data.token) {
+      localStorage.setItem('token', response.data.token);
     }
-  };
+    
+    // Set authentication status
+    setIsAuthenticated(true);
+    
+    // ALWAYS redirect to dashboard after login (not profile completion)
+    navigate('/dashboard');
+    
+  } catch (error) {
+    if (error.response) {
+      setMessage(error.response.data.message);
+    } else {
+      setMessage("Something went wrong. Please try again.");
+    }
+  }
+};
 
   return (
   <div style={{

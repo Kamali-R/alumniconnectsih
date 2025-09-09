@@ -1,27 +1,24 @@
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import { useState } from 'react';  // ✅ You forgot to import useState
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { useState } from 'react';
 import HomePage from './homepage';
 import Register from './Register';
 import VerifyOtp from './VerifyOtp';
 import PasswordResetFlow from './password';
 import Login from './Login';
+import AlumniProfile from './AluminiProfile';
+import Dashboard from './Dashboard'; // Make sure to create this
 import './index.css';
 
 function App() {
-  const [userData, setUserData] = useState(null); // For passing data from Register to VerifyOtp
+  const [userData, setUserData] = useState(null);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   return (
     <Router>
       <div className="App">
         <Routes>
-          {/* Default Home */}
-         <Route path="/" element={<HomePage />} />
-
-
-          {/* Login */}
-          <Route path="/Login" element={<Login />} />
-
-          {/* Register */}
+          <Route path="/" element={<HomePage />} />
+          <Route path="/Login" element={<Login setIsAuthenticated={setIsAuthenticated} />} />
           <Route
             path="/Register"
             element={
@@ -31,16 +28,17 @@ function App() {
               />
             }
           />
- {/* Verify OTP - now handles both registration and password reset */}
           <Route 
             path="/VerifyOtp" 
-            element={<VerifyOtp userData={userData} />} 
+            element={<VerifyOtp userData={userData} setIsAuthenticated={setIsAuthenticated} />} 
           />
-          {/* Add this new route */}
-          <Route 
-            path="/forgot-password" 
-            element={<PasswordResetFlow />} 
-          />
+          <Route path="/forgot-password" element={<PasswordResetFlow />} />
+          <Route path="/complete-profile" element={ isAuthenticated ? (
+                <AlumniProfile />
+              ) : (
+                <Navigate to="/login" replace />
+              )} />
+          <Route path="/dashboard" element={<Dashboard />} />
         </Routes>
       </div>
     </Router>
