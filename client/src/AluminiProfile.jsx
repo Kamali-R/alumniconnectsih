@@ -1,11 +1,14 @@
 import { useState, useEffect, useRef } from 'react';
+import { useLocation } from 'react-router-dom';
 
 const AlumniConnectProfile = () => {
+   const location = useLocation();
+  const { userData } = location.state || {};
   // State for form data
   const [formData, setFormData] = useState({
-    firstName: '',
-    lastName: '',
-    email: '',
+    firstName: userData?.name?.split(' ')[0] || '',
+    lastName: userData?.name?.split(' ')[1] || '',
+    email: userData?.email || '',
     phone: '',
     dob: '',
     gender: '',

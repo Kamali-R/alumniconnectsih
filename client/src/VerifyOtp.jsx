@@ -2,19 +2,16 @@ import React, { useState, useRef } from 'react';
 import axios from 'axios';
 import { useLocation, useNavigate } from 'react-router-dom';
 
-// Add setIsAuthenticated to the props
-const VerifyOtp = ({ userData, setIsAuthenticated }) => {
+const VerifyOtp = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { email } = location.state || {};
+  const { userData, email } = location.state || {};
   
   const [otp, setOtp] = useState(['', '', '', '', '', '']);
   const [message, setMessage] = useState({ text: '', type: '' });
   const [loading, setLoading] = useState(false);
   const [showResend, setShowResend] = useState(false);
   const inputsRef = useRef([]);
-
-  // ... rest of your component code remains the same
 
   const handleChange = (index, value) => {
     if (!/^\d?$/.test(value)) return;
@@ -27,7 +24,7 @@ const VerifyOtp = ({ userData, setIsAuthenticated }) => {
     }
   };
 
-const handleVerify = async (e) => {
+ const handleVerify = async (e) => {
   e.preventDefault();
   const fullOtp = otp.join('');
   
@@ -39,23 +36,18 @@ const handleVerify = async (e) => {
       purpose: 'register' // Add this for signup flow
     });
     
+    
     setMessage({ 
       text: response.data.message || 'Verification successful!', 
       type: 'success' 
     });
     setShowResend(false);
     
-    // Set authentication status
-    setIsAuthenticated(true);
-    
-    // Save token if provided
-    if (response.data.token) {
-      localStorage.setItem('token', response.data.token);
-    }
-    
-    // ALWAYS redirect to profile completion after registration
+    // Redirect to home/dashboard after 2 seconds
     setTimeout(() => {
-      navigate('/complete-profile');
+      navigate('/complete-profile', { 
+        state: { userData: response.data.user || userData } 
+      });
     }, 2000);
     
   } catch (error) {
