@@ -24,7 +24,8 @@ const VerifyOtp = () => {
     }
   };
 
- const handleVerify = async (e) => {
+// In VerifyOtp.jsx, update the handleVerify function
+const handleVerify = async (e) => {
   e.preventDefault();
   const fullOtp = otp.join('');
   
@@ -33,7 +34,7 @@ const VerifyOtp = () => {
     const response = await axios.post('http://localhost:5000/api/verify-otp', {
       ...userData,
       otp: fullOtp,
-      purpose: 'register' // Add this for signup flow
+      purpose: 'register'
     });
     
     setMessage({ 
@@ -42,9 +43,14 @@ const VerifyOtp = () => {
     });
     setShowResend(false);
     
-    // Redirect to home/dashboard after 2 seconds
+    // Redirect to student profile page after successful verification
     setTimeout(() => {
-      navigate('/');
+      navigate('/student-profile', {
+        state: {
+          email: email,
+          // Pass any other user data you might need
+        }
+      });
     }, 2000);
     
   } catch (error) {

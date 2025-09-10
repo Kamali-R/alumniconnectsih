@@ -746,4 +746,4 @@ const StudentProfile = () => {
   );
 };
 
-export default StudentProfile;
+export default studentprofile;
