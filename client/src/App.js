@@ -6,6 +6,8 @@ import VerifyOtp from './VerifyOtp';
 import PasswordResetFlow from './password';
 import Login from './Login';
 import './index.css';
+import AlumniConnectProfile from './AlumniProfile';
+
 
 function App() {
   const [userData, setUserData] = useState(null); // For passing data from Register to VerifyOtp
@@ -41,6 +43,10 @@ function App() {
             path="/forgot-password" 
             element={<PasswordResetFlow />} 
           />
+          <Route 
+  path="/alumni-profile" 
+  element={<AlumniConnectProfile />} 
+/>
         </Routes>
       </div>
     </Router>
