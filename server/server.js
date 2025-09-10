@@ -4,17 +4,17 @@ import mongoose from 'mongoose';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import passport from 'passport';
-import jwt from 'jsonwebtoken';
+import jwt from 'jsonwebtoken'; // ✅ JWT for token generation
 
-import './config/googleAuth.js'; // Load Google OAuth Strategy
+import alumniRoutes from './routes/alumniRoutes.js';
 import authRoutes from './routes/authRoutes.js';
 import protectedRoutes from './routes/protectedRoutes.js';
 import contactRoutes from './routes/contactRoutes.js';
 import studentProfileRoutes from './routes/studentProfileRoutes.js';
 
+// Load Google OAuth config
+import './config/googleAuth.js';
 
-
-// Load environment variables
 dotenv.config();
 
 const app = express();
@@ -29,42 +29,36 @@ app.use(express.json());
 // Session Configuration
 app.use(
   session({
-    secret: process.env.SESSION_SECRET || 'fallback-secret-key',
+    secret: process.env.SESSION_SECRET,
     resave: false,
     saveUninitialized: false,
-    cookie: { 
-      secure: process.env.NODE_ENV === 'production',
-      maxAge: 24 * 60 * 60 * 1000 // 24 hours
-    }
+    cookie: { secure: false }, // ✅ Use true only in HTTPS
   })
 );
 
-// Passport Initialization
+// ✅ Passport initialization
 app.use(passport.initialize());
 app.use(passport.session());
 
-// Routes
+// ✅ API Routes
 app.use('/api', authRoutes);
 app.use('/api', protectedRoutes);
 app.use('/api', contactRoutes);
-// Add this after your other route imports
-app.use('/api', studentProfileRoutes);
+app.use('/api', alumniRoutes); // ✅ Alumni routes added here
 
 // Health Check
 app.get('/', (req, res) => {
   res.status(200).json({ status: 'API is running...' });
 });
 
-// Google OAuth Routes
-app.get('/api/google', passport.authenticate('google', { 
-  scope: ['profile', 'email'],
-  prompt: 'select_account' // Forces account selection
-}));
+// ✅ Google OAuth Routes
+app.get('/api/google', passport.authenticate('google', { scope: ['profile', 'email'] }));
 
-app.get('/auth/google/callback',
-  passport.authenticate('google', { 
-    failureRedirect: 'http://localhost:3000/login?error=google-auth-failed',
-    session: false 
+app.get(
+  '/auth/google/callback',
+  passport.authenticate('google', {
+    successRedirect: 'http://localhost:3000/', // 👈 Redirect after login
+    failureRedirect: 'http://localhost:3000/Register'
   }),
   (req, res) => {
     try {
@@ -78,36 +72,33 @@ app.get('/auth/google/callback',
         { expiresIn: '1h' }
       );
 
-      // Set cookie and redirect
-      res.cookie('jwt', token, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        maxAge: 3600000 // 1 hour
-      }).redirect('http://localhost:3000/dashboard');
-      
-    } catch (error) {
-      console.error('Token generation error:', error);
-      res.redirect('http://localhost:3000/login?error=token-error');
-    }
+    const token = jwt.sign(
+      { id: req.user._id, email: req.user.email, role: req.user.role },
+      process.env.JWT_SECRET,
+      { expiresIn: '1h' }
+    );
+
+    // ✅ Send token to frontend via URL param
+    res.redirect(`http://localhost:3000/dashboard?token=${token}`);
   }
+}
 );
 
-// Database Connection
+// ✅ Connect to MongoDB
 const PORT = process.env.PORT || 5000;
 const MONGO_URI = process.env.MONGO_URI;
 
-mongoose.connect(MONGO_URI)
+mongoose
+  .connect(MONGO_URI, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+  })
   .then(() => {
     console.log('✅ MongoDB Connected');
-    app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
+    app.listen(PORT, () => {
+      console.log(`🚀 Server running on port ${PORT}`);
+    });
   })
   .catch((err) => {
     console.error('❌ MongoDB connection failed:', err.message);
-    process.exit(1);
   });
-
-// Error Handling Middleware (should be last)
-app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(500).json({ error: 'Internal Server Error' });
-});

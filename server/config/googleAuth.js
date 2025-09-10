@@ -20,7 +20,7 @@ passport.use(
 
         if (!user) {
           // ✅ DO NOT create new user
-          return done(null, false, { message: "No account exists for this Google email." });
+          return done(null, false, { message: " No account exists for this Google email. " });
         }
 
         // ✅ Update login time and proceed

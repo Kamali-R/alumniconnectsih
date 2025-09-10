@@ -55,6 +55,7 @@ const Register = () => {
       setErrors((prev) => ({ ...prev, [name]: '' }));
     }
   };
+  
 
   const handleSubmit = async (e) => {
     e.preventDefault();

@@ -43,15 +43,22 @@ const handleVerify = async (e) => {
     });
     setShowResend(false);
     
-    // Redirect to student profile page after successful verification
-    setTimeout(() => {
-      navigate('/student-profile', {
-        state: {
-          email: email,
-          // Pass any other user data you might need
-        }
-      });
-    }, 2000);
+    // In VerifyOtp.jsx, change the redirect after successful verification
+setTimeout(() => {
+  // Store verification status in localStorage
+  localStorage.setItem('otpVerified', 'true');
+  localStorage.setItem('userEmail', userData.email);
+  localStorage.setItem('userRole', userData.role);
+  
+  // Navigate to profile completion page with user data
+  navigate('/alumni-profile', { 
+    state: { 
+      userData: userData, 
+      verified: true,
+      role: userData.role 
+    } 
+  });
+}, 2000);
     
   } catch (error) {
     setMessage({ 
