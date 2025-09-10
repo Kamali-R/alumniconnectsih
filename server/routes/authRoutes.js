@@ -1,3 +1,4 @@
+// authRoutes.js
 import express from 'express';
 import passport from 'passport';
 import jwt from 'jsonwebtoken';
@@ -17,7 +18,7 @@ router.post('/send-otp', sendOtp);
 router.post('/verify-otp', verifyOtp);
 router.post('/login', login);
 
-// ✅ FIXED: Password Reset Routes
+// ✅ Password Reset Routes
 router.post('/forgot-password', forgotPassword); // Use dedicated function
 router.post('/verify-reset-otp', verifyResetOtp);
 router.post('/reset-password', resetPassword);
@@ -40,4 +41,4 @@ router.get('/google/callback',
   }
 );
 
-export default router; 
+export default router;

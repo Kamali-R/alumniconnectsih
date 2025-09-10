@@ -10,7 +10,9 @@ import alumniRoutes from './routes/alumniRoutes.js';
 import authRoutes from './routes/authRoutes.js';
 import protectedRoutes from './routes/protectedRoutes.js';
 import contactRoutes from './routes/contactRoutes.js';
-import './config/googleAuth.js'; // ✅ Google OAuth setup
+
+// Load Google OAuth config
+import './config/googleAuth.js';
 
 dotenv.config();
 
@@ -45,10 +47,7 @@ app.get('/', (req, res) => {
 });
 
 // ✅ Google OAuth Routes
-app.get(
-  '/api/google',
-  passport.authenticate('google', { scope: ['profile', 'email'] })
-);
+app.get('/api/google', passport.authenticate('google', { scope: ['profile', 'email'] }));
 
 app.get(
   '/auth/google/callback',
