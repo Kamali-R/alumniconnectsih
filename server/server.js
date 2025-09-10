@@ -10,7 +10,6 @@ import alumniRoutes from './routes/alumniRoutes.js';
 import authRoutes from './routes/authRoutes.js';
 import protectedRoutes from './routes/protectedRoutes.js';
 import contactRoutes from './routes/contactRoutes.js';
-import studentProfileRoutes from './routes/studentProfileRoutes.js';
 
 // Load Google OAuth config
 import './config/googleAuth.js';
@@ -19,14 +18,10 @@ dotenv.config();
 
 const app = express();
 
-// Middleware Configuration
-app.use(cors({
-  origin: 'http://localhost:3000', // Your frontend URL
-  credentials: true
-}));
+// ✅ Middleware
+app.use(cors());
 app.use(express.json());
 
-// Session Configuration
 app.use(
   session({
     secret: process.env.SESSION_SECRET,
@@ -46,9 +41,9 @@ app.use('/api', protectedRoutes);
 app.use('/api', contactRoutes);
 app.use('/api', alumniRoutes); // ✅ Alumni routes added here
 
-// Health Check
+// ✅ Root Route
 app.get('/', (req, res) => {
-  res.status(200).json({ status: 'API is running...' });
+  res.send('API is running...');
 });
 
 // ✅ Google OAuth Routes
@@ -61,16 +56,7 @@ app.get(
     failureRedirect: 'http://localhost:3000/Register'
   }),
   (req, res) => {
-    try {
-      const token = jwt.sign(
-        { 
-          id: req.user._id, 
-          email: req.user.email, 
-          role: req.user.role 
-        },
-        process.env.JWT_SECRET,
-        { expiresIn: '1h' }
-      );
+    console.log('✅ Google Auth Successful, user:', req.user);
 
     const token = jwt.sign(
       { id: req.user._id, email: req.user.email, role: req.user.role },
@@ -79,9 +65,8 @@ app.get(
     );
 
     // ✅ Send token to frontend via URL param
-    res.redirect(`http://localhost:3000/dashboard?token=${token}`);
+    res.redirect("http://localhost:3000/dashboard?token=${token}");
   }
-}
 );
 
 // ✅ Connect to MongoDB
