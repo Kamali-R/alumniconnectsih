@@ -1,12 +1,9 @@
-
+// Register.jsx
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { useNavigate,useLocation, Link } from 'react-router-dom';
+import { useNavigate, useLocation, Link } from 'react-router-dom';
 
-
-
-
-const Register = () => {
+const Register = ({ setUserData, setUserRole }) => {
   const [form, setForm] = useState({
     name: '',
     email: '',
@@ -18,17 +15,22 @@ const Register = () => {
   const [errors, setErrors] = useState({});
   const navigate = useNavigate();
   const location = useLocation(); 
+  
   useEffect(() => {
     const params = new URLSearchParams(location.search);
     const error = params.get('error');
-
     if (error === 'not_found') {
       setMessage({
         text: 'No account found for this Google email. Please complete your signup.',
         type: 'error',
       });
     }
-  }, [location.search]);
+    
+    // Check if role is passed in location state (from homepage buttons)
+    if (location.state?.role) {
+      setForm(prev => ({ ...prev, role: location.state.role }));
+    }
+  }, [location.search, location.state]);
   
   const validateForm = () => {
     const newErrors = {};
@@ -44,11 +46,10 @@ const Register = () => {
       newErrors.password = 'Password must be at least 6 characters';
     }
     if (!form.role) newErrors.role = 'Please select a role';
-
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
-
+  
   const handleChange = (e) => {
     const { name, value } = e.target;
     setForm((prev) => ({ ...prev, [name]: value }));
@@ -56,35 +57,56 @@ const Register = () => {
       setErrors((prev) => ({ ...prev, [name]: '' }));
     }
   };
-
+  
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!validateForm()) return;
-
+    
     try {
       setLoading(true);
       setMessage({ text: '', type: '' });
-
+      
+      console.log('Sending OTP request:', form);
+      
       const response = await axios.post('http://localhost:5000/api/send-otp', form);
-
+      
+      console.log('OTP sending response:', response.data);
+      
       setMessage({
         text: response.data.message || 'OTP sent successfully!',
         type: 'success',
       });
-
+      
+      // Store user data and role in localStorage as backup
+      localStorage.setItem('registrationData', JSON.stringify(form));
+      localStorage.setItem('userRole', form.role);
+      setUserRole(form.role);
+      
+      // Navigate to OTP verification with user data
       setTimeout(() => {
         navigate('/VerifyOtp', {
           state: {
             userData: form,
             email: form.email,
+            role: form.role,
           },
         });
       }, 1500);
     } catch (error) {
-      const errorMessage =
-        error.response?.data?.message ||
-        error.message ||
-        'Failed to send OTP. Please try again.';
+      console.error('OTP sending error:', error);
+      
+      let errorMessage = 'Failed to send OTP. Please try again.';
+      if (error.response) {
+        console.error('Error response data:', error.response.data);
+        errorMessage = error.response.data?.message || errorMessage;
+      } else if (error.request) {
+        console.error('No response received:', error.request);
+        errorMessage = 'No response from server. Please check your connection.';
+      } else {
+        console.error('Request setup error:', error.message);
+        errorMessage = error.message;
+      }
+      
       setMessage({
         text: errorMessage,
         type: 'error',
@@ -93,7 +115,7 @@ const Register = () => {
       setLoading(false);
     }
   };
-
+  
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
       <div className="w-full max-w-md mx-4 bg-white rounded-xl shadow-lg p-8 border border-gray-200">
@@ -101,7 +123,7 @@ const Register = () => {
           <h2 className="text-3xl font-bold text-gray-800 mb-2">Register to Alumni Connect</h2>
           <p className="text-gray-600">Enter your details to continue</p>
         </div>
-
+        
         {message.text && (
           <div
             className={`mb-6 p-3 rounded-lg ${
@@ -113,7 +135,7 @@ const Register = () => {
             {message.text}
           </div>
         )}
-
+        
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <input
@@ -127,7 +149,7 @@ const Register = () => {
             />
             {errors.name && <p className="mt-1 text-sm text-red-600">{errors.name}</p>}
           </div>
-
+          
           <div>
             <input
               name="email"
@@ -141,7 +163,7 @@ const Register = () => {
             />
             {errors.email && <p className="mt-1 text-sm text-red-600">{errors.email}</p>}
           </div>
-
+          
           <div>
             <input
               name="password"
@@ -155,7 +177,7 @@ const Register = () => {
             />
             {errors.password && <p className="mt-1 text-sm text-red-600">{errors.password}</p>}
           </div>
-
+          
           <div>
             <select
               name="role"
@@ -171,7 +193,7 @@ const Register = () => {
             </select>
             {errors.role && <p className="mt-1 text-sm text-red-600">{errors.role}</p>}
           </div>
-
+          
           <button
             type="submit"
             disabled={loading}
@@ -207,7 +229,7 @@ const Register = () => {
               'Send OTP'
             )}
           </button>
-
+          
           <div className="text-center mt-4">
             <p className="text-gray-600">
               Already have an account?{' '}

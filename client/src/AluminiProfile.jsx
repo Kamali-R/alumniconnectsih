@@ -1,9 +1,13 @@
+// AlumniConnectProfile.jsx
 import { useState, useEffect, useRef } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
+import axios from 'axios';
 
-const AlumniConnectProfile = () => {
-   const location = useLocation();
-  const { userData } = location.state || {};
+const AlumniConnectProfile = ({ userRole }) => {
+  const location = useLocation();
+  const navigate = useNavigate();
+  const { userData, verified, role } = location.state || {};
+  
   // State for form data
   const [formData, setFormData] = useState({
     firstName: userData?.name?.split(' ')[0] || '',
@@ -39,18 +43,51 @@ const AlumniConnectProfile = () => {
     privacy: ['profile-visible', 'email-notifications'],
     terms: false
   });
-
+  
   const [progress, setProgress] = useState(0);
   const [skillInput, setSkillInput] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState({ text: '', type: '' });
   const formRef = useRef(null);
-
+  
   // Populate graduation years
   const graduationYears = [];
   const currentYear = new Date().getFullYear();
   for (let year = currentYear; year >= 1950; year--) {
     graduationYears.push(year);
   }
-
+  
+  // Check if user data exists and if OTP is verified
+  useEffect(() => {
+    const isOtpVerified = localStorage.getItem('otpVerified') === 'true';
+    const userEmail = localStorage.getItem('userEmail');
+    const userRoleFromStorage = localStorage.getItem('userRole');
+    
+    if (!userData || !verified || !isOtpVerified) {
+      setMessage({ 
+        text: 'Unauthorized access. Please verify your email first.', 
+        type: 'error' 
+      });
+      setTimeout(() => navigate('/register'), 2000);
+    } else if (userEmail !== userData.email) {
+      setMessage({ 
+        text: 'Session expired. Please register again.', 
+        type: 'error' 
+      });
+      setTimeout(() => navigate('/register'), 2000);
+    }
+    
+    // If role is passed as prop, use it, otherwise get from localStorage
+    const effectiveRole = userRole || userRoleFromStorage || role;
+    if (!effectiveRole) {
+      setMessage({ 
+        text: 'Role information missing. Please register again.', 
+        type: 'error' 
+      });
+      setTimeout(() => navigate('/register'), 2000);
+    }
+  }, [userData, verified, navigate, userRole, role]);
+  
   // Update progress
   useEffect(() => {
     if (formRef.current) {
@@ -60,7 +97,7 @@ const AlumniConnectProfile = () => {
       setProgress(newProgress);
     }
   }, [formData]);
-
+  
   // Handle input changes
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -81,7 +118,7 @@ const AlumniConnectProfile = () => {
       setFormData(prev => ({ ...prev, [name]: value }));
     }
   };
-
+  
   // Handle experience changes
   const handleExperienceChange = (index, e) => {
     const { name, value } = e.target;
@@ -93,7 +130,7 @@ const AlumniConnectProfile = () => {
       return { ...prev, experiences: newExperiences };
     });
   };
-
+  
   // Add new experience
   const addExperience = () => {
     setFormData(prev => ({
@@ -112,7 +149,7 @@ const AlumniConnectProfile = () => {
       ]
     }));
   };
-
+  
   // Remove experience
   const removeExperience = (index) => {
     if (formData.experiences.length <= 1) return;
@@ -122,7 +159,7 @@ const AlumniConnectProfile = () => {
       experiences: prev.experiences.filter((_, i) => i !== index)
     }));
   };
-
+  
   // Add skill
   const addSkill = (skill) => {
     const trimmedSkill = skill.trim();
@@ -134,7 +171,7 @@ const AlumniConnectProfile = () => {
       setSkillInput('');
     }
   };
-
+  
   // Remove skill
   const removeSkill = (index) => {
     setFormData(prev => ({
@@ -142,9 +179,9 @@ const AlumniConnectProfile = () => {
       skills: prev.skills.filter((_, i) => i !== index)
     }));
   };
-
+  
   // Handle form submission
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     
     // Validate required fields
@@ -159,29 +196,114 @@ const AlumniConnectProfile = () => {
         field.classList.remove('border-red-500');
       }
     });
-
+    
     if (!isValid) {
-      alert('Please fill in all required fields marked with *');
+      setMessage({ text: 'Please fill in all required fields marked with *', type: 'error' });
       return;
     }
-
+    
     // Check terms agreement
     if (!formData.terms) {
-      alert('Please agree to the Terms of Service and Privacy Policy to continue.');
+      setMessage({ text: 'Please agree to the Terms of Service and Privacy Policy to continue.', type: 'error' });
       return;
     }
-
-    // In a real application, you would submit the form data to your backend here
-    console.log('Form data:', formData);
-    alert('Profile completed successfully! Redirecting to dashboard...');
+    
+    try {
+      setLoading(true);
+      setMessage({ text: '', type: '' });
+      
+      // Combine initial registration data with profile details
+      const registrationData = {
+        ...userData,
+        role: userRole || role || localStorage.getItem('userRole'),
+        profile: formData,
+        verified: verified
+      };
+      
+      console.log('Submitting registration data:', registrationData);
+      
+      // Register the user with complete profile
+      const response = await axios.post('http://localhost:5000/api/register', registrationData);
+      
+      console.log('Registration response:', response.data);
+      
+      // Check if registration was successful
+      if (response.data && response.data.success) {
+        setMessage({ 
+          text: 'Registration successful! Redirecting to dashboard...', 
+          type: 'success' 
+        });
+        
+        // Store authentication token if provided
+        if (response.data.token) {
+          localStorage.setItem('authToken', response.data.token);
+        }
+        
+        // Clear OTP verification data
+        localStorage.removeItem('otpVerified');
+        localStorage.removeItem('userEmail');
+        
+        // Redirect to dashboard after successful registration
+        setTimeout(() => {
+          navigate('/dashboard');
+        }, 2000);
+      } else {
+        throw new Error(response.data.message || 'Registration failed');
+      }
+      
+    } catch (error) {
+      console.error('Registration error:', error);
+      
+      let errorMessage = 'Registration failed. Please try again.';
+      if (error.response) {
+        console.error('Error response data:', error.response.data);
+        console.error('Error response status:', error.response.status);
+        
+        if (error.response.status === 409) {
+          errorMessage = 'Email already registered. Please login instead.';
+        } else if (error.response.status === 400) {
+          errorMessage = error.response.data.message || 'Invalid registration data.';
+        } else {
+          errorMessage = error.response.data?.message || errorMessage;
+        }
+      } else if (error.request) {
+        console.error('No response received:', error.request);
+        errorMessage = 'No response from server. Please check your connection.';
+      } else {
+        console.error('Request setup error:', error.message);
+        errorMessage = error.message;
+      }
+      
+      setMessage({ text: errorMessage, type: 'error' });
+    } finally {
+      setLoading(false);
+    }
   };
-
+  
   // Save as draft
   const saveAsDraft = () => {
     // In a real application, you would save the current form state
-    alert('Profile saved as draft. You can complete it later from your account settings.');
+    setMessage({ 
+      text: 'Profile saved as draft. You can complete it later from your account settings.', 
+      type: 'success' 
+    });
   };
-
+  
+  // If no user data, show loading or error
+  if (!userData || !verified) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
+        <div className="text-center">
+          <div className="text-xl font-semibold text-gray-700 mb-2">Redirecting...</div>
+          <div className="text-gray-600">Please wait while we redirect you to the registration page.</div>
+        </div>
+      </div>
+    );
+  }
+  
+  // Determine if user is alumni or student
+  const isAlumni = userRole === 'alumni' || role === 'alumni' || localStorage.getItem('userRole') === 'alumni';
+  
   return (
     <div className="bg-gradient-to-br from-blue-50 to-indigo-100 min-h-screen">
       {/* Header */}
@@ -190,25 +312,32 @@ const AlumniConnectProfile = () => {
           <div className="flex justify-between items-center py-4">
             <div className="flex items-center space-x-3">
               <div className="bg-indigo-600 text-white p-2 rounded-lg">
-                <i className="fas fa-graduation-cap text-xl"></i>
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 14l9-5-9-5-9 5 9 5z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z" />
+                </svg>
               </div>
               <h1 className="text-2xl font-bold text-gray-800">Alumni Connect</h1>
             </div>
             <div className="text-sm text-gray-600">
-              Step 1 of 1 • Complete Your Profile
+              Complete Your {isAlumni ? 'Alumni' : 'Student'} Profile
             </div>
           </div>
         </div>
       </header>
-
+      
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Welcome Message */}
         <div className="text-center mb-8">
           <h2 className="text-3xl font-bold text-gray-800 mb-4">Welcome to Alumni Connect!</h2>
-          <p className="text-lg text-gray-600 mb-2">Let's complete your profile to connect you with fellow alumni</p>
-          <p className="text-sm text-gray-500">This information helps us create meaningful connections within our alumni network</p>
+          <p className="text-lg text-gray-600 mb-2">
+            Let's complete your {isAlumni ? 'alumni' : 'student'} profile to connect you with the community
+          </p>
+          <p className="text-sm text-gray-500">
+            This information helps us create meaningful connections within our alumni network
+          </p>
         </div>
-
+        
         {/* Progress Bar */}
         <div className="mb-8">
           <div className="bg-gray-200 rounded-full h-2">
@@ -221,87 +350,102 @@ const AlumniConnectProfile = () => {
             {progress}% Complete
           </p>
         </div>
-
+        
         {/* Form Container */}
         <form 
           ref={formRef}
           onSubmit={handleSubmit}
           className="bg-white rounded-xl shadow-lg p-8"
         >
+          {/* Message Display */}
+          {message.text && (
+            <div className={`mb-6 p-3 rounded-lg ${
+              message.type === 'error'
+                ? 'bg-red-100 text-red-700 border-l-4 border-red-500'
+                : 'bg-green-100 text-green-700 border-l-4 border-green-500'
+            }`}>
+              {message.text}
+            </div>
+          )}
+          
           {/* Personal Details Section */}
           <div className="mb-8">
             <div className="flex items-center mb-6">
               <div className="bg-indigo-100 p-2 rounded-lg mr-3">
-                <i className="fas fa-user text-indigo-600"></i>
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                </svg>
               </div>
               <h3 className="text-xl font-semibold text-gray-800">Personal Details</h3>
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">First Name *</label>
-                <input 
-                  type="text" 
-                  name="firstName" 
-                  required 
+                <label className="block text-sm font-medium text-gray-700 mb-1">First Name *</label>
+                <input
+                  type="text"
+                  name="firstName"
                   value={formData.firstName}
                   onChange={handleInputChange}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent" 
-                  placeholder="Enter your first name" 
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                  required
                 />
               </div>
+              
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Last Name *</label>
-                <input 
-                  type="text" 
-                  name="lastName" 
-                  required 
+                <label className="block text-sm font-medium text-gray-700 mb-1">Last Name *</label>
+                <input
+                  type="text"
+                  name="lastName"
                   value={formData.lastName}
                   onChange={handleInputChange}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent" 
-                  placeholder="Enter your last name" 
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                  required
                 />
               </div>
+              
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Email Address *</label>
-                <input 
-                  type="email" 
-                  name="email" 
-                  required 
+                <label className="block text-sm font-medium text-gray-700 mb-1">Email *</label>
+                <input
+                  type="email"
+                  name="email"
                   value={formData.email}
                   onChange={handleInputChange}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent" 
-                  placeholder="your.email@example.com" 
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                  required
+                  readOnly
                 />
               </div>
+              
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Phone Number</label>
-                <input 
-                  type="tel" 
-                  name="phone" 
+                <label className="block text-sm font-medium text-gray-700 mb-1">Phone Number</label>
+                <input
+                  type="tel"
+                  name="phone"
                   value={formData.phone}
                   onChange={handleInputChange}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent" 
-                  placeholder="+1 (555) 123-4567" 
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                 />
               </div>
+              
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Date of Birth</label>
-                <input 
-                  type="date" 
-                  name="dob" 
+                <label className="block text-sm font-medium text-gray-700 mb-1">Date of Birth</label>
+                <input
+                  type="date"
+                  name="dob"
                   value={formData.dob}
                   onChange={handleInputChange}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent" 
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                 />
               </div>
+              
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Gender</label>
-                <select 
-                  name="gender" 
+                <label className="block text-sm font-medium text-gray-700 mb-1">Gender</label>
+                <select
+                  name="gender"
                   value={formData.gender}
                   onChange={handleInputChange}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                 >
                   <option value="">Select Gender</option>
                   <option value="male">Male</option>
@@ -311,111 +455,62 @@ const AlumniConnectProfile = () => {
                 </select>
               </div>
             </div>
-
-            <div className="mt-6">
-              <label className="block text-sm font-medium text-gray-700 mb-2">Current Address</label>
-              <textarea 
-                name="address" 
-                rows="3" 
-                value={formData.address}
-                onChange={handleInputChange}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent" 
-                placeholder="Enter your current address"
-              ></textarea>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">City *</label>
-                <input 
-                  type="text" 
-                  name="city" 
-                  required 
-                  value={formData.city}
-                  onChange={handleInputChange}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent" 
-                  placeholder="City" 
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">State/Province</label>
-                <input 
-                  type="text" 
-                  name="state" 
-                  value={formData.state}
-                  onChange={handleInputChange}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent" 
-                  placeholder="State/Province" 
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Country *</label>
-                <select 
-                  name="country" 
-                  required 
-                  value={formData.country}
-                  onChange={handleInputChange}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                >
-                  <option value="">Select Country</option>
-                  <option value="us">United States</option>
-                  <option value="ca">Canada</option>
-                  <option value="uk">United Kingdom</option>
-                  <option value="au">Australia</option>
-                  <option value="in">India</option>
-                  <option value="other">Other</option>
-                </select>
-              </div>
-            </div>
           </div>
-
+          
           {/* Educational Details Section */}
-          <div className="mb-8 border-t pt-8">
+          <div className="mb-8">
             <div className="flex items-center mb-6">
-              <div className="bg-green-100 p-2 rounded-lg mr-3">
-                <i className="fas fa-graduation-cap text-green-600"></i>
+              <div className="bg-indigo-100 p-2 rounded-lg mr-3">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path d="M12 14l9-5-9-5-9 5 9 5z" />
+                  <path d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z" />
+                </svg>
               </div>
               <h3 className="text-xl font-semibold text-gray-800">Educational Details</h3>
             </div>
-
+            
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Degree Type *</label>
-                <select 
-                  name="degreeType" 
-                  required 
+                <label className="block text-sm font-medium text-gray-700 mb-1">Degree Type *</label>
+                <select
+                  name="degreeType"
                   value={formData.degreeType}
                   onChange={handleInputChange}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                  required
                 >
                   <option value="">Select Degree</option>
-                  <option value="bachelor">Bachelor's Degree</option>
-                  <option value="master">Master's Degree</option>
-                  <option value="phd">PhD</option>
+                  <option value="bachelor">Bachelor's</option>
+                  <option value="master">Master's</option>
+                  <option value="doctorate">Doctorate</option>
                   <option value="diploma">Diploma</option>
                   <option value="certificate">Certificate</option>
                 </select>
               </div>
+              
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Field of Study *</label>
-                <input 
-                  type="text" 
-                  name="fieldOfStudy" 
-                  required 
+                <label className="block text-sm font-medium text-gray-700 mb-1">Field of Study *</label>
+                <input
+                  type="text"
+                  name="fieldOfStudy"
                   value={formData.fieldOfStudy}
                   onChange={handleInputChange}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent" 
-                  placeholder="e.g., Computer Science, Business Administration" 
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                  placeholder="e.g., Computer Science"
+                  required
                 />
               </div>
+              
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Graduation Year *</label>
-                <select 
-                  name="graduationYear" 
-                  required 
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  {isAlumni ? 'Graduation Year' : 'Expected Graduation Year'} *
+                </label>
+                <select
+                  name="graduationYear"
                   value={formData.graduationYear}
                   onChange={handleInputChange}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                  required
                 >
                   <option value="">Select Year</option>
                   {graduationYears.map(year => (
@@ -423,405 +518,344 @@ const AlumniConnectProfile = () => {
                   ))}
                 </select>
               </div>
+              
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">GPA (Optional)</label>
-                <input 
-                  type="text" 
-                  name="gpa" 
+                <label className="block text-sm font-medium text-gray-700 mb-1">GPA</label>
+                <input
+                  type="text"
+                  name="gpa"
                   value={formData.gpa}
                   onChange={handleInputChange}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent" 
-                  placeholder="e.g., 3.8/4.0" 
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                  placeholder="e.g., 3.8"
                 />
               </div>
-            </div>
-
-            <div className="mt-6">
-              <label className="block text-sm font-medium text-gray-700 mb-2">Student ID (Optional)</label>
-              <input 
-                type="text" 
-                name="studentId" 
-                value={formData.studentId}
-                onChange={handleInputChange}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent" 
-                placeholder="Your student ID number" 
-              />
-            </div>
-
-            <div className="mt-6">
-              <label className="block text-sm font-medium text-gray-700 mb-2">Activities & Achievements</label>
-              <textarea 
-                name="activities" 
-                rows="3" 
-                value={formData.activities}
-                onChange={handleInputChange}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent" 
-                placeholder="Clubs, societies, awards, honors, etc."
-              ></textarea>
+              
+              {!isAlumni && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Student ID *</label>
+                  <input
+                    type="text"
+                    name="studentId"
+                    value={formData.studentId}
+                    onChange={handleInputChange}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                    required
+                  />
+                </div>
+              )}
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Activities & Societies</label>
+                <textarea
+                  name="activities"
+                  value={formData.activities}
+                  onChange={handleInputChange}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                  rows="2"
+                  placeholder="e.g., Debate Club, Football Team"
+                ></textarea>
+              </div>
             </div>
           </div>
-
-          {/* Professional Experience Section */}
-          <div className="mb-8 border-t pt-8">
-            <div className="flex items-center mb-6">
-              <div className="bg-purple-100 p-2 rounded-lg mr-3">
-                <i className="fas fa-briefcase text-purple-600"></i>
+          
+          {/* Professional Experience Section - Only for Alumni */}
+          {isAlumni && (
+            <div className="mb-8">
+              <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center">
+                  <div className="bg-indigo-100 p-2 rounded-lg mr-3">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                    </svg>
+                  </div>
+                  <h3 className="text-xl font-semibold text-gray-800">Professional Experience</h3>
+                </div>
+                
+                {formData.experiences.length < 5 && (
+                  <button
+                    type="button"
+                    onClick={addExperience}
+                    className="text-indigo-600 hover:text-indigo-800 text-sm font-medium flex items-center"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clipRule="evenodd" />
+                    </svg>
+                    Add Experience
+                  </button>
+                )}
               </div>
-              <h3 className="text-xl font-semibold text-gray-800">Professional Experience</h3>
-            </div>
-
-            <div id="experienceContainer">
+              
               {formData.experiences.map((experience, index) => (
-                <div key={index} className="experience-entry border border-gray-200 rounded-lg p-6 mb-4">
+                <div key={index} className="border border-gray-200 rounded-lg p-4 mb-4">
                   <div className="flex justify-between items-center mb-4">
-                    <h4 className="text-lg font-medium text-gray-800">
-                      {index === 0 ? 'Current/Most Recent Position' : `Experience ${index + 1}`}
-                    </h4>
-                    {index > 0 && (
-                      <button 
-                        type="button" 
+                    <h4 className="font-medium text-gray-800">Experience {index + 1}</h4>
+                    {formData.experiences.length > 1 && (
+                      <button
+                        type="button"
                         onClick={() => removeExperience(index)}
                         className="text-red-600 hover:text-red-800"
                       >
-                        <i className="fas fa-trash"></i>
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                          <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
+                        </svg>
                       </button>
                     )}
                   </div>
                   
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Job Title {index === 0 && '*'}
-                      </label>
-                      <input 
-                        type="text" 
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Job Title</label>
+                      <input
+                        type="text"
                         name="jobTitle[]"
                         value={experience.jobTitle}
                         onChange={(e) => handleExperienceChange(index, e)}
-                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent" 
-                        placeholder="e.g., Software Engineer" 
-                        required={index === 0}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                        placeholder="e.g., Software Engineer"
                       />
                     </div>
+                    
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Company Name {index === 0 && '*'}
-                      </label>
-                      <input 
-                        type="text" 
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Company</label>
+                      <input
+                        type="text"
                         name="company[]"
                         value={experience.company}
                         onChange={(e) => handleExperienceChange(index, e)}
-                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent" 
-                        placeholder="Company name" 
-                        required={index === 0}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                        placeholder="e.g., Tech Company"
                       />
                     </div>
+                    
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Start Date</label>
-                      <input 
-                        type="month" 
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Start Date</label>
+                      <input
+                        type="month"
                         name="startDate[]"
                         value={experience.startDate}
                         onChange={(e) => handleExperienceChange(index, e)}
-                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent" 
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                       />
                     </div>
+                    
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">End Date</label>
-                      <input 
-                        type="month" 
+                      <label className="block text-sm font-medium text-gray-700 mb-1">End Date</label>
+                      <input
+                        type="month"
                         name="endDate[]"
                         value={experience.endDate}
                         onChange={(e) => handleExperienceChange(index, e)}
-                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent" 
-                        placeholder="Leave blank if current" 
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                       />
                     </div>
-                  </div>
-
-                  <div className="mt-4">
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Job Description</label>
-                    <textarea 
-                      name="jobDescription[]"
-                      rows="3" 
-                      value={experience.jobDescription}
-                      onChange={(e) => handleExperienceChange(index, e)}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent" 
-                      placeholder="Describe your role and responsibilities"
-                    ></textarea>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
+                    
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Industry</label>
-                      <select 
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Industry</label>
+                      <input
+                        type="text"
                         name="industry[]"
                         value={experience.industry}
                         onChange={(e) => handleExperienceChange(index, e)}
-                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                      >
-                        <option value="">Select Industry</option>
-                        <option value="technology">Technology</option>
-                        <option value="finance">Finance</option>
-                        <option value="healthcare">Healthcare</option>
-                        <option value="education">Education</option>
-                        <option value="consulting">Consulting</option>
-                        <option value="manufacturing">Manufacturing</option>
-                        <option value="retail">Retail</option>
-                        <option value="other">Other</option>
-                      </select>
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                        placeholder="e.g., Technology"
+                      />
                     </div>
+                    
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Location</label>
-                      <input 
-                        type="text" 
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Work Location</label>
+                      <input
+                        type="text"
                         name="workLocation[]"
                         value={experience.workLocation}
                         onChange={(e) => handleExperienceChange(index, e)}
-                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent" 
-                        placeholder="City, State/Country" 
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                        placeholder="e.g., New York, USA"
                       />
+                    </div>
+                    
+                    <div className="md:col-span-2">
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Job Description</label>
+                      <textarea
+                        name="jobDescription[]"
+                        value={experience.jobDescription}
+                        onChange={(e) => handleExperienceChange(index, e)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                        rows="2"
+                        placeholder="Brief description of your role and responsibilities"
+                      ></textarea>
                     </div>
                   </div>
                 </div>
               ))}
             </div>
-
-            <button 
-              type="button" 
-              onClick={addExperience}
-              className="bg-gray-100 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-200 transition-colors"
-            >
-              <i className="fas fa-plus mr-2"></i>Add Another Experience
-            </button>
-          </div>
-
-          {/* Additional Information Section */}
-          <div className="mb-8 border-t pt-8">
+          )}
+          
+          {/* Skills Section */}
+          <div className="mb-8">
             <div className="flex items-center mb-6">
-              <div className="bg-orange-100 p-2 rounded-lg mr-3">
-                <i className="fas fa-info-circle text-orange-600"></i>
+              <div className="bg-indigo-100 p-2 rounded-lg mr-3">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                </svg>
+              </div>
+              <h3 className="text-xl font-semibold text-gray-800">Skills</h3>
+            </div>
+            
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-1">Add Skills</label>
+              <div className="flex">
+                <input
+                  type="text"
+                  value={skillInput}
+                  onChange={(e) => setSkillInput(e.target.value)}
+                  className="flex-grow px-4 py-2 border border-gray-300 rounded-l-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                  placeholder="e.g., JavaScript, Project Management"
+                  onKeyPress={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      addSkill(skillInput);
+                    }
+                  }}
+                />
+                <button
+                  type="button"
+                  onClick={() => addSkill(skillInput)}
+                  className="bg-indigo-600 text-white px-4 py-2 rounded-r-lg hover:bg-indigo-700"
+                >
+                  Add
+                </button>
+              </div>
+            </div>
+            
+            <div className="flex flex-wrap gap-2">
+              {formData.skills.map((skill, index) => (
+                <div key={index} className="bg-indigo-100 text-indigo-800 px-3 py-1 rounded-full flex items-center">
+                  <span>{skill}</span>
+                  <button
+                    type="button"
+                    onClick={() => removeSkill(index)}
+                    className="ml-2 text-indigo-600 hover:text-indigo-900"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                    </svg>
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+          
+          {/* Additional Information Section */}
+          <div className="mb-8">
+            <div className="flex items-center mb-6">
+              <div className="bg-indigo-100 p-2 rounded-lg mr-3">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
               </div>
               <h3 className="text-xl font-semibold text-gray-800">Additional Information</h3>
             </div>
-
+            
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">LinkedIn Profile</label>
-                <input 
-                  type="url" 
-                  name="linkedin" 
-                  value={formData.linkedin}
+              <div className="md:col-span-2">
+                <label className="block text-sm font-medium text-gray-700 mb-1">Bio</label>
+                <textarea
+                  name="bio"
+                  value={formData.bio}
                   onChange={handleInputChange}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent" 
-                  placeholder="https://linkedin.com/in/yourprofile" 
-                />
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                  rows="3"
+                  placeholder="Tell us about yourself, your achievements, and goals"
+                ></textarea>
               </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Personal Website</label>
-                <input 
-                  type="url" 
-                  name="website" 
-                  value={formData.website}
-                  onChange={handleInputChange}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent" 
-                  placeholder="https://yourwebsite.com" 
-                />
-              </div>
-            </div>
-
-            {/* Skills Section */}
-            <div className="mt-6">
-              <label className="block text-sm font-medium text-gray-700 mb-4">
-                <i className="fas fa-star text-yellow-500 mr-2"></i>Skills & Expertise
-              </label>
               
-              <div className="bg-white border border-gray-200 rounded-xl p-6 space-y-6">
-                {/* Skills Input */}
-                <div>
-                  <div className="flex space-x-3">
-                    <input 
-                      type="text" 
-                      value={skillInput}
-                      onChange={(e) => setSkillInput(e.target.value)}
-                      onKeyPress={(e) => {
-                        if (e.key === 'Enter') {
-                          e.preventDefault();
-                          addSkill(skillInput);
-                        }
-                      }}
-                      className="flex-1 px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-sm" 
-                      placeholder="Type a skill and press Enter" 
-                    />
-                    <button 
-                      type="button" 
-                      onClick={() => addSkill(skillInput)}
-                      className="bg-indigo-600 text-white px-4 py-2.5 rounded-lg hover:bg-indigo-700 transition-colors text-sm font-medium"
-                    >
-                      Add Skill
-                    </button>
-                  </div>
-                  <p className="text-xs text-gray-500 mt-1">Press Enter or click "Add Skill" to add</p>
-                </div>
-
-                {/* Your Skills Display */}
-                <div>
-                  <div className="flex items-center justify-between mb-3">
-                    <h4 className="text-sm font-medium text-gray-700">Your Skills</h4>
-                    <span className="text-xs text-gray-500">
-                      {formData.skills.length} skill{formData.skills.length !== 1 ? 's' : ''} added
-                    </span>
-                  </div>
-                  <div className="min-h-[60px] p-3 bg-gray-50 rounded-lg border-2 border-dashed border-gray-200">
-                    <div className="flex flex-wrap gap-2">
-                      {formData.skills.length === 0 ? (
-                        <p className="text-sm text-gray-400 italic w-full text-center py-2">
-                          No skills added yet
-                        </p>
-                      ) : (
-                        formData.skills.map((skill, index) => (
-                          <div key={index} className="bg-indigo-500 text-white px-3 py-1.5 rounded-lg text-sm flex items-center space-x-2 shadow-sm">
-                            <span>{skill}</span>
-                            <button 
-                              type="button" 
-                              onClick={() => removeSkill(index)}
-                              className="text-indigo-200 hover:text-white ml-2 transition-colors"
-                            >
-                              <i className="fas fa-times text-xs"></i>
-                            </button>
-                          </div>
-                        ))
-                      )}
-                    </div>
-                  </div>
-                </div>
-
-                {/* Popular Skills Categories */}
-                <div>
-                  <h4 className="text-sm font-medium text-gray-700 mb-3">Quick Add - Popular Skills</h4>
-                  
-                  {/* Technical Skills */}
-                  <div className="mb-4">
-                    <p className="text-xs font-medium text-gray-600 mb-2 uppercase tracking-wide">Technical</p>
-                    <div className="flex flex-wrap gap-2">
-                      {['JavaScript', 'Python', 'SQL', 'Machine Learning', 'Data Analysis'].map(skill => (
-                        <button 
-                          key={skill}
-                          type="button" 
-                          onClick={() => addSkill(skill)}
-                          className="bg-blue-50 text-blue-700 px-3 py-1.5 rounded-md text-xs hover:bg-blue-100 transition-colors border border-blue-200"
-                        >
-                          {skill}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Business Skills */}
-                  <div className="mb-4">
-                    <p className="text-xs font-medium text-gray-600 mb-2 uppercase tracking-wide">Business</p>
-                    <div className="flex flex-wrap gap-2">
-                      {['Project Management', 'Leadership', 'Marketing', 'Sales', 'Finance'].map(skill => (
-                        <button 
-                          key={skill}
-                          type="button" 
-                          onClick={() => addSkill(skill)}
-                          className="bg-green-50 text-green-700 px-3 py-1.5 rounded-md text-xs hover:bg-green-100 transition-colors border border-green-200"
-                        >
-                          {skill}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Soft Skills */}
+              {isAlumni && (
+                <>
                   <div>
-                    <p className="text-xs font-medium text-gray-600 mb-2 uppercase tracking-wide">Soft Skills</p>
-                    <div className="flex flex-wrap gap-2">
-                      {['Communication', 'Problem Solving', 'Teamwork', 'Critical Thinking', 'Adaptability'].map(skill => (
-                        <button 
-                          key={skill}
-                          type="button" 
-                          onClick={() => addSkill(skill)}
-                          className="bg-purple-50 text-purple-700 px-3 py-1.5 rounded-md text-xs hover:bg-purple-100 transition-colors border border-purple-200"
-                        >
-                          {skill}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div className="mt-6">
-              <label className="block text-sm font-medium text-gray-700 mb-2">Bio/About Me</label>
-              <textarea 
-                name="bio" 
-                rows="4" 
-                value={formData.bio}
-                onChange={handleInputChange}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent" 
-                placeholder="Tell us about yourself, your interests, and what you're looking for in the alumni network"
-              ></textarea>
-            </div>
-
-            <div className="mt-6">
-              <label className="block text-sm font-medium text-gray-700 mb-4">Networking Preferences</label>
-              <div className="space-y-3">
-                {[
-                  { value: 'mentoring', label: 'Open to mentoring current students' },
-                  { value: 'job-referrals', label: 'Available for job referrals' },
-                  { value: 'collaboration', label: 'Interested in business collaborations' },
-                  { value: 'events', label: 'Want to attend alumni events' }
-                ].map(pref => (
-                  <label key={pref.value} className="flex items-center">
-                    <input 
-                      type="checkbox" 
-                      name="networking[]"
-                      value={pref.value}
-                      checked={formData.networking.includes(pref.value)}
+                    <label className="block text-sm font-medium text-gray-700 mb-1">LinkedIn Profile</label>
+                    <input
+                      type="text"
+                      name="linkedin"
+                      value={formData.linkedin}
                       onChange={handleInputChange}
-                      className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500" 
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                      placeholder="https://linkedin.com/in/yourprofile"
                     />
-                    <span className="ml-2 text-sm text-gray-700">{pref.label}</span>
-                  </label>
-                ))}
-              </div>
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Personal Website</label>
+                    <input
+                      type="text"
+                      name="website"
+                      value={formData.website}
+                      onChange={handleInputChange}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                      placeholder="https://yourwebsite.com"
+                    />
+                  </div>
+                </>
+              )}
             </div>
           </div>
-
-          {/* Privacy Settings */}
-          <div className="mb-8 border-t pt-8">
+          
+          {/* Privacy Settings Section */}
+          <div className="mb-8">
             <div className="flex items-center mb-6">
-              <div className="bg-red-100 p-2 rounded-lg mr-3">
-                <i className="fas fa-shield-alt text-red-600"></i>
+              <div className="bg-indigo-100 p-2 rounded-lg mr-3">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                </svg>
               </div>
               <h3 className="text-xl font-semibold text-gray-800">Privacy Settings</h3>
             </div>
-
-            <div className="space-y-4">
-              {[
-                { value: 'profile-visible', label: 'Make my profile visible to other alumni', checked: true },
-                { value: 'contact-info', label: 'Allow other alumni to see my contact information' },
-                { value: 'email-notifications', label: 'Receive email notifications about network activities', checked: true }
-              ].map(setting => (
-                <label key={setting.value} className="flex items-center">
-                  <input 
-                    type="checkbox" 
-                    name="privacy[]"
-                    value={setting.value}
-                    checked={formData.privacy.includes(setting.value)}
-                    onChange={handleInputChange}
-                    className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500" 
-                  />
-                  <span className="ml-2 text-sm text-gray-700">{setting.label}</span>
-                </label>
-              ))}
+            
+            <div className="space-y-3">
+              <label className="flex items-start">
+                <input
+                  type="checkbox"
+                  name="privacy[]"
+                  value="profile-visible"
+                  checked={formData.privacy.includes('profile-visible')}
+                  onChange={handleInputChange}
+                  className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 mt-1"
+                />
+                <span className="ml-2 text-sm text-gray-700">
+                  Make my profile visible to other alumni and students
+                </span>
+              </label>
+              
+              <label className="flex items-start">
+                <input
+                  type="checkbox"
+                  name="privacy[]"
+                  value="email-notifications"
+                  checked={formData.privacy.includes('email-notifications')}
+                  onChange={handleInputChange}
+                  className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 mt-1"
+                />
+                <span className="ml-2 text-sm text-gray-700">
+                  Send me email notifications about events and opportunities
+                </span>
+              </label>
+              
+              <label className="flex items-start">
+                <input
+                  type="checkbox"
+                  name="privacy[]"
+                  value="contact-alumni"
+                  checked={formData.privacy.includes('contact-alumni')}
+                  onChange={handleInputChange}
+                  className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 mt-1"
+                />
+                <span className="ml-2 text-sm text-gray-700">
+                  Allow other alumni to contact me for mentorship opportunities
+                </span>
+              </label>
             </div>
           </div>
-
+          
           {/* Terms and Submit */}
           <div className="border-t pt-8">
             <div className="mb-6">
@@ -835,27 +869,26 @@ const AlumniConnectProfile = () => {
                   className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 mt-1" 
                 />
                 <span className="ml-2 text-sm text-gray-700">
-  I agree to the{' '}
-  <button 
-    type="button" 
-    className="text-indigo-600 hover:text-indigo-800 underline bg-transparent border-none p-0 cursor-pointer"
-    onClick={() => alert('Terms of Service would open here')}
-  >
-    Terms of Service
-  </button>{' '}
-  and{' '}
-  <button 
-    type="button" 
-    className="text-indigo-600 hover:text-indigo-800 underline bg-transparent border-none p-0 cursor-pointer"
-    onClick={() => alert('Privacy Policy would open here')}
-  >
-    Privacy Policy
-  </button>{' '}
-  *
-</span>
+                  I agree to the{' '}
+                  <button 
+                    type="button" 
+                    className="text-indigo-600 hover:text-indigo-800 underline bg-transparent border-none p-0 cursor-pointer"
+                    onClick={() => alert('Terms of Service would open here')}
+                  >
+                    Terms of Service
+                  </button>{' '}
+                  and{' '}
+                  <button 
+                    type="button" 
+                    className="text-indigo-600 hover:text-indigo-800 underline bg-transparent border-none p-0 cursor-pointer"
+                    onClick={() => alert('Privacy Policy would open here')}
+                  >
+                    Privacy Policy
+                  </button>{' '}
+                  *
+                </span>
               </label>
             </div>
-
             <div className="flex justify-between items-center">
               <button 
                 type="button" 
@@ -866,9 +899,10 @@ const AlumniConnectProfile = () => {
               </button>
               <button 
                 type="submit" 
-                className="bg-indigo-600 text-white px-8 py-3 rounded-lg hover:bg-indigo-700 transition-colors font-semibold"
+                disabled={loading}
+                className="bg-indigo-600 text-white px-8 py-3 rounded-lg hover:bg-indigo-700 transition-colors font-semibold disabled:opacity-50"
               >
-                Complete Profile & Continue
+                {loading ? 'Registering...' : 'Complete Registration'}
               </button>
             </div>
           </div>
