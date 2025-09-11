@@ -62,11 +62,21 @@ const AlumniConnectProfile = ({ userRole }) => {
 useEffect(() => {
   const isOtpVerified = localStorage.getItem('otpVerified') === 'true';
   const userEmail = localStorage.getItem('userEmail');
+  const urlParams = new URLSearchParams(window.location.search);
+  const fromGoogle = urlParams.get('fromGoogle');
+  const token = urlParams.get('token');
   
   // Get role from multiple possible sources
   const effectiveRole = userRole || 
                         localStorage.getItem('userRole') || 
                         (location.state ? location.state.role : null);
+  
+  // Handle Google auth users
+  if (fromGoogle && token) {
+    localStorage.setItem('token', token);
+    // Continue with profile completion
+    return;
+  }
   
   if (!userData || !isOtpVerified) {
     setMessage({ 

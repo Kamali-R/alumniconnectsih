@@ -186,3 +186,20 @@ export const resetPassword = async (req, res) => {
     res.status(500).json({ message: 'Server error during password reset' });
   }
 };
+// In your authController.js
+export const completeProfile = async (req, res) => {
+  try {
+    const { userId } = req.user;
+    const profileData = req.body;
+    
+    await User.findByIdAndUpdate(userId, {
+      ...profileData,
+      profileCompleted: true
+    });
+    
+    res.status(200).json({ message: 'Profile completed successfully' });
+  } catch (error) {
+    console.error('Complete profile error:', error);
+    res.status(500).json({ message: 'Server error during profile completion' });
+  }
+};

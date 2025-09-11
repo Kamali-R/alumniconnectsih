@@ -19,10 +19,14 @@ const userSchema = new mongoose.Schema({
     enum: ['student', 'alumni'],
     required: true,
   },
+  googleId: { type: String },
   isVerified: {
     type: Boolean,
     default: false,
   },
+  profileCompleted: { type: Boolean, default: false },
+  graduationYear: { type: Number },
+  lastLogin: { type: Date },
   otp: String,
   otpExpiry: Date,
   authProvider: {

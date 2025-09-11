@@ -9,6 +9,7 @@ const Login = () => {
   const [password, setPassword] = useState('');
   const [showPwd, setShowPwd] = useState(false);
   const [message, setMessage] = useState('');
+  const [loading, setLoading] = useState(false);
   
   // Check for error state from navigation
   useEffect(() => {
@@ -26,11 +27,14 @@ const Login = () => {
 
   const handleLogin = async (e) => {
     e.preventDefault();
+    setLoading(true);
+    
     try {
       const response = await axios.post('http://localhost:5000/api/login', {
         email,
         password,
       });
+      
       setMessage(response.data.message);
       
       // Save token and redirect based on role
@@ -52,6 +56,8 @@ const Login = () => {
       } else {
         setMessage("Something went wrong. Please try again.");
       }
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -76,6 +82,7 @@ const Login = () => {
             Login <span style={{ fontWeight: '500' }}>to get started</span>
           </h2>
         </div>
+        
         <form onSubmit={handleLogin}>
           <div style={{ marginBottom: '20px' }}>
             <input
@@ -93,6 +100,7 @@ const Login = () => {
               }}
             />
           </div>
+          
           <div style={{ marginBottom: '10px' }}>
             <input
               type={showPwd ? 'text' : 'password'}
@@ -109,6 +117,7 @@ const Login = () => {
               }}
             />
           </div>
+          
           <div style={{
             display: 'flex',
             justifyContent: 'space-between',
@@ -116,17 +125,26 @@ const Login = () => {
             marginBottom: '25px',
             flexWrap: 'nowrap',
           }}>
-            <div
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px',
-                margin: 0,
-                padding: 0,
-                height: '20px',
-              }}
-            >
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              margin: 0,
+              padding: 0,
+              height: '20px',
+            }}>
+              <input
+                type="checkbox"
+                id="showPassword"
+                checked={showPwd}
+                onChange={() => setShowPwd(!showPwd)}
+                style={{ margin: 0 }}
+              />
+              <label htmlFor="showPassword" style={{ fontSize: '14px', color: '#666' }}>
+                Show Password
+              </label>
             </div>
+            
             <Link
               to={email ? "/forgot-password" : "#"}
               state={email ? { email } : null}
@@ -148,19 +166,20 @@ const Login = () => {
           
           <button
             type="submit"
+            disabled={loading}
             style={{
               width: '100%',
               padding: '14px',
-              backgroundColor: '#0024ff',
+              backgroundColor: loading ? '#ccc' : '#0024ff',
               color: 'white',
               fontWeight: 'bold',
               borderRadius: '6px',
               border: 'none',
               fontSize: '16px',
-              cursor: 'pointer',
+              cursor: loading ? 'not-allowed' : 'pointer',
             }}
           >
-            Login
+            {loading ? 'Logging in...' : 'Login'}
           </button>
           
           {message && (
@@ -172,11 +191,13 @@ const Login = () => {
               {message}
             </p>
           )}
+          
           <div style={{ display: 'flex', alignItems: 'center', margin: '20px 0' }}>
             <hr style={{ flex: 1, border: 'none', height: '1px', backgroundColor: '#ccc' }} />
             <span style={{ margin: '0 10px', color: '#888', fontWeight: 'bold' }}>or</span>
             <hr style={{ flex: 1, border: 'none', height: '1px', backgroundColor: '#ccc' }} />
           </div>
+          
           <div style={{ marginTop: '20px', textAlign: 'center' }}>
             <button
               type="button"
@@ -210,6 +231,7 @@ const Login = () => {
               Sign in with Google
             </button>
           </div>
+          
           <p style={{
             textAlign: 'center',
             marginTop: '20px',

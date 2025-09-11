@@ -13,13 +13,13 @@ const GoogleAuthHandler = () => {
     const name = params.get('name');
     const email = params.get('email');
     const graduationYear = params.get('graduationYear');
-
+    const profileCompleted = params.get('profileCompleted');
+    
     console.log('Google Auth Callback Params:', {
-      token, role, error, name, email, graduationYear
+      token, role, error, name, email, graduationYear, profileCompleted
     });
 
     if (error) {
-      // Handle error case
       navigate('/login', { state: { error: 'Google authentication failed. Please try again.' } });
       return;
     }
@@ -33,23 +33,34 @@ const GoogleAuthHandler = () => {
         role: role,
         name: name || 'User',
         email: email || '',
-        graduationYear: graduationYear || ''
+        graduationYear: graduationYear || '',
+        profileCompleted: profileCompleted === 'true'
       };
       localStorage.setItem('user', JSON.stringify(userData));
       
       console.log('User data saved to localStorage:', userData);
       
-      // Redirect based on role
-      if (role === 'alumni') {
-        navigate('/dashboard');
-      } else if (role === 'student') {
-        navigate('/student-dashboard');
+      // Redirect based on profile completion and role
+      if (profileCompleted === 'false') {
+        // Redirect to profile completion
+        navigate('/alumni-profile', { 
+          state: { 
+            userData: userData,
+            fromGoogle: true,
+            token: token
+          }
+        });
       } else {
-        // Default to alumni dashboard
-        navigate('/dashboard');
+        // Redirect to appropriate dashboard
+        if (role === 'alumni') {
+          navigate('/dashboard');
+        } else if (role === 'student') {
+          navigate('/student-dashboard');
+        } else {
+          navigate('/dashboard');
+        }
       }
     } else {
-      // If no token or role, redirect to login
       console.error('Missing token or role in Google callback');
       navigate('/login', { state: { error: 'Authentication failed. Please try again.' } });
     }
