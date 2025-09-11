@@ -9,6 +9,8 @@ import Login from './Login';
 import AlumniProfile from './AluminiProfile';
 import Dashboard from './Dashboard';
 import './index.css';
+import AlumniConnectProfile from './AlumniProfile';
+
 
 function App() {
   const [userData, setUserData] = useState(null);
@@ -72,6 +74,10 @@ function App() {
             path="/dashboard" 
             element={isAuthenticated ? <Dashboard userRole={userRole} /> : <Navigate to="/login" replace />}
           />
+          <Route 
+  path="/alumni-profile" 
+  element={<AlumniConnectProfile />} 
+/>
         </Routes>
       </div>
     </Router>
