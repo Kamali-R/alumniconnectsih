@@ -11,37 +11,28 @@ const AlumniSchema = new mongoose.Schema({
   city: { type: String },
   state: { type: String },
   country: { type: String },
-  degree: { type: String },
+  degreeType: { type: String },
   fieldOfStudy: { type: String },
   graduationYear: { type: Number },
   gpa: { type: String },
   studentId: { type: String, required: true },
-  achievements: { type: String },
+  activities: { type: String },
   experiences: [{
     jobTitle: { type: String },
     company: { type: String },
     startDate: { type: Date },
     endDate: { type: Date },
-    description: { type: String },
+    jobDescription: { type: String },
     industry: { type: String },
-    location: { type: String }
+    workLocation: { type: String }
   }],
-  linkedIn: { type: String },
-  portfolio: { type: String },
+  linkedin: { type: String },
+  website: { type: String },
   skills: [String],
   bio: { type: String },
-  networkingPrefs: {
-    mentoring: { type: Boolean, default: false },
-    referrals: { type: Boolean, default: false },
-    collaborations: { type: Boolean, default: false },
-    events: { type: Boolean, default: false }
-  },
-  privacySettings: {
-    visible: { type: Boolean, default: true },
-    showContact: { type: Boolean, default: false },
-    mailNotifications: { type: Boolean, default: false },
-    agreeTerms: { type: Boolean, required: true }
-  },
+  networking: [String],
+  privacy: [String],
+  terms: { type: Boolean, required: true },
   status: { type: String, enum: ['draft', 'complete'], default: 'draft' }
 }, { timestamps: true });
 

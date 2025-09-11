@@ -33,7 +33,7 @@ const AlumniConnectDashboard = () => {
       }
     }
     
-    // Redirect students to their dashboard
+    // Only redirect if user is a student (not alumni)
     if (storedUser && JSON.parse(storedUser).role === 'student') {
       navigate('/student-dashboard');
     }
@@ -200,7 +200,7 @@ const AlumniConnectDashboard = () => {
     console.log('Quick action clicked:', label);
   };
   
-  // Stat cards data - set to 0 for first-time user
+  // Stat cards data
   const statCards = [
     { 
       title: 'Network Connections', 

@@ -2,10 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useNavigate,useLocation, Link } from 'react-router-dom';
 
-
-
-
-const Register = () => {
+const Register = ({setUserData}) => {
   const [form, setForm] = useState({
     name: '',
     email: '',
@@ -65,7 +62,7 @@ const Register = () => {
       setLoading(true);
       setMessage({ text: '', type: '' });
 
-      const response = await axios.post('http://localhost:5000/api/send-otp', form);
+      const response = await axios.post('http://localhost:5000/send-otp', form);
 
       setMessage({
         text: response.data.message || 'OTP sent successfully!',

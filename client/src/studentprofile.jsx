@@ -140,7 +140,7 @@ const StudentProfile = () => {
       };
 
       // In a real application, you would send this data to your backend
-      const response = await axios.post('/api/student/profile', submissionData, {
+      const response = await axios.post('/student/profile', submissionData, {
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${localStorage.getItem('token')}`

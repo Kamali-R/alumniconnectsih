@@ -12,7 +12,7 @@ const userSchema = new mongoose.Schema({
   },
   password: {
     type: String,
-    required: true, // ✅ Required for local sign-up
+    required: true,
   },
   role: {
     type: String,
@@ -24,7 +24,10 @@ const userSchema = new mongoose.Schema({
     type: Boolean,
     default: false,
   },
-  profileCompleted: { type: Boolean, default: false },
+  profileCompleted: { 
+    type: Boolean, 
+    default: false 
+  },
   graduationYear: { type: Number },
   lastLogin: { type: Date },
   otp: String,
@@ -33,10 +36,6 @@ const userSchema = new mongoose.Schema({
     type: String,
     default: 'local',
   },
-  lastLogin: {
-    type: Date,
-    default: Date.now,
-  }
 }, { timestamps: true });
 
 export default mongoose.model('User', userSchema);

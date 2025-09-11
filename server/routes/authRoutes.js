@@ -11,7 +11,7 @@ import {
   forgotPassword,
   completeProfile
 } from '../controllers/authController.js';
-import auth from '../middleware/authMiddleware.js'; // Create this middleware
+import auth from '../middleware/authMiddleware.js';
 
 const router = express.Router();
 
@@ -29,66 +29,80 @@ router.post('/verify-reset-otp', verifyResetOtp);
 router.post('/reset-password', resetPassword);
 
 // Google OAuth Routes
-router.get('/google', passport.authenticate('google', { 
+router.get('/auth/google', (req, res, next) => {
+  console.log('🚀 Initiating Google OAuth flow');
+  next();
+}, passport.authenticate('google', { 
   scope: ['profile', 'email'],
   prompt: 'select_account'
 }));
 
-router.get('/google/callback',
+router.get('/auth/google/callback',
   passport.authenticate('google', {
     session: false,
     failureRedirect: `${process.env.FRONTEND_URL || 'http://localhost:3000'}/login?error=google_auth_failed`
   }),
   async (req, res) => {
     try {
-      console.log('Google authentication successful for user:', req.user);
+      console.log('✅ Google callback reached');
+      console.log('User from passport:', req.user ? req.user.email : 'No user');
       
-      const token = jwt.sign(
-        { 
-          id: req.user._id, 
-          email: req.user.email, 
-          role: req.user.role,
-          name: req.user.name,
-          graduationYear: req.user.graduationYear,
-          profileCompleted: req.user.profileCompleted || false
-        },
-        process.env.JWT_SECRET,
-        { expiresIn: '1h' }
-      );
-      
-      // Redirect based on profile completion status
-      const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
-      let redirectUrl;
-      
-      if (!req.user.profileCompleted) {
-        // Redirect to profile completion page
-        redirectUrl = `${frontendUrl}/alumni-profile?token=${token}&role=${req.user.role}&name=${encodeURIComponent(req.user.name)}&email=${encodeURIComponent(req.user.email)}&profileCompleted=false`;
-      } else {
-        // Redirect to appropriate dashboard
-        const dashboardPath = req.user.role === 'student' ? '/student-dashboard' : '/dashboard';
-        redirectUrl = `${frontendUrl}${dashboardPath}?token=${token}`;
+      if (!req.user) {
+        console.error('❌ No user from Google authentication');
+        return res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:3000'}/login?error=authentication_failed`);
       }
       
-      console.log('Redirecting to:', redirectUrl);
+      // Generate JWT token with all necessary user data
+      const tokenPayload = {
+        id: req.user._id,
+        email: req.user.email,
+        role: req.user.role || 'alumni',
+        name: req.user.name,
+        profileCompleted: req.user.profileCompleted || false
+      };
+      
+      console.log('Token payload:', tokenPayload);
+      
+      const token = jwt.sign(
+        tokenPayload,
+        process.env.JWT_SECRET,
+        { expiresIn: '7d' }
+      );
+      
+      console.log('Generated token for user:', req.user.email);
+      
+      // Redirect to frontend with token and success flag
+      const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+      const redirectUrl = `${frontendUrl}/auth/google/callback?token=${token}&success=true`;
+      
+      console.log('🔄 Redirecting to:', redirectUrl);
       res.redirect(redirectUrl);
+      
     } catch (error) {
-      console.error('Google callback error:', error);
-      res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:3000'}/login?error=auth_failed`);
+      console.error('❌ Google callback error:', error);
+      const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+      res.redirect(`${frontendUrl}/login?error=auth_failed`);
     }
   }
 );
 
-// Add endpoint to fetch user data
+// User data endpoint (protected)
 router.get('/user', auth, async (req, res) => {
   try {
-    const user = await User.findById(req.user.id).select('-password');
+    console.log('Fetching user data for ID:', req.user.id);
+    
+    const user = await User.findById(req.user.id).select('-password -__v');
     
     if (!user) {
+      console.error('User not found for ID:', req.user.id);
       return res.status(404).json({ message: 'User not found' });
     }
+    
+    console.log('User data retrieved:', { email: user.email, role: user.role });
     res.json(user);
   } catch (error) {
-    res.status(401).json({ message: 'Invalid token' });
+    console.error('Error fetching user data:', error);
+    res.status(500).json({ message: 'Error fetching user data' });
   }
 });
 

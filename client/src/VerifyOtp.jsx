@@ -29,7 +29,7 @@ const VerifyOtp = () => {
     
     try {
       setLoading(true);
-      const response = await axios.post('http://localhost:5000/api/verify-otp', {
+      const response = await axios.post('http://localhost:5000/verify-otp', {
         ...userData,
         otp: fullOtp,
         purpose: 'register'
@@ -80,7 +80,7 @@ const VerifyOtp = () => {
   const handleResend = async () => {
     try {
       setLoading(true);
-      await axios.post('http://localhost:5000/api/send-otp', {
+      await axios.post('http://localhost:5000/send-otp', {
         ...userData,
         purpose: 'register'
       });
