@@ -7,53 +7,92 @@ import jwt from 'jsonwebtoken';
 // STEP 1: Send OTP
 export const sendOtp = async (req, res) => {
   const { name, email, password, role, purpose } = req.body;
-
   if (!email)
     return res.status(400).json({ message: 'Email is required' });
-
   if (purpose === 'register') {
     if (!name || !password || !role)
       return res.status(400).json({ message: 'All fields are required for registration' });
-
     const existing = await User.findOne({ email });
     if (existing) return res.status(400).json({ message: 'User already exists' });
   } else if (purpose === 'reset') {
     const user = await User.findOne({ email });
     if (!user) return res.status(404).json({ message: 'User not found' });
   }
-
   const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
   await Otp.deleteMany({ email });
-
   const otp = new Otp({ email, otp: otpCode });
   await otp.save();
-
   await sendEmail(email, 'Your OTP Code', `Your OTP is: ${otpCode}`);
-
   res.status(200).json({ message: 'OTP sent to your email' });
 };
 
-/// Updated verifyOtp function
+// Updated verifyOtp function
 export const verifyOtp = async (req, res) => {
   const { name, email, password, role, otp, purpose } = req.body;
-
   const otpRecord = await Otp.findOne({ email, otp });
   if (!otpRecord)
     return res.status(400).json({ message: 'Invalid or expired OTP' });
-
   if (purpose === 'register') {
     // Check if user already exists again (just in case)
     const existing = await User.findOne({ email });
     if (existing) return res.status(400).json({ message: 'User already exists' });
-
     const hashedPwd = await bcrypt.hash(password, 10);
     const newUser = new User({ name, email, password: hashedPwd, role });
     await newUser.save();
+    
+    // Generate token after successful registration
+    const token = jwt.sign(
+      { id: newUser._id, role: newUser.role },
+      process.env.JWT_SECRET,
+      { expiresIn: '2h' }
+    );
+    
+    return res.status(200).json({ 
+      message: 'OTP verified successfully',
+      token,
+      user: {
+        id: newUser._id,
+        name: newUser.name,
+        email: newUser.email,
+        role: newUser.role
+      }
+    });
   }
   
   await Otp.deleteMany({ email });
   res.status(200).json({ message: 'OTP verified successfully' });
 };
+
+// Complete profile function
+export const completeProfile = async (req, res) => {
+  try {
+    const userId = req.user.id; // From auth middleware
+    const profileData = req.body;
+    
+    const updatedUser = await User.findByIdAndUpdate(
+      userId,
+      { 
+        ...profileData,
+        profileCompleted: true 
+      },
+      { new: true }
+    );
+    
+    if (!updatedUser) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+    
+    res.status(200).json({ 
+      message: 'Profile completed successfully',
+      user: updatedUser 
+    });
+  } catch (error) {
+    console.error('Complete profile error:', error);
+    res.status(500).json({ message: 'Server error during profile completion' });
+  }
+};
+
+// Other functions remain the same...
 
 // ✅ FIXED: New function for password reset verification
 export const verifyResetOtp = async (req, res) => {
@@ -184,22 +223,5 @@ export const resetPassword = async (req, res) => {
   } catch (err) {
     console.error('Reset password error:', err);
     res.status(500).json({ message: 'Server error during password reset' });
-  }
-};
-// In your authController.js
-export const completeProfile = async (req, res) => {
-  try {
-    const { userId } = req.user;
-    const profileData = req.body;
-    
-    await User.findByIdAndUpdate(userId, {
-      ...profileData,
-      profileCompleted: true
-    });
-    
-    res.status(200).json({ message: 'Profile completed successfully' });
-  } catch (error) {
-    console.error('Complete profile error:', error);
-    res.status(500).json({ message: 'Server error during profile completion' });
   }
 };

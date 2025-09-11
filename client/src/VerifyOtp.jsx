@@ -12,88 +12,95 @@ const VerifyOtp = () => {
   const [loading, setLoading] = useState(false);
   const [showResend, setShowResend] = useState(false);
   const inputsRef = useRef([]);
-
+  
   const handleChange = (index, value) => {
     if (!/^\d?$/.test(value)) return;
     const newOtp = [...otp];
     newOtp[index] = value;
     setOtp(newOtp);
-
     if (value && index < 5) {
       inputsRef.current[index + 1].focus();
     }
   };
-
-// In VerifyOtp.jsx, update the handleVerify function
-const handleVerify = async (e) => {
-  e.preventDefault();
-  const fullOtp = otp.join('');
   
-  try {
-    setLoading(true);
-    const response = await axios.post('http://localhost:5000/api/verify-otp', {
-      ...userData,
-      otp: fullOtp,
-      purpose: 'register'
-    });
+  const handleVerify = async (e) => {
+    e.preventDefault();
+    const fullOtp = otp.join('');
     
-    setMessage({ 
-      text: response.data.message || 'Verification successful!', 
-      type: 'success' 
-    });
-    setShowResend(false);
-    
-    // In VerifyOtp.jsx, change the redirect after successful verification
-setTimeout(() => {
-  // Store verification status in localStorage
-  localStorage.setItem('otpVerified', 'true');
-  localStorage.setItem('userEmail', userData.email);
-  localStorage.setItem('userRole', userData.role);
+    try {
+      setLoading(true);
+      const response = await axios.post('http://localhost:5000/api/verify-otp', {
+        ...userData,
+        otp: fullOtp,
+        purpose: 'register'
+      });
+      
+      setMessage({ 
+        text: response.data.message || 'Verification successful!', 
+        type: 'success' 
+      });
+      setShowResend(false);
+      
+      // Store token and user data if available
+      if (response.data.token) {
+        localStorage.setItem('authToken', response.data.token);
+      }
+      
+      if (response.data.user) {
+        localStorage.setItem('user', JSON.stringify(response.data.user));
+        localStorage.setItem('userRole', response.data.user.role);
+      }
+      
+      // Store verification status
+      localStorage.setItem('otpVerified', 'true');
+      localStorage.setItem('userEmail', userData.email);
+      
+      setTimeout(() => {
+        // Navigate to profile completion page with user data
+        navigate('/alumni-profile', { 
+          state: { 
+            userData: userData || response.data.user, 
+            verified: true,
+            role: userData?.role || response.data.user?.role 
+          } 
+        });
+      }, 2000);
+      
+    } catch (error) {
+      setMessage({ 
+        text: error.response?.data?.message || 'OTP verification failed.', 
+        type: 'error' 
+      });
+      setShowResend(true);
+    } finally {
+      setLoading(false);
+    }
+  };
   
-  // Navigate to profile completion page with user data
-  navigate('/alumni-profile', { 
-    state: { 
-      userData: userData, 
-      verified: true,
-      role: userData.role 
-    } 
-  });
-}, 2000);
-    
-  } catch (error) {
-    setMessage({ 
-      text: error.response?.data?.message || 'OTP verification failed.', 
-      type: 'error' 
-    });
-    setShowResend(true);
-  } finally {
-    setLoading(false);
-  }
-};
-
-const handleResend = async () => {
-  try {
-    setLoading(true);
-    await axios.post('http://localhost:5000/api/send-otp', {
-      ...userData,
-      purpose: 'register' // Add this for signup flow
-    });
-    setOtp(['', '', '', '', '', '']);
-    inputsRef.current[0].focus();
-    setMessage({ 
-      text: 'OTP resent successfully!', 
-      type: 'success' 
-    });
-    setShowResend(false);
-  } catch (error) {
-    setMessage({ 
-      text: error.response?.data?.message || 'Failed to resend OTP.', 
-      type: 'error' 
-    });
-  } finally {
-    setLoading(false);
-  }
-};
+  const handleResend = async () => {
+    try {
+      setLoading(true);
+      await axios.post('http://localhost:5000/api/send-otp', {
+        ...userData,
+        purpose: 'register'
+      });
+      setOtp(['', '', '', '', '', '']);
+      inputsRef.current[0].focus();
+      setMessage({ 
+        text: 'OTP resent successfully!', 
+        type: 'success' 
+      });
+      setShowResend(false);
+    } catch (error) {
+      setMessage({ 
+        text: error.response?.data?.message || 'Failed to resend OTP.', 
+        type: 'error' 
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+  
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">

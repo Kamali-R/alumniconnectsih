@@ -4,7 +4,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 const GoogleAuthHandler = () => {
   const navigate = useNavigate();
   const location = useLocation();
-
+  
   useEffect(() => {
     const params = new URLSearchParams(location.search);
     const token = params.get('token');
@@ -18,15 +18,15 @@ const GoogleAuthHandler = () => {
     console.log('Google Auth Callback Params:', {
       token, role, error, name, email, graduationYear, profileCompleted
     });
-
+    
     if (error) {
       navigate('/login', { state: { error: 'Google authentication failed. Please try again.' } });
       return;
     }
-
+    
     if (token && role) {
       // Save token to localStorage
-      localStorage.setItem('token', token);
+      localStorage.setItem('authToken', token);
       
       // Save user info to localStorage
       const userData = {
@@ -37,6 +37,7 @@ const GoogleAuthHandler = () => {
         profileCompleted: profileCompleted === 'true'
       };
       localStorage.setItem('user', JSON.stringify(userData));
+      localStorage.setItem('userRole', role);
       
       console.log('User data saved to localStorage:', userData);
       
@@ -65,7 +66,7 @@ const GoogleAuthHandler = () => {
       navigate('/login', { state: { error: 'Authentication failed. Please try again.' } });
     }
   }, [location, navigate]);
-
+  
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100">
       <div className="text-center">

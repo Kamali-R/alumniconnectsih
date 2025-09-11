@@ -9,40 +9,44 @@ const AlumniConnectProfile = ({ userRole }) => {
   const { userData, verified, role } = location.state || {};
   
   // State for form data
-  const [formData, setFormData] = useState({
-    firstName: userData?.name?.split(' ')[0] || '',
-    lastName: userData?.name?.split(' ')[1] || '',
-    email: userData?.email || '',
-    phone: '',
-    dob: '',
-    gender: '',
-    address: '',
-    city: '',
-    state: '',
-    country: '',
-    degreeType: '',
-    fieldOfStudy: '',
-    graduationYear: '',
-    gpa: '',
-    studentId: '',
-    activities: '',
-    experiences: [{
-      jobTitle: '',
-      company: '',
-      startDate: '',
-      endDate: '',
-      jobDescription: '',
-      industry: '',
-      workLocation: ''
-    }],
-    linkedin: '',
-    website: '',
-    skills: [],
-    bio: '',
-    networking: [],
-    privacy: ['profile-visible', 'email-notifications'],
-    terms: false
+    const [formData, setFormData] = useState(() => {
+    const initialUserData = location.state?.userData || JSON.parse(localStorage.getItem('user')) || {};
+    return {
+      firstName: initialUserData.name?.split(' ')[0] || '',
+      lastName: initialUserData.name?.split(' ')[1] || '',
+      email: initialUserData.email || '',
+      phone: '',
+      dob: '',
+      gender: '',
+      address: '',
+      city: '',
+      state: '',
+      country: '',
+      degreeType: '',
+      fieldOfStudy: '',
+      graduationYear: '',
+      gpa: '',
+      studentId: '',
+      activities: '',
+      experiences: [{
+        jobTitle: '',
+        company: '',
+        startDate: '',
+        endDate: '',
+        jobDescription: '',
+        industry: '',
+        workLocation: ''
+      }],
+      linkedin: '',
+      website: '',
+      skills: [],
+      bio: '',
+      networking: [],
+      privacy: ['profile-visible', 'email-notifications'],
+      terms: false
+    };
   });
+  
   
   const [progress, setProgress] = useState(0);
   const [skillInput, setSkillInput] = useState('');
@@ -59,45 +63,47 @@ const AlumniConnectProfile = ({ userRole }) => {
   
   // Check if user data exists and if OTP is verified
   // In AlumniConnectProfile.jsx, modify the useEffect to handle the redirect logic better
-useEffect(() => {
-  const isOtpVerified = localStorage.getItem('otpVerified') === 'true';
-  const userEmail = localStorage.getItem('userEmail');
-  const urlParams = new URLSearchParams(window.location.search);
-  const fromGoogle = urlParams.get('fromGoogle');
-  const token = urlParams.get('token');
-  
-  // Get role from multiple possible sources
-  const effectiveRole = userRole || 
+
+  useEffect(() => {
+    const token = localStorage.getItem('authToken');
+    const isOtpVerified = localStorage.getItem('otpVerified') === 'true';
+    const userEmail = localStorage.getItem('userEmail');
+    const urlParams = new URLSearchParams(window.location.search);
+    const fromGoogle = urlParams.get('fromGoogle');
+    const tokenFromQuery = urlParams.get('token');
+    
+    // Get role from multiple possible sources
+    const effectiveRole = userRole || 
                         localStorage.getItem('userRole') || 
                         (location.state ? location.state.role : null);
-  
-  // Handle Google auth users
-  if (fromGoogle && token) {
-    localStorage.setItem('token', token);
-    // Continue with profile completion
-    return;
-  }
-  
-  if (!userData || !isOtpVerified) {
-    setMessage({ 
-      text: 'Unauthorized access. Please verify your email first.', 
-      type: 'error' 
-    });
-    setTimeout(() => navigate('/register'), 2000);
-  } else if (userEmail !== userData.email) {
-    setMessage({ 
-      text: 'Session expired. Please register again.', 
-      type: 'error' 
-    });
-    setTimeout(() => navigate('/register'), 2000);
-  } else if (!effectiveRole) {
-    setMessage({ 
-      text: 'Role information missing. Please register again.', 
-      type: 'error' 
-    });
-    setTimeout(() => navigate('/register'), 2000);
-  }
-}, [userData, navigate, userRole, location.state]);
+    
+    // Handle Google auth users
+    if (fromGoogle && tokenFromQuery) {
+      localStorage.setItem('authToken', tokenFromQuery);
+      // Continue with profile completion
+      return;
+    }
+    
+    if (!userData && !token && !isOtpVerified) {
+      setMessage({ 
+        text: 'Unauthorized access. Please verify your email first.', 
+        type: 'error' 
+      });
+      setTimeout(() => navigate('/register'), 2000);
+    } else if (userEmail && userData && userEmail !== userData.email) {
+      setMessage({ 
+        text: 'Session expired. Please register again.', 
+        type: 'error' 
+      });
+      setTimeout(() => navigate('/register'), 2000);
+    } else if (!effectiveRole) {
+      setMessage({ 
+        text: 'Role information missing. Please register again.', 
+        type: 'error' 
+      });
+      setTimeout(() => navigate('/register'), 2000);
+    }
+  }, [userData, navigate, userRole, location.state]);
   
   // Update progress
   useEffect(() => {
@@ -191,7 +197,7 @@ useEffect(() => {
     }));
   };
   
-  // Handle form submission
+   // Handle form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
     
@@ -223,57 +229,61 @@ useEffect(() => {
       setLoading(true);
       setMessage({ text: '', type: '' });
       
-      // Combine initial registration data with profile details
-      const registrationData = {
-        ...userData,
-        role: userRole || role || localStorage.getItem('userRole'),
-        profile: formData,
-        verified: verified
-      };
+      // Get the token
+      const token = localStorage.getItem('authToken');
       
-      console.log('Submitting registration data:', registrationData);
+      if (!token) {
+        throw new Error('Authentication token not found');
+      }
       
-      // Register the user with complete profile
-      const response = await axios.post('http://localhost:5000/api/register', registrationData);
+      console.log('Submitting profile data:', formData);
       
-      console.log('Registration response:', response.data);
+      // Update the user profile
+      const response = await axios.post('http://localhost:5000/api/complete-profile', formData, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
       
-      // Check if registration was successful
-      if (response.data && response.data.success) {
+      console.log('Profile update response:', response.data);
+      
+      // Check if update was successful
+      if (response.data && response.data.message) {
         setMessage({ 
-          text: 'Registration successful! Redirecting to dashboard...', 
+          text: 'Profile completed successfully! Redirecting to dashboard...', 
           type: 'success' 
         });
         
-        // Store authentication token if provided
-        if (response.data.token) {
-          localStorage.setItem('authToken', response.data.token);
+        // Update user data in localStorage
+        if (response.data.user) {
+          localStorage.setItem('user', JSON.stringify(response.data.user));
         }
         
         // Clear OTP verification data
         localStorage.removeItem('otpVerified');
         localStorage.removeItem('userEmail');
         
-        // Redirect to dashboard after successful registration
+        // Redirect to dashboard after successful profile completion
         setTimeout(() => {
           navigate('/dashboard');
         }, 2000);
       } else {
-        throw new Error(response.data.message || 'Registration failed');
+        throw new Error('Profile update failed');
       }
       
     } catch (error) {
-      console.error('Registration error:', error);
+      console.error('Profile update error:', error);
       
-      let errorMessage = 'Registration failed. Please try again.';
+      let errorMessage = 'Profile update failed. Please try again.';
       if (error.response) {
         console.error('Error response data:', error.response.data);
         console.error('Error response status:', error.response.status);
         
-        if (error.response.status === 409) {
-          errorMessage = 'Email already registered. Please login instead.';
+        if (error.response.status === 401) {
+          errorMessage = 'Authentication expired. Please login again.';
+          setTimeout(() => navigate('/login'), 2000);
         } else if (error.response.status === 400) {
-          errorMessage = error.response.data.message || 'Invalid registration data.';
+          errorMessage = error.response.data.message || 'Invalid profile data.';
         } else {
           errorMessage = error.response.data?.message || errorMessage;
         }
@@ -290,7 +300,6 @@ useEffect(() => {
       setLoading(false);
     }
   };
-  
   // Save as draft
   const saveAsDraft = () => {
     // In a real application, you would save the current form state
