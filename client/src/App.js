@@ -5,13 +5,13 @@ import Register from './Register';
 import VerifyOtp from './VerifyOtp';
 import PasswordResetFlow from './password';
 import Login from './Login';
-import AlumniDashboard from './dashboard'; // Import the dashboard
+import AlumniDashboard from './dashboard';
 import AlumniConnectProfile from './AlumniProfile';
+import GoogleAuthHandler from './GoogleAuthHandler';
 import './index.css';
 
 function App() {
   const [userData, setUserData] = useState(null);
-
   return (
     <Router>
       <div className="App">
@@ -30,8 +30,10 @@ function App() {
           <Route path="/VerifyOtp" element={<VerifyOtp userData={userData} />} />
           <Route path="/forgot-password" element={<PasswordResetFlow />} />
           <Route path="/alumni-profile" element={<AlumniConnectProfile />} />
-          {/* Add the dashboard route */}
           <Route path="/dashboard" element={<AlumniDashboard />} />
+          
+          {/* Add Google Auth Handler route */}
+          <Route path="/auth/google/callback" element={<GoogleAuthHandler />} />
         </Routes>
       </div>
     </Router>

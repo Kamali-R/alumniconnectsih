@@ -1,29 +1,51 @@
-import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
 
 const Login = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPwd, setShowPwd] = useState(false);
   const [message, setMessage] = useState('');
+  
+  // Check for error state from navigation
+  useEffect(() => {
+    if (location.state?.error) {
+      setMessage(location.state.error);
+    }
+    
+    // Check for error message from Google OAuth redirect
+    const params = new URLSearchParams(location.search);
+    const error = params.get('error');
+    if (error === 'google_auth_failed') {
+      setMessage('Google authentication failed. Please try again or use a different method.');
+    }
+  }, [location]);
 
   const handleLogin = async (e) => {
     e.preventDefault();
-
     try {
       const response = await axios.post('http://localhost:5000/api/login', {
         email,
         password,
       });
-
       setMessage(response.data.message);
       
-      // Save token and redirect to dashboard
+      // Save token and redirect based on role
       localStorage.setItem('token', response.data.token);
       localStorage.setItem('user', JSON.stringify(response.data.user));
-      navigate('/dashboard');
+      
+      // Redirect based on user role
+      if (response.data.user.role === 'alumni') {
+        navigate('/dashboard');
+      } else if (response.data.user.role === 'student') {
+        navigate('/student-dashboard');
+      } else {
+        // Default redirect if role is not specified
+        navigate('/dashboard');
+      }
     } catch (error) {
       if (error.response) {
         setMessage(error.response.data.message);
@@ -54,7 +76,6 @@ const Login = () => {
             Login <span style={{ fontWeight: '500' }}>to get started</span>
           </h2>
         </div>
-
         <form onSubmit={handleLogin}>
           <div style={{ marginBottom: '20px' }}>
             <input
@@ -72,7 +93,6 @@ const Login = () => {
               }}
             />
           </div>
-
           <div style={{ marginBottom: '10px' }}>
             <input
               type={showPwd ? 'text' : 'password'}
@@ -89,7 +109,6 @@ const Login = () => {
               }}
             />
           </div>
-
           <div style={{
             display: 'flex',
             justifyContent: 'space-between',
@@ -108,7 +127,6 @@ const Login = () => {
               }}
             >
             </div>
-
             <Link
               to={email ? "/forgot-password" : "#"}
               state={email ? { email } : null}
@@ -154,13 +172,11 @@ const Login = () => {
               {message}
             </p>
           )}
-
           <div style={{ display: 'flex', alignItems: 'center', margin: '20px 0' }}>
             <hr style={{ flex: 1, border: 'none', height: '1px', backgroundColor: '#ccc' }} />
             <span style={{ margin: '0 10px', color: '#888', fontWeight: 'bold' }}>or</span>
             <hr style={{ flex: 1, border: 'none', height: '1px', backgroundColor: '#ccc' }} />
           </div>
-
           <div style={{ marginTop: '20px', textAlign: 'center' }}>
             <button
               type="button"
@@ -180,6 +196,7 @@ const Login = () => {
                 fontWeight: '500',
               }}
               onClick={() => {
+                // Redirect to Google OAuth
                 window.location.href = 'http://localhost:5000/api/google';
               }}
             >
@@ -193,7 +210,6 @@ const Login = () => {
               Sign in with Google
             </button>
           </div>
-
           <p style={{
             textAlign: 'center',
             marginTop: '20px',

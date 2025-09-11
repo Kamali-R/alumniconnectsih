@@ -1,9 +1,44 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
 
 const AlumniConnectDashboard = () => {
+  const navigate = useNavigate();
   const [activeSection, setActiveSection] = useState('dashboard');
   const [fadeAnimation, setFadeAnimation] = useState(false);
-
+  const [userRole, setUserRole] = useState('');
+  const [userName, setUserName] = useState('John Doe');
+  const [userGraduation, setUserGraduation] = useState('Class of 2018');
+  
+  // Check authentication on component mount
+  useEffect(() => {
+    const storedToken = localStorage.getItem('token');
+    const storedUser = localStorage.getItem('user');
+    
+    if (!storedToken) {
+      // Redirect to login if no token found
+      navigate('/login');
+      return;
+    }
+    
+    // Get user data from localStorage
+    if (storedUser) {
+      const userData = JSON.parse(storedUser);
+      setUserRole(userData.role);
+      setUserName(userData.name || 'John Doe');
+      
+      // Set graduation year if available
+      if (userData.graduationYear) {
+        setUserGraduation(`Class of ${userData.graduationYear}`);
+      }
+    }
+    
+    // Redirect students to their dashboard
+    if (storedUser && JSON.parse(storedUser).role === 'student') {
+      navigate('/student-dashboard');
+    }
+  }, [navigate]);
+  
   // Navigation items
   const navItems = [
     { id: 'dashboard', label: 'Dashboard', icon: (
@@ -56,9 +91,13 @@ const AlumniConnectDashboard = () => {
         <svg className="w-5 h-5 mr-3" fill="currentColor" viewBox="0 0 20 20">
           <path fillRule="evenodd" d="M3 3a1 1 0 00-1 1v12a1 1 0 102 0V4a1 1 0 00-1-1zm10.293 9.293a1 1 0 001.414 1.414l3-3a1 1 0 000-1.414l-3-3a1 1 0 10-1.414 1.414L14.586 9H7a1 1 0 100 2h7.586l-1.293 1.293z" clipRule="evenodd"></path>
         </svg>
-      ) },
+      ), action: () => {
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        navigate('/login');
+      } },
   ];
-
+  
   // Quick action buttons
   const quickActions = [
     { 
@@ -95,7 +134,7 @@ const AlumniConnectDashboard = () => {
       )
     },
   ];
-
+  
   // Recent activity items
   const recentActivities = [
     {
@@ -122,11 +161,11 @@ const AlumniConnectDashboard = () => {
     },
     {
       icon: (
-        <svg className="w-5 h-5 text-purple-600" fill="currentColor" viewBox="0 0 20 20">
+        <svg className="w-5 h-5 text-indigo-600" fill="currentColor" viewBox="0 0 20 20">
           <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3z"></path>
         </svg>
       ),
-      bgColor: 'bg-purple-100',
+      bgColor: 'bg-indigo-100',
       title: 'Mentorship Opportunity',
       time: '1 day ago',
       description: 'Sarah Johnson (Class of 2015) is offering mentorship for recent graduates.'
@@ -143,26 +182,31 @@ const AlumniConnectDashboard = () => {
       description: 'Michael Chen (Class of 2010) received the Industry Leadership Award.'
     },
   ];
-
+  
   // Handle navigation click
-  const handleNavClick = (sectionId) => {
+  const handleNavClick = (sectionId, action) => {
+    if (action) {
+      action();
+      return;
+    }
+    
     setActiveSection(sectionId);
     setFadeAnimation(true);
     setTimeout(() => setFadeAnimation(false), 10);
   };
-
+  
   // Handle quick action click
   const handleQuickActionClick = (label) => {
     console.log('Quick action clicked:', label);
   };
-
+  
   // Stat cards data - set to 0 for first-time user
   const statCards = [
     { 
       title: 'Network Connections', 
       value: '0', 
       icon: (
-        <svg className="w-8 h-8 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+        <svg className="w-8 h-8 text-blue-700" fill="currentColor" viewBox="0 0 20 20">
           <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3z"></path>
         </svg>
       )
@@ -171,7 +215,7 @@ const AlumniConnectDashboard = () => {
       title: 'Job Opportunities', 
       value: '12', 
       icon: (
-        <svg className="w-8 h-8 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+        <svg className="w-8 h-8 text-blue-700" fill="currentColor" viewBox="0 0 20 20">
           <path fillRule="evenodd" d="M6 6V5a3 3 0 013-3h2a3 3 0 013 3v1h2a2 2 0 012 2v3.57A22.952 22.952 0 0110 13a22.95 22.95 0 01-8-1.43V8a2 2 0 012-2h2zm2-1a1 1 0 011-1h2a1 1 0 011 1v1H8V5zm1 5a1 1 0 011-1h.01a1 1 0 110 2H10a1 1 0 01-1-1z" clipRule="evenodd"></path>
         </svg>
       )
@@ -180,7 +224,7 @@ const AlumniConnectDashboard = () => {
       title: 'Upcoming Events', 
       value: '5', 
       icon: (
-        <svg className="w-8 h-8 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+        <svg className="w-8 h-8 text-blue-700" fill="currentColor" viewBox="0 0 20 20">
           <path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clipRule="evenodd"></path>
         </svg>
       )
@@ -189,14 +233,14 @@ const AlumniConnectDashboard = () => {
       title: 'Messages', 
       value: '0', 
       icon: (
-        <svg className="w-8 h-8 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+        <svg className="w-8 h-8 text-blue-700" fill="currentColor" viewBox="0 0 20 20">
           <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z"></path>
           <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z"></path>
         </svg>
       )
     },
   ];
-
+  
   return (
     <div className="flex h-screen bg-gray-100">
       {/* Sidebar */}
@@ -204,7 +248,7 @@ const AlumniConnectDashboard = () => {
         <div className="p-6">
           {/* Logo */}
           <div className="flex items-center mb-8">
-            <div className="w-10 h-10 bg-purple-600 rounded-lg flex items-center justify-center">
+            <div className="w-10 h-10 bg-blue-700 rounded-lg flex items-center justify-center">
               <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
                 <path d="M10.394 2.08a1 1 0 00-.788 0l-7 3a1 1 0 000 1.84L5.25 8.051a.999.999 0 01.356-.257l4-1.714a1 1 0 11.788 1.838L7.667 9.088l1.94.831a1 1 0 00.787 0l7-3a1 1 0 000-1.838l-7-3z"></path>
               </svg>
@@ -214,12 +258,15 @@ const AlumniConnectDashboard = () => {
           
           {/* Alumni Profile Section */}
           <div className="flex items-center mb-6 p-3 bg-gray-50 rounded-lg border border-gray-200">
-            <div className="w-12 h-12 bg-purple-600 rounded-full flex items-center justify-center">
-              <span className="text-white font-semibold">JD</span>
+            <div className="w-12 h-12 bg-blue-700 rounded-full flex items-center justify-center">
+              <span className="text-white font-semibold">
+                {userName.split(' ').map(n => n[0]).join('')}
+              </span>
             </div>
             <div className="ml-3">
-              <p className="font-semibold text-gray-900">John Doe</p>
-              <p className="text-sm text-gray-600">Class of 2018</p>
+              <p className="font-semibold text-gray-900">{userName}</p>
+              <p className="text-sm text-gray-600">{userGraduation}</p>
+              <p className="text-xs text-blue-600 mt-1">{userRole === 'alumni' ? 'Alumni' : 'Student'}</p>
             </div>
           </div>
           
@@ -230,10 +277,10 @@ const AlumniConnectDashboard = () => {
                 key={item.id}
                 className={`sidebar-item w-full flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-all duration-200 ${
                   activeSection === item.id
-                    ? 'active bg-purple-600 text-white shadow-md'
-                    : 'text-gray-600 hover:bg-purple-50 hover:text-purple-600'
+                    ? 'active bg-blue-700 text-white shadow-md'
+                    : 'text-gray-600 hover:bg-blue-100 hover:text-blue-700'
                 }`}
-                onClick={() => handleNavClick(item.id)}
+                onClick={() => handleNavClick(item.id, item.action)}
               >
                 {item.icon}
                 {item.label}
@@ -252,8 +299,14 @@ const AlumniConnectDashboard = () => {
             <div className={`content-section ${fadeAnimation ? 'fade-in' : ''}`}>
               {/* Welcome Header */}
               <div className="mb-8">
-                <h1 className="text-3xl font-bold text-gray-900 mb-2">Welcome to Alumni Connect, John! 👋</h1>
-                <p className="text-gray-600">Let's get you started with connecting to your alumni network.</p>
+                <h1 className="text-3xl font-bold text-gray-900 mb-2">
+                  Welcome to Alumni Connect, {userName}! 👋
+                </h1>
+                <p className="text-gray-600">
+                  {userRole === 'alumni' 
+                    ? "Let's get you started with connecting to your alumni network."
+                    : "Explore opportunities and connect with alumni from your institution."}
+                </p>
               </div>
               
               {/* Stat Cards */}
@@ -278,7 +331,7 @@ const AlumniConnectDashboard = () => {
                   {quickActions.map((action, index) => (
                     <button
                       key={index}
-                      className="quick-action-btn bg-purple-600 text-white p-4 rounded-lg text-center hover:bg-purple-700 hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1 flex flex-col items-center justify-center"
+                      className="quick-action-btn bg-blue-700 text-white p-4 rounded-lg text-center hover:bg-blue-800 hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1 flex flex-col items-center justify-center"
                       onClick={() => handleQuickActionClick(action.label)}
                     >
                       {action.icon}
@@ -312,13 +365,13 @@ const AlumniConnectDashboard = () => {
               </div>
               
               {/* Call to Action */}
-              <div className="mt-8 p-6 bg-gradient-to-r from-purple-500 to-indigo-600 rounded-xl text-white">
+              <div className="mt-8 p-6 bg-gradient-to-r from-blue-700 to-blue-900 rounded-xl text-white">
                 <div className="flex items-center justify-between">
                   <div>
                     <h3 className="text-xl font-bold mb-2">Complete Your Profile</h3>
                     <p className="opacity-90">Add your information to get the most out of Alumni Connect</p>
                   </div>
-                  <button className="bg-white text-purple-600 px-6 py-2 rounded-lg font-medium hover:bg-gray-100 transition-colors">
+                  <button className="bg-white text-blue-700 px-6 py-2 rounded-lg font-medium hover:bg-gray-100 transition-colors">
                     Get Started
                   </button>
                 </div>
