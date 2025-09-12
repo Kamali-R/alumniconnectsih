@@ -20,6 +20,7 @@ const AlumniConnectProfile = ({ userRole }) => {
     city: '',
     state: '',
     country: '',
+
     degreeType: '',
     fieldOfStudy: '',
     graduationYear: '',
@@ -62,13 +63,13 @@ const AlumniConnectProfile = ({ userRole }) => {
 useEffect(() => {
   const isOtpVerified = localStorage.getItem('otpVerified') === 'true';
   const userEmail = localStorage.getItem('userEmail');
-  
+  const userId = localStorage.getItem('userId');
   // Get role from multiple possible sources
   const effectiveRole = userRole || 
                         localStorage.getItem('userRole') || 
                         (location.state ? location.state.role : null);
   
-  if (!userData || !isOtpVerified) {
+  if (!userData || !isOtpVerified || !userId)  {
     setMessage({ 
       text: 'Unauthorized access. Please verify your email first.', 
       type: 'error' 
@@ -182,105 +183,125 @@ useEffect(() => {
   };
   
   // Handle form submission
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    
-    // Validate required fields
-    const requiredFields = formRef.current.querySelectorAll('input[required], select[required]');
-    let isValid = true;
-    
-    requiredFields.forEach(field => {
-      if (!field.value.trim()) {
-        field.classList.add('border-red-500');
-        isValid = false;
-      } else {
-        field.classList.remove('border-red-500');
+const handleSubmit = async (e) => {
+  e.preventDefault();
+
+  // Validate required fields
+  const requiredFields = formRef.current.querySelectorAll('input[required], select[required]');
+  let isValid = true;
+
+  requiredFields.forEach(field => {
+    if (!field.value.trim()) {
+      field.classList.add('border-red-500');
+      isValid = false;
+    } else {
+      field.classList.remove('border-red-500');
+    }
+  });
+
+  if (!isValid) {
+    setMessage({ text: 'Please fill in all required fields marked with *', type: 'error' });
+    return;
+  }
+
+  // Check terms agreement
+  if (!formData.terms) {
+    setMessage({ text: 'Please agree to the Terms of Service and Privacy Policy to continue.', type: 'error' });
+    return;
+  }
+
+  try {
+    setLoading(true);
+    setMessage({ text: '', type: '' });
+
+    // Get userId from location state or localStorage
+    const userId = location.state?.userId || localStorage.getItem('userId');
+    if (!userId) {
+      throw new Error('User ID not found. Please restart the registration process.');
+    }
+
+    // Get token and role
+    const token = localStorage.getItem('authToken');
+    const userRole = localStorage.getItem('userRole') || role;
+
+    // Prepare the payload to match backend requirements
+    const payload = {
+      ...formData,
+      privacySettings: {
+        agreeTerms: formData.terms,
+        visible: formData.privacy.includes('profile-visible'),
+        showContact: formData.privacy.includes('show-contact'),
+        mailNotifications: formData.privacy.includes('email-notifications')
+      }
+    };
+
+    // Send profile data to complete registration
+    const response = await axios.post('http://localhost:5000/api/alumni', {
+      userId: userId,
+      role: userRole,
+      ...payload
+    }, {
+      withCredentials: true,
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}` // Add Authorization header
       }
     });
-    
-    if (!isValid) {
-      setMessage({ text: 'Please fill in all required fields marked with *', type: 'error' });
-      return;
-    }
-    
-    // Check terms agreement
-    if (!formData.terms) {
-      setMessage({ text: 'Please agree to the Terms of Service and Privacy Policy to continue.', type: 'error' });
-      return;
-    }
-    
-    try {
-      setLoading(true);
-      setMessage({ text: '', type: '' });
-      
-      // Combine initial registration data with profile details
-      const registrationData = {
-        ...userData,
-        role: userRole || role || localStorage.getItem('userRole'),
-        profile: formData,
-        verified: verified
-      };
-      
-      console.log('Submitting registration data:', registrationData);
-      
-      // Register the user with complete profile
-      const response = await axios.post('http://localhost:5000/api/register', registrationData);
-      
-      console.log('Registration response:', response.data);
-      
-      // Check if registration was successful
-      if (response.data && response.data.success) {
-        setMessage({ 
-          text: 'Registration successful! Redirecting to dashboard...', 
-          type: 'success' 
-        });
-        
-        // Store authentication token if provided
-        if (response.data.token) {
-          localStorage.setItem('authToken', response.data.token);
-        }
-        
-        // Clear OTP verification data
-        localStorage.removeItem('otpVerified');
-        localStorage.removeItem('userEmail');
-        
-        // Redirect to dashboard after successful registration
-        setTimeout(() => {
-          navigate('/dashboard');
-        }, 2000);
-      } else {
-        throw new Error(response.data.message || 'Registration failed');
+
+    console.log('Registration response:', response.data);
+
+    if (response.data && response.data.success) {
+      setMessage({
+        text: 'Registration successful! Redirecting to dashboard...',
+        type: 'success'
+      });
+
+      if (response.data.token) {
+        localStorage.setItem('authToken', response.data.token);
+        localStorage.setItem('userRole', userRole);
       }
-      
-    } catch (error) {
-      console.error('Registration error:', error);
-      
-      let errorMessage = 'Registration failed. Please try again.';
-      if (error.response) {
-        console.error('Error response data:', error.response.data);
-        console.error('Error response status:', error.response.status);
-        
-        if (error.response.status === 409) {
-          errorMessage = 'Email already registered. Please login instead.';
-        } else if (error.response.status === 400) {
-          errorMessage = error.response.data.message || 'Invalid registration data.';
-        } else {
-          errorMessage = error.response.data?.message || errorMessage;
-        }
-      } else if (error.request) {
-        console.error('No response received:', error.request);
-        errorMessage = 'No response from server. Please check your connection.';
-      } else {
-        console.error('Request setup error:', error.message);
-        errorMessage = error.message;
-      }
-      
-      setMessage({ text: errorMessage, type: 'error' });
-    } finally {
-      setLoading(false);
+
+      // Clean up localStorage
+      localStorage.removeItem('otpVerified');
+      localStorage.removeItem('userEmail');
+      localStorage.removeItem('userId');
+
+      // Redirect to dashboard after a short delay
+      setTimeout(() => {
+        navigate('/dashboard');
+      }, 2000);
+    } else {
+      throw new Error(response.data.message || 'Registration failed');
     }
-  };
-  
+
+  } catch (error) {
+    console.error('Registration error:', error);
+
+    let errorMessage = 'Registration failed. Please try again.';
+    if (error.response) {
+      console.error('Error response data:', error.response.data);
+      console.error('Error response status:', error.response.status);
+
+      if (error.response.status === 409) {
+        errorMessage = 'Email already registered. Please login instead.';
+      } else if (error.response.status === 400) {
+        errorMessage = error.response.data.message || 'Invalid registration data.';
+      } else {
+        errorMessage = error.response.data?.message || errorMessage;
+      }
+    } else if (error.request) {
+      console.error('No response received:', error.request);
+      errorMessage = 'No response from server. Please check your connection.';
+    } else {
+      console.error('Request setup error:', error.message);
+      errorMessage = error.message;
+    }
+
+    setMessage({ text: errorMessage, type: 'error' });
+  } finally {
+    setLoading(false);
+  }
+};
   // Save as draft
   const saveAsDraft = () => {
     // In a real application, you would save the current form state

@@ -19,7 +19,12 @@ dotenv.config();
 const app = express();
 
 // ✅ Middleware
-app.use(cors());
+app.use(cors({
+  origin: 'http://localhost:3000', // Your React app URL
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
 app.use(express.json());
 
 app.use(
@@ -30,6 +35,15 @@ app.use(
     cookie: { secure: false }, // ✅ Use true only in HTTPS
   })
 );
+
+// ✅ Add TEST ENDPOINT here - BEFORE API routes
+app.get('/api/test', (req, res) => {
+  res.json({ 
+    success: true, 
+    message: '✅ Backend is working!',
+    timestamp: new Date().toISOString()
+  });
+});
 
 // ✅ Passport initialization
 app.use(passport.initialize());
