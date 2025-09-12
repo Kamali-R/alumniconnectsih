@@ -12,33 +12,45 @@ const AlumniConnectDashboard = () => {
   
   // Check authentication on component mount
   useEffect(() => {
-    const storedToken = localStorage.getItem('token');
-    const storedUser = localStorage.getItem('user');
+  const storedToken = localStorage.getItem('token');
+  const storedUser = localStorage.getItem('user');
+  const profileCompleted = localStorage.getItem('profileCompleted') === 'true';
+  
+  if (!storedToken) {
+    // Redirect to login if no token found
+    navigate('/login');
+    return;
+  }
+  
+  // Get user data from localStorage
+  if (storedUser) {
+    const userData = JSON.parse(storedUser);
+    setUserRole(userData.role);
+    setUserName(userData.name || 'John Doe');
     
-    if (!storedToken) {
-      // Redirect to login if no token found
-      navigate('/login');
+    // Set graduation year if available
+    if (userData.graduationYear) {
+      setUserGraduation(`Class of ${userData.graduationYear}`);
+    }
+    
+    // If profile is not completed, redirect to profile completion
+    if (!profileCompleted && userData.role === 'alumni') {
+      navigate('/alumni-profile', {
+        state: {
+          userData: userData,
+          verified: true,
+          role: userData.role
+        }
+      });
       return;
     }
-    
-    // Get user data from localStorage
-    if (storedUser) {
-      const userData = JSON.parse(storedUser);
-      setUserRole(userData.role);
-      setUserName(userData.name || 'John Doe');
-      
-      // Set graduation year if available
-      if (userData.graduationYear) {
-        setUserGraduation(`Class of ${userData.graduationYear}`);
-      }
-    }
-    
-    // Only redirect if user is a student (not alumni)
-    if (storedUser && JSON.parse(storedUser).role === 'student') {
-      navigate('/student-dashboard');
-    }
-  }, [navigate]);
+  }
   
+  // Only redirect if user is a student (not alumni)
+  if (storedUser && JSON.parse(storedUser).role === 'student') {
+    navigate('/student-dashboard');
+  }
+}, [navigate]);
   // Navigation items
   const navItems = [
     { id: 'dashboard', label: 'Dashboard', icon: (

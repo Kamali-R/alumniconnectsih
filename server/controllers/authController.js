@@ -31,25 +31,37 @@ export const sendOtp = async (req, res) => {
 export const verifyOtp = async (req, res) => {
   const { name, email, password, role, otp, purpose } = req.body;
   const otpRecord = await Otp.findOne({ email, otp });
-  if (!otpRecord)
+  
+  if (!otpRecord) {
     return res.status(400).json({ message: 'Invalid or expired OTP' });
+  }
+  
   if (purpose === 'register') {
     // Check if user already exists again (just in case)
     const existing = await User.findOne({ email });
-    if (existing) return res.status(400).json({ message: 'User already exists' });
+    if (existing) {
+      return res.status(400).json({ message: 'User already exists' });
+    }
+    
     const hashedPwd = await bcrypt.hash(password, 10);
     const newUser = new User({ 
       name, 
       email, 
       password: hashedPwd, 
       role,
-      isVerified: true // Mark as verified after OTP verification
+      isVerified: true,
+      profileCompleted: false // Set to false initially for new registrations
     });
+    
     await newUser.save();
     
     // Generate token after successful registration
     const token = jwt.sign(
-      { id: newUser._id, role: newUser.role },
+      { 
+        id: newUser._id, 
+        role: newUser.role,
+        profileCompleted: newUser.profileCompleted
+      },
       process.env.JWT_SECRET,
       { expiresIn: '2h' }
     );
@@ -65,7 +77,7 @@ export const verifyOtp = async (req, res) => {
         name: newUser.name,
         email: newUser.email,
         role: newUser.role,
-        profileCompleted: false // Set to false initially
+        profileCompleted: newUser.profileCompleted // This will be false for new registrations
       }
     });
   }
@@ -73,12 +85,13 @@ export const verifyOtp = async (req, res) => {
   await Otp.deleteMany({ email });
   res.status(200).json({ message: 'OTP verified successfully' });
 };
-
 // Complete profile function
 export const completeProfile = async (req, res) => {
   try {
     const userId = req.user.id;
     const userData = req.body;
+    
+    console.log('Completing profile for user:', userId);
     
     // Check if alumni profile already exists
     let alumniProfile = await Alumni.findOne({ userId });
@@ -104,7 +117,7 @@ export const completeProfile = async (req, res) => {
     const updatedUser = await User.findByIdAndUpdate(
       userId,
       { 
-        profileCompleted: true,
+        profileCompleted: true, // This is the key fix
         alumniProfile: alumniProfile._id,
         // Update user name if provided in profile
         ...(userData.firstName && userData.lastName && {
@@ -113,6 +126,8 @@ export const completeProfile = async (req, res) => {
       },
       { new: true }
     ).select('-password');
+    
+    console.log('Profile completion successful for user:', userId);
     
     res.status(200).json({
       message: 'Alumni profile saved successfully',
@@ -146,28 +161,34 @@ export const verifyResetOtp = async (req, res) => {
   }
 };
 
+// In your login function
 export const login = async (req, res) => {
   try {
     const { email, password } = req.body;
+    
     // 1. Check if user exists
     const user = await User.findOne({ email });
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
+    
     // 2. Compare password
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
       return res.status(401).json({ message: 'Invalid credentials' });
     }
+    
     // 3. Create JWT token
     const token = jwt.sign(
       {
         id: user._id,
         role: user.role,
+        profileCompleted: user.profileCompleted // Include this in the token
       },
       process.env.JWT_SECRET,
-      { expiresIn: '2h' } // token expires in 2 hours
+      { expiresIn: '2h' }
     );
+    
     // 4. Return token and user info
     res.status(200).json({
       message: 'Login successful',
@@ -176,12 +197,12 @@ export const login = async (req, res) => {
         name: user.name,
         email: user.email,
         role: user.role,
-        profileCompleted: user.profileCompleted
+        profileCompleted: user.profileCompleted // Make sure this is included
       },
     });
   } catch (err) {
     console.error('Login error:', err);
-    res.status(500).json({ message: 'Server error:' +err.message});
+    res.status(500).json({ message: 'Server error:' + err.message });
   }
 };
 

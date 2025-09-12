@@ -60,48 +60,65 @@ const AlumniConnectProfile = ({ userRole }) => {
   }
   
   // Check if user data exists and if OTP is verified
-  useEffect(() => {
-    const token = localStorage.getItem('token');
-    
-    const isOtpVerified = localStorage.getItem('otpVerified') === 'true';
-    const userEmail = localStorage.getItem('userEmail');
-    const urlParams = new URLSearchParams(window.location.search);
-    const fromGoogle = urlParams.get('fromGoogle');
-    const tokenFromQuery = urlParams.get('token');
-    
-    // Get role from multiple possible sources
-    const effectiveRole = userRole || 
-                      localStorage.getItem('userRole') || 
-                      (location.state ? location.state.role : null);
-    
-    // Handle Google auth users
-    if (fromGoogle === 'true' && tokenFromQuery) {
-      localStorage.setItem('token', tokenFromQuery);
-      // Continue with profile completion
-      return;
-    }
-    
-    // If we don't have user data and we're not coming from Google, redirect to register
-    if (!userData && !token && !isOtpVerified) {
-      setMessage({ 
-        text: 'Unauthorized access. Please register first.', 
-        type: 'error' 
-      });
-      setTimeout(() => navigate('/register'), 2000);
-    } else if (userEmail && userData && userEmail !== userData.email) {
-      setMessage({ 
-        text: 'Session expired. Please register again.', 
-        type: 'error' 
-      });
-      setTimeout(() => navigate('/register'), 2000);
-    } else if (!effectiveRole) {
-      setMessage({ 
-        text: 'Role information missing. Please register again.', 
-        type: 'error' 
-      });
-      setTimeout(() => navigate('/register'), 2000);
-    }
-  }, [userData, navigate, userRole, location.state]);
+  // In AlumniConnectProfile component, update the useEffect
+useEffect(() => {
+  const token = localStorage.getItem('token');
+  const isOtpVerified = localStorage.getItem('otpVerified') === 'true';
+  const userEmail = localStorage.getItem('userEmail');
+  const profileCompleted = localStorage.getItem('profileCompleted') === 'true';
+  
+  const urlParams = new URLSearchParams(window.location.search);
+  const fromGoogle = urlParams.get('fromGoogle');
+  const tokenFromQuery = urlParams.get('token');
+  
+  // Get role from multiple possible sources
+  const effectiveRole = userRole || 
+                    localStorage.getItem('userRole') || 
+                    (location.state ? location.state.role : null);
+  
+  // Handle Google auth users
+  if (fromGoogle === 'true' && tokenFromQuery) {
+    localStorage.setItem('token', tokenFromQuery);
+    return;
+  }
+  
+  // If profile is already completed, redirect to dashboard
+  if (profileCompleted) {
+    setMessage({ 
+      text: 'Your profile is already completed. Redirecting to dashboard...', 
+      type: 'info' 
+    });
+    setTimeout(() => {
+      if (effectiveRole === 'student') {
+        navigate('/student-dashboard');
+      } else {
+        navigate('/dashboard');
+      }
+    }, 2000);
+    return;
+  }
+  
+  // If we don't have user data and we're not coming from Google, redirect to register
+  if (!userData && !token && !isOtpVerified) {
+    setMessage({ 
+      text: 'Unauthorized access. Please register first.', 
+      type: 'error' 
+    });
+    setTimeout(() => navigate('/register'), 2000);
+  } else if (userEmail && userData && userEmail !== userData.email) {
+    setMessage({ 
+      text: 'Session expired. Please register again.', 
+      type: 'error' 
+    });
+    setTimeout(() => navigate('/register'), 2000);
+  } else if (!effectiveRole) {
+    setMessage({ 
+      text: 'Role information missing. Please register again.', 
+      type: 'error' 
+    });
+    setTimeout(() => navigate('/register'), 2000);
+  }
+}, [userData, navigate, userRole, location.state]);
   
   // Update progress
   useEffect(() => {
@@ -266,7 +283,7 @@ const handleSubmit = async (e) => {
         type: 'success' 
       });
       
-      // Update user data in localStorage
+      // Update user data in localStorage - this is crucial
       if (response.data.user) {
         localStorage.setItem('user', JSON.stringify(response.data.user));
         localStorage.setItem('userRole', response.data.user.role);
@@ -948,4 +965,4 @@ const handleSubmit = async (e) => {
   );
 };
 
-export default AlumniConnectProfile; 
+export default AlumniConnectProfile;

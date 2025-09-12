@@ -28,44 +28,45 @@ const Login = () => {
     }
   }, [location]);
   
-  const handleLogin = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    setMessage('');
-    
-    try {
-      const response = await axios.post('http://localhost:5000/login', {
-        email,
-        password,
-      });
-      
-      // Save token and user data
-      localStorage.setItem('token', response.data.token);
-      localStorage.setItem('user', JSON.stringify(response.data.user));
-      localStorage.setItem('userRole', response.data.user.role);
-      
-      setMessage('Login successful! Redirecting...');
-      
-      // Redirect based on user role and profile completion
-setTimeout(() => {
-  if (response.data.user.profileCompleted) {
-    // If profile completed, redirect based on role
-    if (response.data.user.role === 'student') {
-      navigate('/student-dashboard');
-    } else {
-      navigate('/dashboard');
-    }
-  } else {
-    // Redirect to profile completion page
-    navigate('/alumni-profile', {
-      state: {
-        userData: response.data.user,
-        verified: true,
-        role: response.data.user.role
-      }
+ const handleLogin = async (e) => {
+  e.preventDefault();
+  setLoading(true);
+  setMessage('');
+  
+  try {
+    const response = await axios.post('http://localhost:5000/login', {
+      email,
+      password,
     });
-  }
-}, 1000);
+    
+    // Save token and user data
+    localStorage.setItem('token', response.data.token);
+    localStorage.setItem('user', JSON.stringify(response.data.user));
+    localStorage.setItem('userRole', response.data.user.role);
+    localStorage.setItem('profileCompleted', response.data.user.profileCompleted ? 'true' : 'false');
+    
+    setMessage('Login successful! Redirecting...');
+    
+    // Redirect based on profile completion
+    setTimeout(() => {
+      if (response.data.user.profileCompleted) {
+        // If profile completed, redirect based on role
+        if (response.data.user.role === 'student') {
+          navigate('/student-dashboard');
+        } else {
+          navigate('/dashboard');
+        }
+      } else {
+        // Redirect to profile completion page
+        navigate('/alumni-profile', {
+          state: {
+            userData: response.data.user,
+            verified: true,
+            role: response.data.user.role
+          }
+        });
+      }
+    }, 1000);
       
     } catch (error) {
       console.error('Login error:', error);
