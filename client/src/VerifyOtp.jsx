@@ -24,75 +24,83 @@ const VerifyOtp = () => {
     }
   };
 
- const handleVerify = async (e) => {
-  e.preventDefault();
-  const fullOtp = otp.join('');
-  
-  try {
-    setLoading(true);
-    const response = await axios.post('http://localhost:5000/api/verify-otp', {
-      ...userData,
-      otp: fullOtp,
-      purpose: 'register' // Add this for signup flow
-    });
+  const handleVerify = async (e) => {
+    e.preventDefault();
+    const fullOtp = otp.join('');
     
-    setMessage({ 
-      text: response.data.message || 'Verification successful!', 
-      type: 'success' 
-    });
-    setShowResend(false);
-    
-    // In VerifyOtp.jsx, change the redirect after successful verification
-setTimeout(() => {
-  // Store verification status in localStorage
-  localStorage.setItem('otpVerified', 'true');
-  localStorage.setItem('userEmail', userData.email);
-  localStorage.setItem('userRole', userData.role);
-  
-  // Navigate to profile completion page with user data
-  navigate('/alumni-profile', { 
-    state: { 
-      userData: userData, 
-      verified: true,
-      role: userData.role 
-    } 
-  });
-}, 2000);
-    
-  } catch (error) {
-    setMessage({ 
-      text: error.response?.data?.message || 'OTP verification failed.', 
-      type: 'error' 
-    });
-    setShowResend(true);
-  } finally {
-    setLoading(false);
-  }
-};
+    try {
+      setLoading(true);
+      const response = await axios.post('http://localhost:5000/api/verify-otp', {
+        ...userData,
+        otp: fullOtp,
+        purpose: 'register'
+      });
+      
+      setMessage({ 
+        text: response.data.message || 'Verification successful!', 
+        type: 'success' 
+      });
+      setShowResend(false);
+      
+      // Get userId from the server response or userData
+      const userId = response.data.userId || userData?._id || userData?.userId;
+      
+      if (!userId) {
+        throw new Error('User ID not found in response');
+      }
+      
+      setTimeout(() => {
+        // Store verification status and user data
+        localStorage.setItem('otpVerified', 'true');
+        localStorage.setItem('userEmail', userData.email);
+        localStorage.setItem('userRole', userData.role);
+        localStorage.setItem('userId', userId);
+        
+        // Navigate to profile completion page
+        navigate('/alumni-profile', { 
+          state: { 
+            userData: { ...userData, _id: userId },
+            verified: true,
+            role: userData.role,
+            userId: userId
+          } 
+        });
+      }, 2000);
+      
+    } catch (error) {
+      setMessage({ 
+        text: error.response?.data?.message || error.message || 'OTP verification failed.', 
+        type: 'error' 
+      });
+      setShowResend(true);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-const handleResend = async () => {
-  try {
-    setLoading(true);
-    await axios.post('http://localhost:5000/api/send-otp', {
-      ...userData,
-      purpose: 'register' // Add this for signup flow
-    });
-    setOtp(['', '', '', '', '', '']);
-    inputsRef.current[0].focus();
-    setMessage({ 
-      text: 'OTP resent successfully!', 
-      type: 'success' 
-    });
-    setShowResend(false);
-  } catch (error) {
-    setMessage({ 
-      text: error.response?.data?.message || 'Failed to resend OTP.', 
-      type: 'error' 
-    });
-  } finally {
-    setLoading(false);
-  }
-};
+  const handleResend = async () => {
+    try {
+      setLoading(true);
+      await axios.post('http://localhost:5000/api/send-otp', {
+        ...userData,
+        purpose: 'register'
+      });
+      setOtp(['', '', '', '', '', '']);
+      inputsRef.current[0].focus();
+      setMessage({ 
+        text: 'OTP resent successfully!', 
+        type: 'success' 
+      });
+      setShowResend(false);
+    } catch (error) {
+      setMessage({ 
+        text: error.response?.data?.message || 'Failed to resend OTP.', 
+        type: 'error' 
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">

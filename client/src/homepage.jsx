@@ -14,7 +14,6 @@ const AlumniConnect = () => {
     email: '',
     message: ''
   });
-
   const handleContactSubmit = async (e) => {
   e.preventDefault();
 
