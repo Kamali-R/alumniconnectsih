@@ -1,9 +1,8 @@
-// Register.jsx
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 
-const Register = ({ setUserData, setUserRole }) => {
+const Register = ({setUserData}) => {
   const [form, setForm] = useState({
     name: '',
     email: '',
@@ -58,78 +57,51 @@ const Register = ({ setUserData, setUserRole }) => {
     }
   };
   
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (!validateForm()) return;
-    
-    try {
-      setLoading(true);
-      setMessage({ text: '', type: '' });
-      
-      console.log('Sending OTP request:', form);
-      
-      // In your axios request
-const response = await axios.post('http://localhost:5000/api/send-otp', {
-  ...form,
-  purpose: 'register',
-  requestId: Date.now() // Unique identifier for each request
-}, {
-  headers: {
-    'Cache-Control': 'no-cache, no-store, must-revalidate',
-    'Pragma': 'no-cache',
-    'Expires': '0'
+
+ // In Register component, update the handleSubmit function
+const handleSubmit = async (e) => {
+  e.preventDefault();
+  if (!validateForm()) return;
+
+  try {
+    setLoading(true);
+    setMessage({ text: '', type: '' });
+
+    const response = await axios.post('http://localhost:5000/send-otp', {
+      ...form,
+      purpose: 'register'
+    });
+
+    setMessage({
+      text: response.data.message || 'OTP sent successfully!',
+      type: 'success',
+    });
+
+    // Store user data for profile completion
+    setUserData(form);
+
+    setTimeout(() => {
+      navigate('/VerifyOtp', {
+        state: {
+          userData: form,
+          email: form.email,
+        },
+      });
+    }, 1500);
+  } catch (error) {
+    const errorMessage =
+      error.response?.data?.message ||
+      error.message ||
+      'Failed to send OTP. Please try again.';
+    setMessage({
+      text: errorMessage,
+      type: 'error',
+    });
+  } finally {
+    setLoading(false);
   }
-});
-      console.log('OTP sending response:', response.data);
-      
-      setMessage({
-        text: response.data.message || 'OTP sent successfully!',
-        type: 'success',
-      });
-      
-      // Store user data and role in localStorage as backup
-      localStorage.setItem('registrationData', JSON.stringify(form));
-      localStorage.setItem('userRole', form.role);
-      if (setUserRole && typeof setUserRole === 'function') {
-        setUserRole(form.role);
-      } else {
-        console.warn('setUserRole is not a function or not provided');
-      }
-      
-      // Navigate to OTP verification with user data
-      setTimeout(() => {
-        navigate('/VerifyOtp', {
-          state: {
-            userData: form,
-            email: form.email,
-            role: form.role,
-          },
-        });
-      }, 1500);
-    } catch (error) {
-      console.error('OTP sending error:', error);
-      
-      let errorMessage = 'Failed to send OTP. Please try again.';
-      if (error.response) {
-        console.error('Error response data:', error.response.data);
-        errorMessage = error.response.data?.message || errorMessage;
-      } else if (error.request) {
-        console.error('No response received:', error.request);
-        errorMessage = 'No response from server. Please check your connection.';
-      } else {
-        console.error('Request setup error:', error.message);
-        errorMessage = error.message;
-      }
-      
-      setMessage({
-        text: errorMessage,
-        type: 'error',
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-  
+};
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
       <div className="w-full max-w-md mx-4 bg-white rounded-xl shadow-lg p-8 border border-gray-200">
@@ -258,4 +230,4 @@ const response = await axios.post('http://localhost:5000/api/send-otp', {
   );
 };
 
-export default Register;
+export default Register; 
