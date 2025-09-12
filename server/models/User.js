@@ -12,7 +12,10 @@ const userSchema = new mongoose.Schema({
   },
   password: {
     type: String,
-    required: true,
+    // Make password optional for Google OAuth users
+    required: function() {
+      return this.authProvider === 'local';
+    }
   },
   role: {
     type: String,
@@ -28,12 +31,17 @@ const userSchema = new mongoose.Schema({
     type: Boolean, 
     default: false 
   },
+  alumniProfile: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Alumni'
+  },
   graduationYear: { type: Number },
   lastLogin: { type: Date },
   otp: String,
   otpExpiry: Date,
   authProvider: {
     type: String,
+    enum: ['local', 'google'],
     default: 'local',
   },
 }, { timestamps: true });

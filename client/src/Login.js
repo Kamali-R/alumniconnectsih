@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+ import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
 import './index.css';
@@ -47,26 +47,25 @@ const Login = () => {
       setMessage('Login successful! Redirecting...');
       
       // Redirect based on user role and profile completion
-      setTimeout(() => {
-        // Only redirect to profile page if profile is not completed
-        if (response.data.user.profileCompleted === false) {
-          navigate('/alumni-profile', {
-            state: {
-              userData: response.data.user,
-              verified: true,
-              role: response.data.user.role
-            }
-          });
-        } else {
-          // If profile completed, redirect based on role
-          if (response.data.user.role === 'student') {
-            navigate('/student-dashboard');
-          } else {
-            // Alumni goes to alumni dashboard
-            navigate('/dashboard');
-          }
-        }
-      }, 1000);
+setTimeout(() => {
+  if (response.data.user.profileCompleted) {
+    // If profile completed, redirect based on role
+    if (response.data.user.role === 'student') {
+      navigate('/student-dashboard');
+    } else {
+      navigate('/dashboard');
+    }
+  } else {
+    // Redirect to profile completion page
+    navigate('/alumni-profile', {
+      state: {
+        userData: response.data.user,
+        verified: true,
+        role: response.data.user.role
+      }
+    });
+  }
+}, 1000);
       
     } catch (error) {
       console.error('Login error:', error);

@@ -1,9 +1,9 @@
-import express from 'express';
 import session from 'express-session';
 import mongoose from 'mongoose';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import passport from 'passport';
+import express from 'express';
 // Load routes
 import alumniRoutes from './routes/alumniRoutes.js';
 import authRoutes from './routes/authRoutes.js';

@@ -237,19 +237,16 @@ const handleSubmit = async (e) => {
       throw new Error('Authentication token not found');
     }
     
-    // Prepare form data with role
+    // Prepare form data
     const submitData = {
       ...formData,
       role: userRole || role || localStorage.getItem('userRole')
     };
     
-    // For alumni, if studentId is not provided, generate a default one
-    if (submitData.role === 'alumni' && !submitData.studentId) {
-      // Get user ID from localStorage
-      const user = JSON.parse(localStorage.getItem('user'));
-      if (user && user.id) {
-        submitData.studentId = `ALUMNI-${user.id.slice(-6)}`;
-      }
+    // For alumni, generate studentId if not provided
+    if (isAlumni && !submitData.studentId) {
+      const timestamp = Date.now().toString().slice(-6);
+      submitData.studentId = `ALUM-${timestamp}`;
     }
     
     console.log('Submitting profile data:', submitData);
@@ -263,7 +260,6 @@ const handleSubmit = async (e) => {
     
     console.log('Profile update response:', response.data);
     
-    // Check if update was successful
     if (response.data && response.data.message) {
       setMessage({ 
         text: 'Profile completed successfully! Redirecting to dashboard...', 
@@ -273,6 +269,8 @@ const handleSubmit = async (e) => {
       // Update user data in localStorage
       if (response.data.user) {
         localStorage.setItem('user', JSON.stringify(response.data.user));
+        localStorage.setItem('userRole', response.data.user.role);
+        localStorage.setItem('profileCompleted', 'true');
       }
       
       // Clear OTP verification data
@@ -281,12 +279,7 @@ const handleSubmit = async (e) => {
       
       // Redirect to dashboard after successful profile completion
       setTimeout(() => {
-        const userRole = response.data.user.role;
-        if (userRole === 'student') {
-          navigate('/student-dashboard');
-        } else {
-          navigate('/dashboard');
-        }
+        navigate('/dashboard');
       }, 2000);
     } else {
       throw new Error('Profile update failed');
@@ -297,9 +290,6 @@ const handleSubmit = async (e) => {
     
     let errorMessage = 'Profile update failed. Please try again.';
     if (error.response) {
-      console.error('Error response data:', error.response.data);
-      console.error('Error response status:', error.response.status);
-      
       if (error.response.status === 401) {
         errorMessage = 'Authentication expired. Please login again.';
         setTimeout(() => navigate('/login'), 2000);
@@ -308,12 +298,6 @@ const handleSubmit = async (e) => {
       } else {
         errorMessage = error.response.data?.message || error.response.data?.error || errorMessage;
       }
-    } else if (error.request) {
-      console.error('No response received:', error.request);
-      errorMessage = 'No response from server. Please check your connection.';
-    } else {
-      console.error('Request setup error:', error.message);
-      errorMessage = error.message;
     }
     
     setMessage({ text: errorMessage, type: 'error' });
@@ -964,4 +948,4 @@ const handleSubmit = async (e) => {
   );
 };
 
-export default AlumniConnectProfile;
+export default AlumniConnectProfile; 

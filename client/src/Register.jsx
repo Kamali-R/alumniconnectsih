@@ -219,4 +219,4 @@ const Register = ({setUserData}) => {
   );
 };
 
-export default Register;
+export default Register; 

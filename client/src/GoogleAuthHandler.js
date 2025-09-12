@@ -12,9 +12,6 @@ const GoogleAuthHandler = () => {
         const params = new URLSearchParams(location.search);
         const token = params.get('token');
         const error = params.get('error');
-        const success = params.get('success');
-        
-        console.log('Google auth params:', { token, error, success });
         
         if (error) {
           console.error('Google auth error:', error);
@@ -26,43 +23,53 @@ const GoogleAuthHandler = () => {
           return;
         }
         
-        if (token && success === 'true') {
-          // Store token with consistent key
+        if (token) {
+          // Store token
           localStorage.setItem('token', token);
           
-          // Get user data using the token
-          const response = await axios.get('http://localhost:5000/user', {
-            headers: {
-              'Authorization': `Bearer ${token}`
+          try {
+            // Get user data using the token
+            const response = await axios.get('http://localhost:5000/user', {
+              headers: {
+                'Authorization': `Bearer ${token}`
+              }
+            });
+            
+            const userData = response.data;
+            
+            // Store user data
+            localStorage.setItem('user', JSON.stringify(userData));
+            localStorage.setItem('userRole', userData.role);
+            
+            console.log('Google auth successful, user data:', userData);
+            
+            // Redirect based on profile completion
+            if (userData.profileCompleted) {
+              // Redirect to appropriate dashboard
+              if (userData.role === 'student') {
+                navigate('/student-dashboard');
+              } else {
+                navigate('/dashboard');
+              }
+            } else {
+              // Redirect to profile completion
+              navigate('/alumni-profile', { 
+                state: { 
+                  userData: userData,
+                  verified: true,
+                  role: userData.role,
+                  fromGoogle: true
+                }
+              });
             }
-          });
-          
-          const userData = response.data;
-          
-          // Store user data
-          localStorage.setItem('user', JSON.stringify(userData));
-          localStorage.setItem('userRole', userData.role);
-          localStorage.setItem('otpVerified', 'true');
-          
-          console.log('Google auth successful, user data:', userData);
-          
-          // Redirect based on profile completion
-          if (!userData.profileCompleted) {
+          } catch (userError) {
+            console.error('Error fetching user data:', userError);
+            // If we can't get user data but have a token, try to proceed
             navigate('/alumni-profile', { 
               state: { 
-                userData: userData,
-                verified: true,
-                role: userData.role,
                 fromGoogle: true
               }
             });
-          } else {
-            // Redirect to appropriate dashboard
-            if (userData.role === 'student') {
-              navigate('/student-dashboard');
-            } else {
-              navigate('/dashboard');
-            }
           }
         } else {
           console.error('No token received from Google auth');
@@ -74,12 +81,6 @@ const GoogleAuthHandler = () => {
         }
       } catch (error) {
         console.error('Google auth handler error:', error);
-        
-        // Clear any partial auth data
-        localStorage.removeItem('token');
-        localStorage.removeItem('user');
-        localStorage.removeItem('userRole');
-        
         navigate('/login', { 
           state: { 
             error: 'Authentication failed. Please try again.' 

@@ -1,4 +1,4 @@
-import passport from "passport";
+ import passport from "passport";
 import { Strategy as GoogleStrategy } from "passport-google-oauth20";
 import dotenv from "dotenv";
 dotenv.config();
@@ -119,4 +119,4 @@ passport.deserializeUser(async (id, done) => {
   }
 });
 
-export default passport;
+export default passport; 

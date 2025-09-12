@@ -1,4 +1,4 @@
-import User from '../models/User.js';
+ import User from '../models/User.js';
 import Otp from '../models/otp.js';
 import bcrypt from 'bcryptjs';
 import sendEmail from '../utils/sendEmail.js';
@@ -78,32 +78,41 @@ export const verifyOtp = async (req, res) => {
 export const completeProfile = async (req, res) => {
   try {
     const userId = req.user.id;
+    const userData = req.body;
     
     // Check if alumni profile already exists
     let alumniProfile = await Alumni.findOne({ userId });
+    
     if (alumniProfile) {
       // Update existing alumni profile
       alumniProfile = await Alumni.findOneAndUpdate(
         { userId },
-        { ...req.body, status: 'complete' },
+        { ...userData, status: 'complete' },
         { new: true, runValidators: true }
       );
     } else {
       // Create new alumni profile
       alumniProfile = new Alumni({
         userId,
-        ...req.body,
+        ...userData,
         status: 'complete'
       });
       await alumniProfile.save();
     }
     
-    // Update User document to mark profileCompleted = true
+    // Update User document to mark profileCompleted = true and link alumni profile
     const updatedUser = await User.findByIdAndUpdate(
       userId,
-      { profileCompleted: true },
+      { 
+        profileCompleted: true,
+        alumniProfile: alumniProfile._id,
+        // Update user name if provided in profile
+        ...(userData.firstName && userData.lastName && {
+          name: `${userData.firstName} ${userData.lastName}`
+        })
+      },
       { new: true }
-    );
+    ).select('-password');
     
     res.status(200).json({
       message: 'Alumni profile saved successfully',
@@ -225,4 +234,4 @@ export const resetPassword = async (req, res) => {
     console.error('Reset password error:', err);
     res.status(500).json({ message: 'Server error during password reset' });
   }
-};
+}; 

@@ -1,7 +1,7 @@
-import express from 'express';
 import passport from 'passport';
 import jwt from 'jsonwebtoken';
 import User from '../models/User.js';
+import express from 'express';
 import {
   sendOtp,
   verifyOtp,
@@ -105,5 +105,18 @@ router.get('/user', auth, async (req, res) => {
     res.status(500).json({ message: 'Error fetching user data' });
   }
 });
-
+// Check if profile is completed
+// Check if profile is completed
+router.get('/check-profile', auth, async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id).select('profileCompleted role');
+    res.json({
+      profileCompleted: user.profileCompleted,
+      role: user.role
+    });
+  } catch (error) {
+    console.error('Profile check error:', error);
+    res.status(500).json({ message: 'Error checking profile status' });
+  }
+});
 export default router;
