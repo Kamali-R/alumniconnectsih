@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import axios from 'axios';
 import { useLocation, useNavigate } from 'react-router-dom';
 
@@ -12,6 +12,14 @@ const VerifyOtp = () => {
   const [loading, setLoading] = useState(false);
   const [showResend, setShowResend] = useState(false);
   const inputsRef = useRef([]);
+  const [countdown, setCountdown] = useState(30);
+   useEffect(() => {
+    // Countdown timer for resend OTP
+    if (countdown > 0) {
+      const timer = setTimeout(() => setCountdown(countdown - 1), 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [countdown]);
 
   const handleChange = (index, value) => {
     if (!/^\d?$/.test(value)) return;
@@ -27,6 +35,13 @@ const VerifyOtp = () => {
  const handleVerify = async (e) => {
   e.preventDefault();
   const fullOtp = otp.join('');
+  if (fullOtp.length !== 6) {
+      setMessage({ 
+        text: 'Please enter a complete 6-digit OTP', 
+        type: 'error' 
+      });
+      return;
+    }
   
   try {
     setLoading(true);
@@ -43,12 +58,11 @@ const VerifyOtp = () => {
     setShowResend(false);
     
     // In VerifyOtp.jsx, change the redirect after successful verification
-setTimeout(() => {
   // Store verification status in localStorage
   localStorage.setItem('otpVerified', 'true');
   localStorage.setItem('userEmail', userData.email);
   localStorage.setItem('userRole', userData.role);
-  
+  setTimeout(() => {
   // Navigate to profile completion page with user data
   navigate('/alumni-profile', { 
     state: { 
@@ -60,15 +74,28 @@ setTimeout(() => {
 }, 2000);
     
   } catch (error) {
-    setMessage({ 
-      text: error.response?.data?.message || 'OTP verification failed.', 
-      type: 'error' 
-    });
-    setShowResend(true);
-  } finally {
-    setLoading(false);
-  }
-};
+      console.error('OTP verification error:', error);
+      let errorMessage = 'OTP verification failed.';
+      
+      if (error.response?.status === 400 && error.response?.data?.message === 'User already exists') {
+        errorMessage = 'This email is already registered. Please try logging in.';
+        // Optionally redirect to login after a delay
+        setTimeout(() => {
+          navigate('/login', { state: { email: userData.email } });
+        }, 3000);
+      } else if (error.response?.data?.message) {
+        errorMessage = error.response.data.message;
+      }
+      
+      setMessage({ 
+        text: errorMessage, 
+        type: 'error' 
+      });
+      setShowResend(true);
+    } finally {
+      setLoading(false);
+    }
+  };
 
 const handleResend = async () => {
   try {
@@ -85,6 +112,7 @@ const handleResend = async () => {
     });
     setShowResend(false);
   } catch (error) {
+    console.error('Resend OTP error:', error);
     setMessage({ 
       text: error.response?.data?.message || 'Failed to resend OTP.', 
       type: 'error' 
@@ -93,6 +121,10 @@ const handleResend = async () => {
     setLoading(false);
   }
 };
+if (!userData || !email) {
+    navigate('/register');
+    return null;
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">

@@ -68,8 +68,18 @@ const Register = ({ setUserData, setUserRole }) => {
       
       console.log('Sending OTP request:', form);
       
-      const response = await axios.post('http://localhost:5000/api/send-otp', form);
-      
+      // In your axios request
+const response = await axios.post('http://localhost:5000/api/send-otp', {
+  ...form,
+  purpose: 'register',
+  requestId: Date.now() // Unique identifier for each request
+}, {
+  headers: {
+    'Cache-Control': 'no-cache, no-store, must-revalidate',
+    'Pragma': 'no-cache',
+    'Expires': '0'
+  }
+});
       console.log('OTP sending response:', response.data);
       
       setMessage({
@@ -80,7 +90,11 @@ const Register = ({ setUserData, setUserRole }) => {
       // Store user data and role in localStorage as backup
       localStorage.setItem('registrationData', JSON.stringify(form));
       localStorage.setItem('userRole', form.role);
-      setUserRole(form.role);
+      if (setUserRole && typeof setUserRole === 'function') {
+        setUserRole(form.role);
+      } else {
+        console.warn('setUserRole is not a function or not provided');
+      }
       
       // Navigate to OTP verification with user data
       setTimeout(() => {
