@@ -81,9 +81,6 @@ export const verifyOtp = async (req, res) => {
       }
     });
   }
-  
-  await Otp.deleteMany({ email });
-  res.status(200).json({ message: 'OTP verified successfully' });
 };
 // Complete profile function
 export const completeProfile = async (req, res) => {

@@ -34,6 +34,15 @@ app.use(
   })
 );
 
+// ✅ Add TEST ENDPOINT here - BEFORE API routes
+app.get('/api/test', (req, res) => {
+  res.json({ 
+    success: true, 
+    message: '✅ Backend is working!',
+    timestamp: new Date().toISOString()
+  });
+});
+
 // ✅ Passport initialization
 app.use(passport.initialize());
 app.use(passport.session());
