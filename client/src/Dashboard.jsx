@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-
+import AlumniProfilePage from './profile';
 const AlumniConnectDashboard = () => {
   const navigate = useNavigate();
   const [activeSection, setActiveSection] = useState('dashboard');
@@ -390,6 +390,12 @@ const AlumniConnectDashboard = () => {
               </div>
             </div>
           )}
+                  {/* Add the Profile Section right after the Dashboard section */}
+          {activeSection === 'profile' && (
+            <div className={`content-section ${fadeAnimation ? 'fade-in' : ''}`}>
+              <AlumniProfilePage />
+            </div>
+          )}
           
           {/* Other Sections (Placeholders) */}
           {activeSection !== 'dashboard' && (
@@ -398,7 +404,7 @@ const AlumniConnectDashboard = () => {
                 {navItems.find(item => item.id === activeSection)?.label}
               </h1>
               <div className="bg-white rounded-xl shadow p-8">
-                <p className="text-gray-600">This section is under construction. Check back soon!</p>
+                
               </div>
             </div>
           )}
