@@ -309,6 +309,6 @@ return (
   </div>
 </footer>
     </div>
-  );
+  ); 
 };
 export default AlumniConnect;

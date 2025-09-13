@@ -56,7 +56,15 @@ const Register = ({setUserData}) => {
       setErrors((prev) => ({ ...prev, [name]: '' }));
     }
   };
-  
+  const checkUserExists = async (email) => {
+    try {
+      const response = await axios.get(`http://localhost:5000/api/check-user?email=${email}`);
+      return response.data.exists;
+    } catch (error) {
+      console.error('Error checking user:', error);
+      return false;
+    }
+  };
 
  // In Register component, update the handleSubmit function
 const handleSubmit = async (e) => {
@@ -66,6 +74,16 @@ const handleSubmit = async (e) => {
   try {
     setLoading(true);
     setMessage({ text: '', type: '' });
+    const userExists = await checkUserExists(form.email);
+      if (userExists) {
+        setMessage({
+          text: 'User already exists with this email address',
+          type: 'error',
+        });
+        setLoading(false);
+        return;
+      }
+
 
     const response = await axios.post('http://localhost:5000/send-otp', {
       ...form,
@@ -89,18 +107,25 @@ const handleSubmit = async (e) => {
       });
     }, 1500);
   } catch (error) {
-    const errorMessage =
-      error.response?.data?.message ||
-      error.message ||
-      'Failed to send OTP. Please try again.';
-    setMessage({
-      text: errorMessage,
-      type: 'error',
-    });
-  } finally {
-    setLoading(false);
-  }
-};
+    if (error.response?.status === 400 && error.response?.data?.message === 'User already exists') {
+        setMessage({
+          text: 'User already exists with this email address',
+          type: 'error',
+        });
+      } else {
+        const errorMessage =
+          error.response?.data?.message ||
+          error.message ||
+          'Failed to send OTP. Please try again.';
+        setMessage({
+          text: errorMessage,
+          type: 'error',
+        });
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
