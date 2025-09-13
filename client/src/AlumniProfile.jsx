@@ -1,5 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { 
+import { useNavigate } from 'react-router-dom';
+ // Make sure this is imported
+  import { 
   FaUser, FaVenusMars, FaCalendar, FaEnvelope, FaPhone, FaMapMarkerAlt,
   FaGraduationCap, FaUniversity, FaIdCard, FaCertificate, FaCodeBranch, FaCalendarAlt,
   FaBriefcase, FaTools, FaStar, FaUserEdit, FaGlobe, FaUpload, FaShieldAlt, FaInfoCircle,
@@ -7,53 +9,12 @@ import {
   FaBuilding, FaLightbulb, FaGraduationCap as FaGraduation, FaSearch, FaExclamationCircle
 } from 'react-icons/fa';
 import { FaLinkedin, FaGithub } from 'react-icons/fa';
+// Make sure to import useNavigate from react-router-dom
 
-<<<<<<< HEAD
-const AlumniConnectProfile = ({ userRole }) => {
-  const location = useLocation();
-  const navigate = useNavigate();
-  const { userData, verified, role } = location.state || {};
-  
-  // State for form data
-  const [formData, setFormData] = useState(() => {
-    const initialUserData = location.state?.userData || JSON.parse(localStorage.getItem('user')) || {};
-    return {
-      firstName: initialUserData.name?.split(' ')[0] || '',
-      lastName: initialUserData.name?.split(' ')[1] || '',
-      email: initialUserData.email || '',
-      phone: '',
-      dob: '',
-      gender: '',
-      address: '',
-      city: '',
-      state: '',
-      country: '',
-      degreeType: '',
-      fieldOfStudy: '',
-      graduationYear: '',
-      gpa: '',
-      studentId: '',
-      activities: '',
-      experiences: [{
-        jobTitle: '',
-        company: '',
-        startDate: '',
-        endDate: '',
-        jobDescription: '',
-        industry: '',
-        workLocation: ''
-      }],
-      linkedin: '',
-      website: '',
-      skills: [],
-      bio: '',
-      networking: [],
-      privacy: ['profile-visible', 'email-notifications'],
-      terms: false
-    };
-=======
 const AlumniConnectProfile = () => {
-
+  const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState({ text: '', type: '' });
+  const navigate = useNavigate(); 
   const [showSuccess, setShowSuccess] = useState(false);
   // Personal Information State
 
@@ -115,7 +76,6 @@ const AlumniConnectProfile = () => {
     portfolio: '',
     termsAccept: false,
     emailConsent: false
->>>>>>> 7aae5c253fd2e4bc3cb3f3c0ee6c988dea0ac2c8
   });
   
   // Dynamic sections state
@@ -146,51 +106,13 @@ const AlumniConnectProfile = () => {
   const [showLocationDropdown, setShowLocationDropdown] = useState(false);
   const [filteredLocations, setFilteredLocations] = useState([]);
   
-<<<<<<< HEAD
-  // Check if user data exists and if OTP is verified
-  // In AlumniConnectProfile component, update the useEffect
-useEffect(() => {
-  const token = localStorage.getItem('token');
-  const isOtpVerified = localStorage.getItem('otpVerified') === 'true';
-  const userEmail = localStorage.getItem('userEmail');
-  const profileCompleted = localStorage.getItem('profileCompleted') === 'true';
-=======
   // Validation states
   const [errors, setErrors] = useState({});
   const [touched, setTouched] = useState({});
->>>>>>> 7aae5c253fd2e4bc3cb3f3c0ee6c988dea0ac2c8
   
   // Refs
   const fileInputRef = useRef(null);
   
-<<<<<<< HEAD
-  // Get role from multiple possible sources
-  const effectiveRole = userRole || 
-                    localStorage.getItem('userRole') || 
-                    (location.state ? location.state.role : null);
-  
-  // Handle Google auth users
-  if (fromGoogle === 'true' && tokenFromQuery) {
-    localStorage.setItem('token', tokenFromQuery);
-    return;
-  }
-  
-  // If profile is already completed, redirect to dashboard
-  if (profileCompleted) {
-    setMessage({ 
-      text: 'Your profile is already completed. Redirecting to dashboard...', 
-      type: 'info' 
-    });
-    setTimeout(() => {
-      if (effectiveRole === 'student') {
-        navigate('/student-dashboard');
-      } else {
-        navigate('/dashboard');
-      }
-    }, 2000);
-    return;
-  }
-=======
   // Options for dropdowns
   const degreeOptions = [
     'B.Tech', 'B.E', 'B.Sc', 'B.A', 'B.Com', 'BBA', 'BCA', 'B.Arch', 'B.Des', 'B.Pharm',
@@ -264,7 +186,6 @@ useEffect(() => {
     'Rio de Janeiro, Brazil', 'São Paulo, Brazil', 'Santiago, Chile', 'Lima, Peru',
     'Bogotá, Colombia', 'Caracas, Venezuela'
   ];
->>>>>>> 7aae5c253fd2e4bc3cb3f3c0ee6c988dea0ac2c8
   
   const industryOptions = [
     'Technology/Software', 'Healthcare', 'Finance/Banking', 'Education',
@@ -435,99 +356,9 @@ useEffect(() => {
   };
   
   const addExperience = () => {
-<<<<<<< HEAD
-    setFormData(prev => ({
-      ...prev,
-      experiences: [
-        ...prev.experiences,
-        {
-          jobTitle: '',
-          company: '',
-          startDate: '',
-          endDate: '',
-          jobDescription: '',
-          industry: '',
-          workLocation: ''
-        }
-      ]
-    }));
-  };
-  
-  // Remove experience
-  const removeExperience = (index) => {
-    if (formData.experiences.length <= 1) return;
-    
-    setFormData(prev => ({
-      ...prev,
-      experiences: prev.experiences.filter((_, i) => i !== index)
-    }));
-  };
-  
-  // Add skill
-  const addSkill = (skill) => {
-    const trimmedSkill = skill.trim();
-    if (trimmedSkill && !formData.skills.includes(trimmedSkill)) {
-      setFormData(prev => ({
-        ...prev,
-        skills: [...prev.skills, trimmedSkill]
-      }));
-      setSkillInput('');
-    }
-  };
-  
-  // Remove skill
-  const removeSkill = (index) => {
-    setFormData(prev => ({
-      ...prev,
-      skills: prev.skills.filter((_, i) => i !== index)
-    }));
-  };
-  
-  // Handle form submission
-  // In the AlumniConnectProfile component, update the form submission logic
-
-// Handle form submission
-const handleSubmit = async (e) => {
-  e.preventDefault();
-  
-  // Validate required fields
-  const requiredFields = formRef.current.querySelectorAll('input[required], select[required]');
-  let isValid = true;
-  
-  requiredFields.forEach(field => {
-    if (!field.value.trim()) {
-      field.classList.add('border-red-500');
-      isValid = false;
-    } else {
-      field.classList.remove('border-red-500');
-    }
-  });
-  
-  if (!isValid) {
-    setMessage({ text: 'Please fill in all required fields marked with *', type: 'error' });
-    return;
-  }
-  
-  // Check terms agreement
-  if (!formData.terms) {
-    setMessage({ text: 'Please agree to the Terms of Service and Privacy Policy to continue.', type: 'error' });
-    return;
-  }
-  
-  try {
-    setLoading(true);
-    setMessage({ text: '', type: '' });
-    
-    // Get the token
-    const token = localStorage.getItem('token');
-    
-    if (!token) {
-      throw new Error('Authentication token not found');
-=======
     // Validate required fields
     if (!currentExperience.company.trim() || !currentExperience.title.trim()) {
       return; // Prevent adding if required fields are empty
->>>>>>> 7aae5c253fd2e4bc3cb3f3c0ee6c988dea0ac2c8
     }
     
     const newExperience = {
@@ -539,76 +370,6 @@ const handleSubmit = async (e) => {
       description: currentExperience.description.trim()
     };
     
-<<<<<<< HEAD
-    // For alumni, generate studentId if not provided
-    if (isAlumni && !submitData.studentId) {
-      const timestamp = Date.now().toString().slice(-6);
-      submitData.studentId = `ALUM-${timestamp}`;
-    }
-    
-    console.log('Submitting profile data:', submitData);
-    
-    // Update the user profile
-    const response = await axios.post('http://localhost:5000/complete-profile', submitData, {
-      headers: {
-        'Authorization': `Bearer ${token}`
-      }
-    });
-    
-    console.log('Profile update response:', response.data);
-    
-    if (response.data && response.data.message) {
-      setMessage({ 
-        text: 'Profile completed successfully! Redirecting to dashboard...', 
-        type: 'success' 
-      });
-      
-      // Update user data in localStorage - this is crucial
-      if (response.data.user) {
-        localStorage.setItem('user', JSON.stringify(response.data.user));
-        localStorage.setItem('userRole', response.data.user.role);
-        localStorage.setItem('profileCompleted', 'true');
-      }
-      
-      // Clear OTP verification data
-      localStorage.removeItem('otpVerified');
-      localStorage.removeItem('userEmail');
-      
-      // Redirect to dashboard after successful profile completion
-      setTimeout(() => {
-        navigate('/dashboard');
-      }, 2000);
-    } else {
-      throw new Error('Profile update failed');
-    }
-    
-  } catch (error) {
-    console.error('Profile update error:', error);
-    
-    let errorMessage = 'Profile update failed. Please try again.';
-    if (error.response) {
-      if (error.response.status === 401) {
-        errorMessage = 'Authentication expired. Please login again.';
-        setTimeout(() => navigate('/login'), 2000);
-      } else if (error.response.status === 400) {
-        errorMessage = error.response.data.message || error.response.data.error || 'Invalid profile data.';
-      } else {
-        errorMessage = error.response.data?.message || error.response.data?.error || errorMessage;
-      }
-    }
-    
-    setMessage({ text: errorMessage, type: 'error' });
-  } finally {
-    setLoading(false);
-  }
-};
-  // Save as draft
-  const saveAsDraft = () => {
-    // In a real application, you would save the current form state
-    setMessage({ 
-      text: 'Profile saved as draft. You can complete it later from your account settings.', 
-      type: 'success' 
-=======
     setExperiences(prev => [...prev, newExperience]);
     setCurrentExperience({
       company: '',
@@ -616,7 +377,6 @@ const handleSubmit = async (e) => {
       location: '',
       duration: '',
       description: ''
->>>>>>> 7aae5c253fd2e4bc3cb3f3c0ee6c988dea0ac2c8
     });
   };
   
@@ -819,47 +579,95 @@ const handleSubmit = async (e) => {
   };
   
   // Form submission
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    
-    // Validate form
-    const isValid = validateForm();
-    
-    if (!isValid) {
-      // Scroll to the first error
-      const firstErrorField = Object.keys(errors)[0];
-      const element = document.querySelector(`[name="${firstErrorField}"]`);
-      if (element) {
-        element.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        element.focus();
-      }
-      return;
+  // Form submission
+const handleSubmit = async (e) => {
+  e.preventDefault();
+  
+  // Validate form
+  const isValid = validateForm();
+  
+  if (!isValid) {
+    // Scroll to the first error
+    const firstErrorField = Object.keys(errors)[0];
+    const element = document.querySelector(`[name="${firstErrorField}"]`);
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      element.focus();
     }
-    
-    // Form data
-    const formData = {
-      personalInfo,
-      academicInfo,
-      professionalInfo,
-      careerStatus,
-      careerDetails,
-      otherInfo,
-      experiences,
-      skills,
-      interests,
-      resumeFile
-    };
-    
-    console.log('Form submitted:', formData);
-    setShowSuccess(true);
-    
-    // Hide notification after 5 seconds
-    setTimeout(() => {
-      setShowSuccess(false);
-    }, 5000);
-    // Here you would typically send the data to a server
+    return;
+  }
+  
+  // Prepare form data for submission
+  const formData = {
+    personalInfo,
+    academicInfo,
+    professionalInfo,
+    careerStatus,
+    careerDetails,
+    otherInfo: {
+      ...otherInfo,
+      // Remove termsAccept as it's not needed in the profile
+      termsAccept: undefined
+    },
+    experiences,
+    skills,
+    interests,
+    resumeFileName: resumeFile ? resumeFile.name : null
   };
   
+  setLoading(true);
+  
+  try {
+    // Save profile to backend
+    const result = await saveProfileToBackend(formData);
+    
+    console.log('Profile saved successfully:', result);
+    setShowSuccess(true);
+    
+    // Update local storage
+    localStorage.setItem('profileCompleted', 'true');
+    
+    // Redirect to dashboard after 3 seconds
+    setTimeout(() => {
+      navigate('/dashboard');
+    }, 3000);
+    
+  } catch (error) {
+    console.error('Error submitting form:', error);
+    setMessage({
+      text: error.message || 'Failed to save profile. Please try again.',
+      type: 'error'
+    });
+  } finally {
+    setLoading(false);
+  }
+};
+  
+const saveProfileToBackend = async (formData) => {
+  try {
+    const token = localStorage.getItem('token');
+    
+    const response = await fetch('http://localhost:5000/api/alumni/profile', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify(formData)
+    });
+    
+    const data = await response.json();
+    
+    if (!response.ok) {
+      throw new Error(data.message || 'Failed to save profile');
+    }
+    
+    return data;
+  } catch (error) {
+    console.error('Error saving profile:', error);
+    throw error;
+  }
+};
   // Close dropdowns when clicking outside
   useEffect(() => {
     const handleClickOutside = () => {
@@ -900,7 +708,32 @@ return (
           </div>
         </div>
       )}
-      
+      {message.text && (
+  <div className={`fixed top-4 left-1/2 transform -translate-x-1/2 z-50 animate-fade-in ${
+    message.type === 'error' ? 'bg-red-50 border-red-200 text-red-700' : 'bg-green-50 border-green-200 text-green-700'
+  } border rounded-xl p-4 shadow-lg max-w-md`}>
+    <div className="flex items-start space-x-3">
+      <div className={`p-2 rounded-full ${
+        message.type === 'error' ? 'bg-red-100' : 'bg-green-100'
+      }`}>
+        {message.type === 'error' ? (
+          <FaExclamationCircle className="text-red-600 text-xl" />
+        ) : (
+          <FaCheckCircle className="text-green-600 text-xl" />
+        )}
+      </div>
+      <div className="flex-1">
+        <p className="text-sm">{message.text}</p>
+      </div>
+      <button 
+        onClick={() => setMessage({ text: '', type: '' })}
+        className="text-gray-600 hover:text-gray-800 transition-colors duration-200"
+      >
+        <FaTimes />
+      </button>
+    </div>
+  </div>
+)}
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="text-center mb-12">
@@ -2152,13 +1985,28 @@ return (
           
           {/* Submit Button */}
           <div className="flex justify-end pt-8">
-            <button 
-              type="submit" 
-              className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-12 py-4 rounded-xl transition-all duration-200 transform hover:scale-105 shadow-lg hover:shadow-xl flex items-center space-x-3"
-            >
-              <span className="text-lg">Complete Registration</span>
-              <FaArrowRight />
-            </button>
+<button 
+  type="submit" 
+  disabled={loading}
+  className={`bg-blue-600 hover:bg-blue-700 text-white font-semibold px-12 py-4 rounded-xl transition-all duration-200 transform hover:scale-105 shadow-lg hover:shadow-xl flex items-center space-x-3 ${
+    loading ? 'opacity-75 cursor-not-allowed' : ''
+  }`}
+>
+  {loading ? (
+    <>
+      <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+      </svg>
+      <span className="text-lg">Saving...</span>
+    </>
+  ) : (
+    <>
+      <span className="text-lg">Complete Registration</span>
+      <FaArrowRight />
+    </>
+  )}
+</button>
           </div>
         </form>
       </div>
