@@ -9,7 +9,8 @@ import {
   verifyResetOtp,
   resetPassword,
   forgotPassword,
-  completeProfile
+  completeProfile,
+  checkUser
 } from '../controllers/authController.js';
 import auth from '../middleware/authMiddleware.js';
 
@@ -27,7 +28,8 @@ router.post('/complete-profile', auth, completeProfile);
 router.post('/forgot-password', forgotPassword);
 router.post('/verify-reset-otp', verifyResetOtp);
 router.post('/reset-password', resetPassword);
-
+// In your routes file
+router.get('/api/check-user', checkUser);
 // Google OAuth Routes
 router.get('/auth/google', (req, res, next) => {
   console.log('🚀 Initiating Google OAuth flow');

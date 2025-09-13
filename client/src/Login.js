@@ -3,12 +3,13 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
 import './index.css';
 
-const Login = () => {
+const Login = ({ setIsAuthenticated }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [showPwd, setShowPwd] = useState(false);
+  // eslint-disable-next-line no-unused-vars
+const [showPwd, setShowPwd] = useState(false);
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(false);
   
