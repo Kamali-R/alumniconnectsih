@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { useNavigate,useLocation, Link } from 'react-router-dom';
+import { useNavigate, useLocation, Link } from 'react-router-dom';
 
 const Register = ({setUserData}) => {
   const [form, setForm] = useState({
@@ -14,17 +14,22 @@ const Register = ({setUserData}) => {
   const [errors, setErrors] = useState({});
   const navigate = useNavigate();
   const location = useLocation(); 
+  
   useEffect(() => {
     const params = new URLSearchParams(location.search);
     const error = params.get('error');
-
     if (error === 'not_found') {
       setMessage({
         text: 'No account found for this Google email. Please complete your signup.',
         type: 'error',
       });
     }
-  }, [location.search]);
+    
+    // Check if role is passed in location state (from homepage buttons)
+    if (location.state?.role) {
+      setForm(prev => ({ ...prev, role: location.state.role }));
+    }
+  }, [location.search, location.state]);
   
   const validateForm = () => {
     const newErrors = {};
@@ -40,11 +45,10 @@ const Register = ({setUserData}) => {
       newErrors.password = 'Password must be at least 6 characters';
     }
     if (!form.role) newErrors.role = 'Please select a role';
-
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
-
+  
   const handleChange = (e) => {
     const { name, value } = e.target;
     setForm((prev) => ({ ...prev, [name]: value }));
@@ -52,7 +56,15 @@ const Register = ({setUserData}) => {
       setErrors((prev) => ({ ...prev, [name]: '' }));
     }
   };
-  
+  const checkUserExists = async (email) => {
+    try {
+      const response = await axios.get(`http://localhost:5000/api/check-user?email=${email}`);
+      return response.data.exists;
+    } catch (error) {
+      console.error('Error checking user:', error);
+      return false;
+    }
+  };
 
  // In Register component, update the handleSubmit function
 const handleSubmit = async (e) => {
@@ -62,6 +74,16 @@ const handleSubmit = async (e) => {
   try {
     setLoading(true);
     setMessage({ text: '', type: '' });
+    const userExists = await checkUserExists(form.email);
+      if (userExists) {
+        setMessage({
+          text: 'User already exists with this email address',
+          type: 'error',
+        });
+        setLoading(false);
+        return;
+      }
+
 
     const response = await axios.post('http://localhost:5000/send-otp', {
       ...form,
@@ -85,18 +107,25 @@ const handleSubmit = async (e) => {
       });
     }, 1500);
   } catch (error) {
-    const errorMessage =
-      error.response?.data?.message ||
-      error.message ||
-      'Failed to send OTP. Please try again.';
-    setMessage({
-      text: errorMessage,
-      type: 'error',
-    });
-  } finally {
-    setLoading(false);
-  }
-};
+    if (error.response?.status === 400 && error.response?.data?.message === 'User already exists') {
+        setMessage({
+          text: 'User already exists with this email address',
+          type: 'error',
+        });
+      } else {
+        const errorMessage =
+          error.response?.data?.message ||
+          error.message ||
+          'Failed to send OTP. Please try again.';
+        setMessage({
+          text: errorMessage,
+          type: 'error',
+        });
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
@@ -105,7 +134,7 @@ const handleSubmit = async (e) => {
           <h2 className="text-3xl font-bold text-gray-800 mb-2">Register to Alumni Connect</h2>
           <p className="text-gray-600">Enter your details to continue</p>
         </div>
-
+        
         {message.text && (
           <div
             className={`mb-6 p-3 rounded-lg ${
@@ -117,7 +146,7 @@ const handleSubmit = async (e) => {
             {message.text}
           </div>
         )}
-
+        
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <input
@@ -131,7 +160,7 @@ const handleSubmit = async (e) => {
             />
             {errors.name && <p className="mt-1 text-sm text-red-600">{errors.name}</p>}
           </div>
-
+          
           <div>
             <input
               name="email"
@@ -145,7 +174,7 @@ const handleSubmit = async (e) => {
             />
             {errors.email && <p className="mt-1 text-sm text-red-600">{errors.email}</p>}
           </div>
-
+          
           <div>
             <input
               name="password"
@@ -159,7 +188,7 @@ const handleSubmit = async (e) => {
             />
             {errors.password && <p className="mt-1 text-sm text-red-600">{errors.password}</p>}
           </div>
-
+          
           <div>
             <select
               name="role"
@@ -175,7 +204,7 @@ const handleSubmit = async (e) => {
             </select>
             {errors.role && <p className="mt-1 text-sm text-red-600">{errors.role}</p>}
           </div>
-
+          
           <button
             type="submit"
             disabled={loading}
@@ -211,7 +240,7 @@ const handleSubmit = async (e) => {
               'Send OTP'
             )}
           </button>
-
+          
           <div className="text-center mt-4">
             <p className="text-gray-600">
               Already have an account?{' '}

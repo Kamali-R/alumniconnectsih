@@ -4,7 +4,21 @@ import bcrypt from 'bcryptjs';
 import sendEmail from '../utils/sendEmail.js';
 import jwt from 'jsonwebtoken';
 import Alumni from '../models/Alumni.js';
-
+// Add this to your authController.js
+export const checkUser = async (req, res) => {
+  try {
+    const { email } = req.query;
+    if (!email) {
+      return res.status(400).json({ message: 'Email is required' });
+    }
+    
+    const existingUser = await User.findOne({ email });
+    res.status(200).json({ exists: !!existingUser });
+  } catch (error) {
+    console.error('Check user error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
 // STEP 1: Send OTP
 export const sendOtp = async (req, res) => {
   const { name, email, password, role, purpose } = req.body;
