@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import AlumniProfilePage from './profile';
+import AlumniNetworkingHub from './NetworkingHub';
+
 const AlumniConnectDashboard = () => {
   const navigate = useNavigate();
   const [activeSection, setActiveSection] = useState('dashboard');
@@ -12,45 +14,41 @@ const AlumniConnectDashboard = () => {
   
   // Check authentication on component mount
   useEffect(() => {
-  const storedToken = localStorage.getItem('token');
-  const storedUser = localStorage.getItem('user');
-  const profileCompleted = localStorage.getItem('profileCompleted') === 'true';
-  
-  if (!storedToken) {
-    // Redirect to login if no token found
-    navigate('/login');
-    return;
-  }
-  
-  // Get user data from localStorage
-  if (storedUser) {
-    const userData = JSON.parse(storedUser);
-    setUserRole(userData.role);
-    setUserName(userData.name || 'John Doe');
+    const storedToken = localStorage.getItem('token');
+    const storedUser = localStorage.getItem('user');
+    const profileCompleted = localStorage.getItem('profileCompleted') === 'true';
     
-    // Set graduation year if available
-    if (userData.graduationYear) {
-      setUserGraduation(`Class of ${userData.graduationYear}`);
-    }
-    
-    // If profile is not completed, redirect to profile completion
-    if (!profileCompleted && userData.role === 'alumni') {
-      navigate('/alumni-profile', {
-        state: {
-          userData: userData,
-          verified: true,
-          role: userData.role
-        }
-      });
+    if (!storedToken) {
+      navigate('/login');
       return;
     }
-  }
-  
-  // Only redirect if user is a student (not alumni)
-  if (storedUser && JSON.parse(storedUser).role === 'student') {
-    navigate('/student-dashboard');
-  }
-}, [navigate]);
+    
+    if (storedUser) {
+      const userData = JSON.parse(storedUser);
+      setUserRole(userData.role);
+      setUserName(userData.name || 'John Doe');
+      
+      if (userData.graduationYear) {
+        setUserGraduation(`Class of ${userData.graduationYear}`);
+      }
+      
+      if (!profileCompleted && userData.role === 'alumni') {
+        navigate('/alumni-profile', {
+          state: {
+            userData: userData,
+            verified: true,
+            role: userData.role
+          }
+        });
+        return;
+      }
+    }
+    
+    if (storedUser && JSON.parse(storedUser).role === 'student') {
+      navigate('/student-dashboard');
+    }
+  }, [navigate]);
+
   // Navigation items
   const navItems = [
     { id: 'dashboard', label: 'Dashboard', icon: (
@@ -305,10 +303,10 @@ const AlumniConnectDashboard = () => {
       {/* Main Content */}
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Content Area */}
-        <main className="flex-1 overflow-y-auto p-8">
+        <main className="flex-1 overflow-y-auto">
           {/* Dashboard Section */}
           {activeSection === 'dashboard' && (
-            <div className={`content-section ${fadeAnimation ? 'fade-in' : ''}`}>
+            <div className={`content-section p-8 ${fadeAnimation ? 'fade-in' : ''}`}>
               {/* Welcome Header */}
               <div className="mb-8">
                 <h1 className="text-3xl font-bold text-gray-900 mb-2">
@@ -390,21 +388,29 @@ const AlumniConnectDashboard = () => {
               </div>
             </div>
           )}
-                  {/* Add the Profile Section right after the Dashboard section */}
+          
+          {/* Profile Section */}
           {activeSection === 'profile' && (
             <div className={`content-section ${fadeAnimation ? 'fade-in' : ''}`}>
               <AlumniProfilePage />
             </div>
           )}
           
+          {/* Networking Hub Section - Fixed */}
+          {activeSection === 'networking' && (
+            <div className={`content-section ${fadeAnimation ? 'fade-in' : ''}`}>
+              <AlumniNetworkingHub />
+            </div>
+          )}
+          
           {/* Other Sections (Placeholders) */}
-          {activeSection !== 'dashboard' && (
-            <div className="content-section">
+          {activeSection !== 'dashboard' && activeSection !== 'profile' && activeSection !== 'networking' && (
+            <div className="content-section p-8">
               <h1 className="text-3xl font-bold text-gray-900 mb-6">
                 {navItems.find(item => item.id === activeSection)?.label}
               </h1>
               <div className="bg-white rounded-xl shadow p-8">
-                
+                <p className="text-gray-600">This section is under development.</p>
               </div>
             </div>
           )}
