@@ -97,6 +97,7 @@ export const verifyOtp = async (req, res) => {
   }
 };
 // Complete profile function
+// Complete profile function
 export const completeProfile = async (req, res) => {
   try {
     const userId = req.user.id;
@@ -128,11 +129,11 @@ export const completeProfile = async (req, res) => {
     const updatedUser = await User.findByIdAndUpdate(
       userId,
       { 
-        profileCompleted: true, // This is the key fix
+        profileCompleted: true,
         alumniProfile: alumniProfile._id,
         // Update user name if provided in profile
-        ...(userData.firstName && userData.lastName && {
-          name: `${userData.firstName} ${userData.lastName}`
+        ...(userData.fullName && {
+          name: userData.fullName
         })
       },
       { new: true }
