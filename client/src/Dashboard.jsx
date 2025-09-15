@@ -4,6 +4,7 @@ import axios from 'axios';
 import AlumniProfilePage from './profile';
 import AlumniNetworkingHub from './NetworkingHub';
 import AlumniJobDashboard from './AlumniJobDashboard';
+import AlumniMentorshipPlatform from './AlumniMentorship';
 
 const AlumniConnectDashboard = () => {
   const navigate = useNavigate();
@@ -49,7 +50,7 @@ const AlumniConnectDashboard = () => {
       navigate('/student-dashboard');
     }
   }, [navigate]);
-
+  
   // Navigation items
   const navItems = [
     { id: 'dashboard', label: 'Dashboard', icon: (
@@ -252,6 +253,9 @@ const AlumniConnectDashboard = () => {
     },
   ];
   
+  // Define sections with dedicated components
+  const dedicatedSections = ['dashboard', 'profile', 'networking', 'jobs', 'mentorship'];
+  
   return (
     <div className="flex h-screen bg-gray-100">
       {/* Sidebar */}
@@ -397,21 +401,29 @@ const AlumniConnectDashboard = () => {
             </div>
           )}
           
-          {/* Networking Hub Section - Fixed */}
+          {/* Networking Hub Section */}
           {activeSection === 'networking' && (
             <div className={`content-section ${fadeAnimation ? 'fade-in' : ''}`}>
               <AlumniNetworkingHub />
             </div>
           )}
-          {/* Networking Hub Section - Fixed */}
+          
+          {/* Jobs Section */}
           {activeSection === 'jobs' && (
             <div className={`content-section ${fadeAnimation ? 'fade-in' : ''}`}>
               <AlumniJobDashboard />
             </div>
           )}
           
+          {/* Mentorship Section */}
+          {activeSection === 'mentorship' && (
+            <div className={`content-section ${fadeAnimation ? 'fade-in' : ''}`}>
+              <AlumniMentorshipPlatform />
+            </div>
+          )}
+          
           {/* Other Sections (Placeholders) */}
-          {activeSection !== 'dashboard' && activeSection !== 'profile' && activeSection !== 'networking' && activeSection!=='AlumniJobDashboard' && (
+          {!dedicatedSections.includes(activeSection) && (
             <div className="content-section p-8">
               <h1 className="text-3xl font-bold text-gray-900 mb-6">
                 {navItems.find(item => item.id === activeSection)?.label}
@@ -426,4 +438,5 @@ const AlumniConnectDashboard = () => {
     </div>
   );
 };
+
 export default AlumniConnectDashboard;
