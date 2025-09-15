@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
 const AlumniMentorshipPlatform = () => {
   const [activeSection, setActiveSection] = useState('find-mentor');
@@ -7,44 +7,7 @@ const AlumniMentorshipPlatform = () => {
   const [modalContent, setModalContent] = useState({ title: '', message: '' });
   const [requestedMentors, setRequestedMentors] = useState([]);
   const [isMentor, setIsMentor] = useState(false);
-  
-  // Mock data
-  const mentors = [
-    {
-      id: 1,
-      name: 'Sarah Johnson',
-      initials: 'SJ',
-      position: 'Senior Product Manager',
-      company: 'Google',
-      graduationYear: 'Class of 2015',
-      expertise: ['Product Strategy', 'Leadership'],
-      description: 'Specializes in product development and team leadership in tech startups.',
-      color: 'from-blue-500 to-purple-600'
-    },
-    {
-      id: 2,
-      name: 'Michael Chen',
-      initials: 'MC',
-      position: 'Investment Director',
-      company: 'Goldman Sachs',
-      graduationYear: 'Class of 2012',
-      expertise: ['Finance', 'Investment'],
-      description: 'Expert in financial markets and investment strategies with 10+ years experience.',
-      color: 'from-green-500 to-teal-600'
-    },
-    {
-      id: 3,
-      name: 'Amanda Rodriguez',
-      initials: 'AR',
-      position: 'Marketing Director',
-      company: 'Nike',
-      graduationYear: 'Class of 2013',
-      expertise: ['Digital Marketing', 'Brand Strategy'],
-      description: 'Specializes in digital marketing campaigns and brand development.',
-      color: 'from-pink-500 to-red-600'
-    }
-  ];
-  const requests = [
+  const [requests, setRequests] = useState([
     {
       id: 1,
       name: 'Emily Smith',
@@ -75,8 +38,8 @@ const AlumniMentorshipPlatform = () => {
       message: "I'm passionate about digital marketing and brand development. Your work at Nike is inspiring! I'd love to learn about campaign strategies and how to build a successful marketing career.",
       color: 'from-pink-500 to-rose-600'
     }
-  ];
-  const myMentorships = {
+  ]);
+  const [myMentorships, setMyMentorships] = useState({
     asMentee: [
       {
         id: 1,
@@ -105,7 +68,250 @@ const AlumniMentorshipPlatform = () => {
         color: 'from-orange-500 to-red-600'
       }
     ]
+  });
+
+  // Filter states
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedIndustry, setSelectedIndustry] = useState('All Industries');
+  const [selectedExperience, setSelectedExperience] = useState('Experience Level');
+  const [selectedGraduation, setSelectedGraduation] = useState('Graduation Year');
+  const [selectedCompanySize, setSelectedCompanySize] = useState('Company Size');
+  const [selectedLocation, setSelectedLocation] = useState('Location');
+  const [selectedAvailability, setSelectedAvailability] = useState('Availability');
+  
+  // Mock data with more alumni
+  const allMentors = [
+    {
+      id: 1,
+      name: 'Sarah Johnson',
+      initials: 'SJ',
+      position: 'Senior Product Manager',
+      company: 'Google',
+      graduationYear: 'Class of 2015',
+      expertise: ['Product Strategy', 'Leadership'],
+      description: 'Specializes in product development and team leadership in tech startups.',
+      color: 'from-blue-500 to-purple-600',
+      industry: 'Technology',
+      experience: '10-15 years',
+      companySize: 'Large (500+)',
+      location: 'San Francisco',
+      availability: '3-4 hours/month'
+    },
+    {
+      id: 2,
+      name: 'Michael Chen',
+      initials: 'MC',
+      position: 'Investment Director',
+      company: 'Goldman Sachs',
+      graduationYear: 'Class of 2012',
+      expertise: ['Finance', 'Investment'],
+      description: 'Expert in financial markets and investment strategies with 10+ years experience.',
+      color: 'from-green-500 to-teal-600',
+      industry: 'Finance',
+      experience: '10-15 years',
+      companySize: 'Large (500+)',
+      location: 'New York',
+      availability: '1-2 hours/month'
+    },
+    {
+      id: 3,
+      name: 'Amanda Rodriguez',
+      initials: 'AR',
+      position: 'Marketing Director',
+      company: 'Nike',
+      graduationYear: 'Class of 2013',
+      expertise: ['Digital Marketing', 'Brand Strategy'],
+      description: 'Specializes in digital marketing campaigns and brand development.',
+      color: 'from-pink-500 to-red-600',
+      industry: 'Marketing',
+      experience: '5-10 years',
+      companySize: 'Large (500+)',
+      location: 'London',
+      availability: '3-4 hours/month'
+    },
+    {
+      id: 4,
+      name: 'Robert Williams',
+      initials: 'RW',
+      position: 'CTO',
+      company: 'TechStart Inc.',
+      graduationYear: 'Class of 2010',
+      expertise: ['Technology', 'Entrepreneurship'],
+      description: 'Founded three successful tech startups and expert in scaling businesses.',
+      color: 'from-purple-500 to-indigo-600',
+      industry: 'Technology',
+      experience: '15+ years',
+      companySize: 'Medium (51-500)',
+      location: 'Remote',
+      availability: '5+ hours/month'
+    },
+    {
+      id: 5,
+      name: 'Jennifer Kim',
+      initials: 'JK',
+      position: 'Senior Healthcare Consultant',
+      company: 'McKinsey & Company',
+      graduationYear: 'Class of 2014',
+      expertise: ['Healthcare', 'Consulting'],
+      description: 'Specializes in healthcare strategy and digital transformation in the medical sector.',
+      color: 'from-teal-500 to-green-600',
+      industry: 'Healthcare',
+      experience: '5-10 years',
+      companySize: 'Large (500+)',
+      location: 'Boston',
+      availability: '1-2 hours/month'
+    },
+    {
+      id: 6,
+      name: 'David Thompson',
+      initials: 'DT',
+      position: 'Engineering Director',
+      company: 'SpaceX',
+      graduationYear: 'Class of 2008',
+      expertise: ['Engineering', 'Leadership'],
+      description: 'Leading aerospace engineering projects with 15+ years of experience.',
+      color: 'from-blue-500 to-cyan-600',
+      industry: 'Engineering',
+      experience: '15+ years',
+      companySize: 'Large (500+)',
+      location: 'Los Angeles',
+      availability: '3-4 hours/month'
+    },
+    {
+      id: 7,
+      name: 'Lisa Chen',
+      initials: 'LC',
+      position: 'VP of Education',
+      company: 'Khan Academy',
+      graduationYear: 'Class of 2011',
+      expertise: ['Education', 'Leadership'],
+      description: 'Passionate about educational technology and making learning accessible to all.',
+      color: 'from-yellow-500 to-orange-600',
+      industry: 'Education',
+      experience: '10-15 years',
+      companySize: 'Medium (51-500)',
+      location: 'Remote',
+      availability: '5+ hours/month'
+    },
+    {
+      id: 8,
+      name: 'James Wilson',
+      initials: 'JW',
+      position: 'Senior Software Engineer',
+      company: 'Microsoft',
+      graduationYear: 'Class of 2016',
+      expertise: ['Technology', 'Product Development'],
+      description: 'Expert in cloud computing and distributed systems with experience at top tech companies.',
+      color: 'from-indigo-500 to-blue-600',
+      industry: 'Technology',
+      experience: '3-5 years',
+      companySize: 'Large (500+)',
+      location: 'Seattle',
+      availability: '1-2 hours/month'
+    },
+    {
+      id: 9,
+      name: 'Michelle Garcia',
+      initials: 'MG',
+      position: 'Finance Manager',
+      company: 'J.P. Morgan',
+      graduationYear: 'Class of 2013',
+      expertise: ['Finance', 'Investment Banking'],
+      description: 'Specializes in corporate finance and investment strategies for high-net-worth clients.',
+      color: 'from-green-500 to-emerald-600',
+      industry: 'Finance',
+      experience: '5-10 years',
+      companySize: 'Large (500+)',
+      location: 'New York',
+      availability: '3-4 hours/month'
+    }
+  ];
+
+  const [mentors, setMentors] = useState(allMentors);
+
+  // Apply filters when any filter value changes
+  useEffect(() => {
+    let filtered = allMentors;
+
+    // Search filter
+    if (searchTerm) {
+      filtered = filtered.filter(mentor => 
+        mentor.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        mentor.position.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        mentor.company.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        mentor.expertise.some(skill => skill.toLowerCase().includes(searchTerm.toLowerCase()))
+      );
+    }
+
+    // Industry filter
+    if (selectedIndustry !== 'All Industries') {
+      filtered = filtered.filter(mentor => mentor.industry === selectedIndustry);
+    }
+
+    // Experience filter
+    if (selectedExperience !== 'Experience Level') {
+      filtered = filtered.filter(mentor => mentor.experience === selectedExperience);
+    }
+
+    // Graduation year filter
+    if (selectedGraduation !== 'Graduation Year') {
+      filtered = filtered.filter(mentor => {
+        const year = mentor.graduationYear.replace('Class of ', '');
+        if (selectedGraduation === '2020-2024') {
+          return year >= '2020' && year <= '2024';
+        } else if (selectedGraduation === '2015-2019') {
+          return year >= '2015' && year <= '2019';
+        } else if (selectedGraduation === '2010-2014') {
+          return year >= '2010' && year <= '2014';
+        } else if (selectedGraduation === '2005-2009') {
+          return year >= '2005' && year <= '2009';
+        } else if (selectedGraduation === 'Before 2005') {
+          return year < '2005';
+        }
+        return true;
+      });
+    }
+
+    // Company size filter
+    if (selectedCompanySize !== 'Company Size') {
+      filtered = filtered.filter(mentor => mentor.companySize === selectedCompanySize);
+    }
+
+    // Location filter
+    if (selectedLocation !== 'Location') {
+      filtered = filtered.filter(mentor => mentor.location === selectedLocation);
+    }
+
+    // Availability filter
+    if (selectedAvailability !== 'Availability') {
+      filtered = filtered.filter(mentor => mentor.availability === selectedAvailability);
+    }
+
+    setMentors(filtered);
+  }, [searchTerm, selectedIndustry, selectedExperience, selectedGraduation, selectedCompanySize, selectedLocation, selectedAvailability, allMentors]);
+
+  // Function to clear all filters
+  const clearAllFilters = () => {
+    setSearchTerm('');
+    setSelectedIndustry('All Industries');
+    setSelectedExperience('Experience Level');
+    setSelectedGraduation('Graduation Year');
+    setSelectedCompanySize('Company Size');
+    setSelectedLocation('Location');
+    setSelectedAvailability('Availability');
   };
+
+  // Check if any filter is active
+  const isFilterActive = () => {
+    return searchTerm !== '' || 
+           selectedIndustry !== 'All Industries' || 
+           selectedExperience !== 'Experience Level' || 
+           selectedGraduation !== 'Graduation Year' || 
+           selectedCompanySize !== 'Company Size' || 
+           selectedLocation !== 'Location' || 
+           selectedAvailability !== 'Availability';
+  };
+
   const stats = [
     { title: 'Active Mentorships', value: '3', color: 'text-blue-600' }
   ];
@@ -127,13 +333,45 @@ const AlumniMentorshipPlatform = () => {
     });
     setShowModal(true);
   };
-  const handleRequest = (action, studentName) => {
-    const actionText = action === 'accept' ? 'accepted' : 'declined';
-    setModalContent({
-      title: `Request ${actionText.charAt(0).toUpperCase() + actionText.slice(1)}!`,
-      message: `You have ${actionText} ${studentName}'s mentorship request.`
-    });
-    setShowModal(true);
+  const handleRequest = (action, studentName, requestId) => {
+    if (action === 'accept') {
+      // Find the request to accept
+      const requestToAccept = requests.find(req => req.id === requestId);
+      if (requestToAccept) {
+        // Remove from pending requests
+        setRequests(requests.filter(req => req.id !== requestId));
+        
+        // Add to mentor's mentee list
+        const newMentee = {
+          id: Date.now(), // Generate unique ID
+          name: requestToAccept.name,
+          initials: requestToAccept.initials,
+          expertise: requestToAccept.interests[0], // Use first interest as expertise
+          nextSession: 'To be scheduled',
+          color: requestToAccept.color
+        };
+        
+        setMyMentorships({
+          ...myMentorships,
+          asMentor: [...myMentorships.asMentor, newMentee]
+        });
+        
+        setModalContent({
+          title: 'Request Accepted!',
+          message: `${studentName} has been added to your mentorship list.`
+        });
+        setShowModal(true);
+      }
+    } else if (action === 'decline') {
+      // Remove from pending requests
+      setRequests(requests.filter(req => req.id !== requestId));
+      
+      setModalContent({
+        title: 'Request Declined',
+        message: `You have declined ${studentName}'s mentorship request.`
+      });
+      setShowModal(true);
+    }
   };
   const renderFindMentor = () => (
     <div>
@@ -146,8 +384,14 @@ const AlumniMentorshipPlatform = () => {
             type="text" 
             placeholder="Search by name or expertise..." 
             className="px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
           />
-          <select className="px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+          <select 
+            className="px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+            value={selectedIndustry}
+            onChange={(e) => setSelectedIndustry(e.target.value)}
+          >
             <option>All Industries</option>
             <option>Technology</option>
             <option>Finance</option>
@@ -157,14 +401,22 @@ const AlumniMentorshipPlatform = () => {
             <option>Education</option>
             <option>Engineering</option>
           </select>
-          <select className="px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+          <select 
+            className="px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+            value={selectedExperience}
+            onChange={(e) => setSelectedExperience(e.target.value)}
+          >
             <option>Experience Level</option>
             <option>3-5 years</option>
             <option>5-10 years</option>
             <option>10-15 years</option>
             <option>15+ years</option>
           </select>
-          <select className="px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+          <select 
+            className="px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+            value={selectedGraduation}
+            onChange={(e) => setSelectedGraduation(e.target.value)}
+          >
             <option>Graduation Year</option>
             <option>2020-2024</option>
             <option>2015-2019</option>
@@ -173,27 +425,67 @@ const AlumniMentorshipPlatform = () => {
             <option>Before 2005</option>
           </select>
         </div>
-        <div className="grid md:grid-cols-3 gap-4">
-          <select className="px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+        <div className="grid md:grid-cols-4 gap-4">
+          <select 
+            className="px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+            value={selectedCompanySize}
+            onChange={(e) => setSelectedCompanySize(e.target.value)}
+          >
             <option>Company Size</option>
             <option>Startup (1-50)</option>
             <option>Medium (51-500)</option>
             <option>Large (500+)</option>
           </select>
-          <select className="px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+          <select 
+            className="px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+            value={selectedLocation}
+            onChange={(e) => setSelectedLocation(e.target.value)}
+          >
             <option>Location</option>
             <option>San Francisco</option>
             <option>New York</option>
             <option>London</option>
+            <option>Boston</option>
+            <option>Los Angeles</option>
+            <option>Seattle</option>
             <option>Remote</option>
           </select>
-          <select className="px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+          <select 
+            className="px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+            value={selectedAvailability}
+            onChange={(e) => setSelectedAvailability(e.target.value)}
+          >
             <option>Availability</option>
             <option>1-2 hours/month</option>
             <option>3-4 hours/month</option>
             <option>5+ hours/month</option>
           </select>
+          <div className="flex items-end">
+                    <button 
+        onClick={clearAllFilters}
+        disabled={!isFilterActive()}
+        className={`w-full px-4 py-3 rounded-lg font-medium transition-colors ${
+            isFilterActive()
+            ? 'bg-blue-600 text-white hover:bg-blue-700'
+            : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+        }`}
+        >
+        Clear Filters
+        </button>
+          </div>
         </div>
+      </div>
+      
+      {/* Results count */}
+      <div className="mb-4 flex justify-between items-center">
+        <div className="text-sm text-gray-600">
+          Showing {mentors.length} of {allMentors.length} mentors
+        </div>
+        {isFilterActive() && (
+          <div className="text-sm text-blue-600">
+            Filters applied
+          </div>
+        )}
       </div>
       
       {/* Mentor Cards */}
@@ -239,6 +531,12 @@ const AlumniMentorshipPlatform = () => {
           </div>
         ))}
       </div>
+      
+      {mentors.length === 0 && (
+        <div className="text-center py-12">
+          <p className="text-gray-500">No mentors match your search criteria. Try adjusting your filters.</p>
+        </div>
+      )}
     </div>
   );
   const renderBecomeMentor = () => (
@@ -356,7 +654,7 @@ const AlumniMentorshipPlatform = () => {
       <div className="grid md:grid-cols-1 gap-6 mb-8">
         {stats.map((stat, index) => (
           <div key={index} className="bg-white rounded-xl shadow-sm p-6 text-center">
-            <div className={`text-3xl font-bold ${stat.color} mb-2`}>{stat.value}</div>
+            <div className={`text-3xl font-bold ${stat.color} mb-2`}>{myMentorships.asMentor.length}</div>
             <div className="text-gray-600">{stat.title}</div>
           </div>
         ))}
@@ -374,7 +672,7 @@ const AlumniMentorshipPlatform = () => {
                   : 'border-transparent text-gray-500 hover:text-gray-700'
               }`}
             >
-              As Mentee (2)
+              As Mentee ({myMentorships.asMentee.length})
             </button>
             <button 
               onClick={() => setMentorshipTab('as-mentor')}
@@ -384,7 +682,7 @@ const AlumniMentorshipPlatform = () => {
                   : 'border-transparent text-gray-500 hover:text-gray-700'
               }`}
             >
-              As Mentor (1)
+              As Mentor ({myMentorships.asMentor.length})
             </button>
           </nav>
         </div>
@@ -450,46 +748,52 @@ const AlumniMentorshipPlatform = () => {
       <div className="bg-white rounded-xl shadow-sm p-6">
         <h3 className="text-lg font-semibold text-gray-800 mb-4">Pending Requests from Students</h3>
         
-        <div className="space-y-4">
-          {requests.map(request => (
-            <div key={request.id} className="border border-gray-200 rounded-lg p-4 hover:bg-gray-50 transition-colors">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center">
-                  <div className="w-12 h-12 bg-gray-300 rounded-full flex items-center justify-center text-white font-bold">
-                    {request.initials}
-                  </div>
-                  <div className="ml-4">
-                    <div className="flex items-center gap-2 mb-1">
-                      <h4 className="font-semibold text-gray-800">{request.name}</h4>
-                      <span className="px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full font-medium">Student</span>
+        {requests.length === 0 ? (
+          <div className="text-center py-8">
+            <p className="text-gray-500">No pending requests at the moment.</p>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {requests.map(request => (
+              <div key={request.id} className="border border-gray-200 rounded-lg p-4 hover:bg-gray-50 transition-colors">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center">
+                    <div className="w-12 h-12 bg-gray-300 rounded-full flex items-center justify-center text-white font-bold">
+                      {request.initials}
                     </div>
-                    <p className="text-sm text-gray-600">{request.major} • {request.graduationYear}</p>
-                    <p className="text-xs text-gray-500">Interested in: {request.interests.join(', ')}</p>
+                    <div className="ml-4">
+                      <div className="flex items-center gap-2 mb-1">
+                        <h4 className="font-semibold text-gray-800">{request.name}</h4>
+                        <span className="px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full font-medium">Student</span>
+                      </div>
+                      <p className="text-sm text-gray-600">{request.major} • {request.graduationYear}</p>
+                      <p className="text-xs text-gray-500">Interested in: {request.interests.join(', ')}</p>
+                    </div>
+                  </div>
+                  <div className="flex space-x-2">
+                    <button 
+                      onClick={() => handleRequest('decline', request.name, request.id)}
+                      className="px-4 py-2 text-red-600 border border-red-600 rounded-lg hover:bg-red-50 transition-colors"
+                    >
+                      Decline
+                    </button>
+                    <button 
+                      onClick={() => handleRequest('accept', request.name, request.id)}
+                      className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                    >
+                      Accept
+                    </button>
                   </div>
                 </div>
-                <div className="flex space-x-2">
-                  <button 
-                    onClick={() => handleRequest('decline', request.name)}
-                    className="px-4 py-2 text-red-600 border border-red-600 rounded-lg hover:bg-red-50 transition-colors"
-                  >
-                    Decline
-                  </button>
-                  <button 
-                    onClick={() => handleRequest('accept', request.name)}
-                    className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
-                  >
-                    Accept
-                  </button>
+                <div className="mt-3 pl-16">
+                  <p className="text-sm text-gray-600 bg-gray-50 p-3 rounded-lg">
+                    "{request.message}"
+                  </p>
                 </div>
               </div>
-              <div className="mt-3 pl-16">
-                <p className="text-sm text-gray-600 bg-gray-50 p-3 rounded-lg">
-                  "{request.message}"
-                </p>
-              </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );

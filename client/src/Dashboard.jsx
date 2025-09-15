@@ -5,6 +5,9 @@ import AlumniProfilePage from './profile';
 import AlumniNetworkingHub from './NetworkingHub';
 import AlumniJobDashboard from './AlumniJobDashboard';
 import AlumniMentorshipPlatform from './AlumniMentorship';
+import AlumniEventPortal from './AlumniEventPortal';
+import AlumniMessages from './Messages';
+import NewsAndAchievements from './NewsAndAchievements';
 
 const AlumniConnectDashboard = () => {
   const navigate = useNavigate();
@@ -422,17 +425,26 @@ const AlumniConnectDashboard = () => {
             </div>
           )}
           
-          {/* Other Sections (Placeholders) */}
-          {!dedicatedSections.includes(activeSection) && (
-            <div className="content-section p-8">
-              <h1 className="text-3xl font-bold text-gray-900 mb-6">
-                {navItems.find(item => item.id === activeSection)?.label}
-              </h1>
-              <div className="bg-white rounded-xl shadow p-8">
-                <p className="text-gray-600">This section is under development.</p>
-              </div>
+          {/* Mentorship Section */}
+          {activeSection === 'events' && (
+            <div className={`content-section ${fadeAnimation ? 'fade-in' : ''}`}>
+              <AlumniEventPortal/>
             </div>
           )}
+          {/* Mentorship Section */}
+          {activeSection === 'messages' && (
+            <div className={`content-section ${fadeAnimation ? 'fade-in' : ''}`}>
+              <AlumniMessages/>
+            </div>
+          )}
+          
+          {/* Mentorship Section */}
+          {activeSection === 'news' && (
+            <div className={`content-section ${fadeAnimation ? 'fade-in' : ''}`}>
+              <NewsAndAchievements/>
+            </div>
+          )}
+          
         </main>
       </div>
     </div>
