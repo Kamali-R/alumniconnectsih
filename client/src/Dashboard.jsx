@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import AlumniProfilePage from './profile';
 import AlumniNetworkingHub from './NetworkingHub';
+import AlumniJobDashboard from './AlumniJobDashboard';
 
 const AlumniConnectDashboard = () => {
   const navigate = useNavigate();
@@ -402,9 +403,15 @@ const AlumniConnectDashboard = () => {
               <AlumniNetworkingHub />
             </div>
           )}
+          {/* Networking Hub Section - Fixed */}
+          {activeSection === 'jobs' && (
+            <div className={`content-section ${fadeAnimation ? 'fade-in' : ''}`}>
+              <AlumniJobDashboard />
+            </div>
+          )}
           
           {/* Other Sections (Placeholders) */}
-          {activeSection !== 'dashboard' && activeSection !== 'profile' && activeSection !== 'networking' && (
+          {activeSection !== 'dashboard' && activeSection !== 'profile' && activeSection !== 'networking' && activeSection!=='AlumniJobDashboard' && (
             <div className="content-section p-8">
               <h1 className="text-3xl font-bold text-gray-900 mb-6">
                 {navItems.find(item => item.id === activeSection)?.label}
@@ -419,5 +426,4 @@ const AlumniConnectDashboard = () => {
     </div>
   );
 };
-
 export default AlumniConnectDashboard;
