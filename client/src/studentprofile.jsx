@@ -1,749 +1,1369 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import { FaUser, FaVenusMars, FaCalendar, FaEnvelope, FaPhone, FaMapMarkerAlt, FaGraduationCap, FaUniversity, FaIdCard, FaCertificate, FaCodeBranch, FaCalendarAlt, FaBriefcase, FaTools, FaStar, FaUserEdit, FaGlobe, FaUpload, FaShieldAlt, FaInfoCircle, FaPlus, FaTimes, FaArrowRight, FaCheckCircle, FaWrench, FaHeart, FaDollarSign, FaBuilding, FaLightbulb, FaGraduationCap as FaGraduation, FaSearch, FaExclamationCircle, FaLinkedin, FaGithub } from 'react-icons/fa';
 
 const StudentProfile = () => {
+  const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState({ text: '', type: '' });
   const navigate = useNavigate();
-  const [formData, setFormData] = useState({
+  const [showSuccess, setShowSuccess] = useState(false);
+
+  // Personal Information State
+  const [personalInfo, setPersonalInfo] = useState({
     fullName: '',
+    gender: '',
     dob: '',
     personalEmail: '',
     phone: '',
-    rollNumber: '',
+    location: ''
+  });
+
+  // Academic Information State
+  const [academicInfo, setAcademicInfo] = useState({
     collegeEmail: '',
+    enrollmentNumber: '',
     degree: '',
-    otherDegree: '',
     branch: '',
-    currentYear: '',
     graduationYear: '',
+    expectedGraduationYear: '', // ✅ ADDED THIS FIELD
+    cgpa: ''
+  });
+
+  // Professional Information State
+  const [professionalInfo, setProfessionalInfo] = useState({
+    employmentStatus: '',
+    salaryRange: ''
+  });
+
+  // Career Status State
+  const [careerStatus, setCareerStatus] = useState('');
+  const [careerDetails, setCareerDetails] = useState({
+    careerGoal: ''
+  });
+
+  // Other Information State
+  const [otherInfo, setOtherInfo] = useState({
+    bio: '',
     linkedin: '',
     github: '',
-    skills: [],
-    otherSkills: '',
-    interests: [],
-    otherInterests: '',
-    careerGoals: '',
-    terms: false
+    portfolio: '',
+    termsAccept: false,
+    emailConsent: false
   });
-  const [profileImage, setProfileImage] = useState(null);
+
+  // Dynamic sections state
+  const [skills, setSkills] = useState([]);
+  const [interests, setInterests] = useState([]);
   const [resumeFile, setResumeFile] = useState(null);
-  const [showOtherDegree, setShowOtherDegree] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [progress, setProgress] = useState(0);
-  const [showSuccessModal, setShowSuccessModal] = useState(false);
+
+  // Dropdown states
+  const [skillInput, setSkillInput] = useState('');
+  const [interestInput, setInterestInput] = useState('');
+  const [showSkillDropdown, setShowSkillDropdown] = useState(false);
+  const [showInterestDropdown, setShowInterestDropdown] = useState(false);
+  const [filteredSkills, setFilteredSkills] = useState([]);
+  const [filteredInterests, setFilteredInterests] = useState([]);
+
+  // Location dropdown states
+  const [locationInput, setLocationInput] = useState('');
+  const [showLocationDropdown, setShowLocationDropdown] = useState(false);
+  const [filteredLocations, setFilteredLocations] = useState([]);
+
+  // Validation states
+  const [errors, setErrors] = useState({});
+  const [touched, setTouched] = useState({});
+
+  // Refs
   const fileInputRef = useRef(null);
-  const resumeInputRef = useRef(null);
 
-  useEffect(() => {
-    // Load saved profile image from localStorage
-    const savedImage = localStorage.getItem('profileImage');
-    if (savedImage) {
-      setProfileImage(savedImage);
+  // Options for dropdowns
+  const degreeOptions = [
+    'B.Tech', 'B.E', 'B.Sc', 'B.A', 'B.Com', 'BBA', 'BCA', 'B.Arch', 'B.Des', 'B.Pharm',
+    'M.Tech', 'M.E', 'M.Sc', 'M.A', 'M.Com', 'MBA', 'MCA', 'M.Arch', 'M.Des', 'M.Pharm',
+    'PhD', 'MPhil', 'Post Doc', 'Diploma', 'Integrated Dual Degree', 'Other'
+  ];
+
+  const branchOptions = [
+    'Computer Science', 'Computer Science & Engineering', 'Information Technology',
+    'Electrical Engineering', 'Electrical & Electronics Engineering', 'Electronics & Communication Engineering',
+    'Electronics & Instrumentation Engineering', 'Mechanical Engineering', 'Mechanical & Automation Engineering',
+    'Civil Engineering', 'Chemical Engineering', 'Aerospace Engineering', 'Biotechnology',
+    'Information Technology', 'Electronics and Communication', 'Instrumentation Engineering',
+    'Production Engineering', 'Metallurgical Engineering', 'Mining Engineering', 'Petroleum Engineering',
+    'Biomedical Engineering', 'Environmental Engineering', 'Industrial Engineering', 'Agricultural Engineering',
+    'Marine Engineering', 'Nuclear Engineering', 'Business Administration', 'Economics', 'Mathematics',
+    'Physics', 'Chemistry', 'Biology', 'English Literature', 'History', 'Psychology', 'Sociology',
+    'Philosophy', 'Fine Arts', 'Performing Arts', 'Architecture', 'Pharmacy', 'Medicine', 'Dentistry',
+    'Nursing', 'Public Health', 'Law', 'Education', 'Journalism', 'Hospitality Management', 'Other'
+  ];
+
+  const locationOptions = [
+    'Karur, Tamil Nadu, India', 'Chennai, Tamil Nadu, India', 'Coimbatore, Tamil Nadu, India',
+    'Madurai, Tamil Nadu, India', 'Salem, Tamil Nadu, India', 'Tiruchirappalli, Tamil Nadu, India',
+    'Bangalore, Karnataka, India', 'Mysore, Karnataka, India', 'Hubli, Karnataka, India',
+    'Mangalore, Karnataka, India', 'Mumbai, Maharashtra, India', 'Pune, Maharashtra, India',
+    'Nagpur, Maharashtra, India', 'Nashik, Maharashtra, India', 'Delhi, Delhi, India',
+    'New Delhi, Delhi, India', 'Gurgaon, Haryana, India', 'Faridabad, Haryana, India',
+    'Kolkata, West Bengal, India', 'Howrah, West Bengal, India', 'Hyderabad, Telangana, India',
+    'Secunderabad, Telangana, India', 'Ahmedabad, Gujarat, India', 'Surat, Gujarat, India',
+    'Vadodara, Gujarat, India', 'Jaipur, Rajasthan, India', 'Jodhpur, Rajasthan, India',
+    'Udaipur, Rajasthan, India', 'Lucknow, Uttar Pradesh, India', 'Kanpur, Uttar Pradesh, India',
+    'Agra, Uttar Pradesh, India', 'Patna, Bihar, India', 'Gaya, Bihar, India',
+    'Bhopal, Madhya Pradesh, India', 'Indore, Madhya Pradesh, India', 'Chandigarh, Punjab, India',
+    'Amritsar, Punjab, India', 'Dehradun, Uttarakhand, India', 'Rishikesh, Uttarakhand, India',
+    'Guwahati, Assam, India', 'Shillong, Meghalaya, India', 'Bhubaneswar, Odisha, India',
+    'Ranchi, Jharkhand, India', 'Thiruvananthapuram, Kerala, India', 'Kochi, Kerala, India',
+    'Goa, Goa, India', 'Puducherry, Puducherry, India', 'Andaman and Nicobar Islands, Andaman and Nicobar Islands, India',
+    'Lakshadweep, Lakshadweep, India', 'Daman and Diu, Daman and Diu, India',
+    'Dadra and Nagar Haveli, Dadra and Nagar Haveli, India', 'Ladakh, Ladakh, India',
+    'Jammu and Kashmir, Jammu and Kashmir, India'
+  ];
+
+  const skillSuggestions = [
+    'JavaScript', 'Python', 'Java', 'React', 'Node.js', 'HTML/CSS', 'TypeScript', 'Angular', 'Vue.js', 'PHP',
+    'C++', 'C#', 'Ruby', 'Go', 'Swift', 'Kotlin', 'SQL', 'MongoDB', 'Express.js', 'Django',
+    'Machine Learning', 'Data Science', 'DevOps', 'AWS', 'Docker', 'Kubernetes', 'Git', 'REST API', 'GraphQL', 'UI/UX Design'
+  ];
+
+  const interestSuggestions = [
+    'Web Development', 'Mobile Development', 'Data Science', 'Machine Learning', 'Artificial Intelligence',
+    'Cybersecurity', 'Cloud Computing', 'DevOps', 'UI/UX Design', 'Game Development',
+    'Entrepreneurship', 'Digital Marketing', 'Project Management', 'Finance', 'Consulting',
+    'Research', 'Open Source', 'Blockchain', 'IoT', 'Robotics'
+  ];
+
+  // Handle input changes
+  const handlePersonalInfoChange = (e) => {
+    const { name, value } = e.target;
+    setPersonalInfo(prev => ({ ...prev, [name]: value }));
+    if (errors[name]) {
+      setErrors(prev => ({ ...prev, [name]: '' }));
     }
-  }, []);
+  };
 
-  const handleInputChange = (e) => {
+  const handleAcademicInfoChange = (e) => {
+    const { name, value } = e.target;
+    setAcademicInfo(prev => ({ ...prev, [name]: value }));
+    if (errors[name]) {
+      setErrors(prev => ({ ...prev, [name]: '' }));
+    }
+  };
+
+  const handleProfessionalInfoChange = (e) => {
+    const { name, value } = e.target;
+    setProfessionalInfo(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleCareerStatusChange = (e) => {
+    const value = e.target.value;
+    setCareerStatus(value);
+    if (errors.careerStatus) {
+      setErrors(prev => ({ ...prev, careerStatus: '' }));
+    }
+  };
+
+  const handleCareerDetailsChange = (e) => {
+    const { name, value } = e.target;
+    setCareerDetails(prev => ({ ...prev, [name]: value }));
+    if (errors[name]) {
+      setErrors(prev => ({ ...prev, [name]: '' }));
+    }
+  };
+
+  const handleOtherInfoChange = (e) => {
     const { name, value, type, checked } = e.target;
+    setOtherInfo(prev => ({ 
+      ...prev, 
+      [name]: type === 'checkbox' ? checked : value 
+    }));
+    if (errors[name]) {
+      setErrors(prev => ({ ...prev, [name]: '' }));
+    }
+  };
+
+  // Handle blur events to mark fields as touched
+  const handleBlur = (e) => {
+    const { name } = e.target;
+    setTouched(prev => ({ ...prev, [name]: true }));
+  };
+
+  // Validation function
+  const validateForm = () => {
+    const newErrors = {};
     
-    if (type === 'checkbox') {
-      if (name === 'skills' || name === 'interests') {
-        const updatedValues = checked
-          ? [...formData[name], value]
-          : formData[name].filter(item => item !== value);
-        
-        setFormData(prev => ({
-          ...prev,
-          [name]: updatedValues
-        }));
-      } else {
-        setFormData(prev => ({
-          ...prev,
-          [name]: checked
-        }));
-      }
-    } else {
-      setFormData(prev => ({
-        ...prev,
-        [name]: value
-      }));
-
-      if (name === 'degree') {
-        setShowOtherDegree(value === 'Other');
-      }
+    // Personal info validation
+    if (!personalInfo.fullName) newErrors.fullName = 'Full name is required';
+    if (!personalInfo.gender) newErrors.gender = 'Gender is required';
+    if (!personalInfo.dob) newErrors.dob = 'Date of birth is required';
+    if (!personalInfo.personalEmail) newErrors.personalEmail = 'Personal email is required';
+    if (!personalInfo.phone) newErrors.phone = 'Phone number is required';
+    if (!personalInfo.location) newErrors.location = 'Location is required';
+    
+    // Academic info validation
+    if (!academicInfo.collegeEmail) newErrors.collegeEmail = 'College email is required';
+    if (!academicInfo.enrollmentNumber) newErrors.enrollmentNumber = 'Enrollment number is required';
+    if (!academicInfo.degree) newErrors.degree = 'Degree is required';
+    if (!academicInfo.branch) newErrors.branch = 'Branch is required';
+    if (!academicInfo.graduationYear) newErrors.graduationYear = 'Graduation year is required';
+    if (!academicInfo.expectedGraduationYear) newErrors.expectedGraduationYear = 'Expected graduation year is required';
+    
+    // Career status validation
+    if (!careerStatus) newErrors.careerStatus = 'Career status is required';
+    
+    // Career details validation
+    if (careerStatus === 'not-working' && !careerDetails.careerGoal) {
+      newErrors.careerGoal = 'Career goal is required';
     }
+    
+    // Terms acceptance validation
+    if (!otherInfo.termsAccept) newErrors.termsAccept = 'You must accept the terms and conditions';
+    
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
   };
 
-  const handleImageUpload = (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-
-    if (file.size > 2 * 1024 * 1024) {
-      alert('File size exceeds 2MB. Please choose a smaller image.');
+  // Skills management
+  const handleSkillInputChange = (e) => {
+    const value = e.target.value;
+    setSkillInput(value);
+    
+    if (value.trim() === '') {
+      setShowSkillDropdown(false);
       return;
     }
-
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      const imageDataUrl = event.target.result;
-      setProfileImage(imageDataUrl);
-      localStorage.setItem('profileImage', imageDataUrl);
-    };
-    reader.readAsDataURL(file);
+    
+    const filtered = skillSuggestions.filter(skill => 
+      skill.toLowerCase().startsWith(value.toLowerCase()) && 
+      !skills.includes(skill)
+    ).slice(0, 8);
+    
+    setFilteredSkills(filtered);
+    setShowSkillDropdown(true);
   };
 
-  const handleResumeUpload = (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
+  const addSkill = () => {
+    if (skillInput.trim() && !skills.includes(skillInput.trim())) {
+      setSkills(prev => [...prev, skillInput.trim()]);
+      setSkillInput('');
+      setShowSkillDropdown(false);
+    }
+  };
 
-    if (file.size > 5 * 1024 * 1024) {
-      alert('File size exceeds 5MB. Please choose a smaller file.');
+  const removeSkill = (skill) => {
+    setSkills(prev => prev.filter(s => s !== skill));
+  };
+
+  const selectSkill = (skill) => {
+    if (!skills.includes(skill)) {
+      setSkills(prev => [...prev, skill]);
+    }
+    setSkillInput('');
+    setShowSkillDropdown(false);
+  };
+
+  // Interests management
+  const handleInterestInputChange = (e) => {
+    const value = e.target.value;
+    setInterestInput(value);
+    
+    if (value.trim() === '') {
+      setShowInterestDropdown(false);
       return;
     }
-
-    setResumeFile(file);
+    
+    const filtered = interestSuggestions.filter(interest => 
+      interest.toLowerCase().startsWith(value.toLowerCase()) && 
+      !interests.includes(interest)
+    ).slice(0, 8);
+    
+    setFilteredInterests(filtered);
+    setShowInterestDropdown(true);
   };
 
+  const addInterest = () => {
+    if (interestInput.trim() && !interests.includes(interestInput.trim())) {
+      setInterests(prev => [...prev, interestInput.trim()]);
+      setInterestInput('');
+      setShowInterestDropdown(false);
+    }
+  };
+
+  const removeInterest = (interest) => {
+    setInterests(prev => prev.filter(i => i !== interest));
+  };
+
+  const selectInterest = (interest) => {
+    if (!interests.includes(interest)) {
+      setInterests(prev => [...prev, interest]);
+    }
+    setInterestInput('');
+    setShowInterestDropdown(false);
+  };
+
+  // Location management
+  const handleLocationInputChange = (e) => {
+    const value = e.target.value;
+    setLocationInput(value);
+    setPersonalInfo(prev => ({ ...prev, location: value }));
+    
+    if (errors.location) {
+      setErrors(prev => ({ ...prev, location: '' }));
+    }
+    
+    if (value.trim() === '') {
+      setShowLocationDropdown(false);
+      return;
+    }
+    
+    const filtered = locationOptions.filter(location => 
+      location.toLowerCase().includes(value.toLowerCase())
+    ).slice(0, 8);
+    
+    setFilteredLocations(filtered);
+    setShowLocationDropdown(true);
+  };
+
+  const selectLocation = (location) => {
+    setLocationInput(location);
+    setPersonalInfo(prev => ({ ...prev, location }));
+    if (errors.location) {
+      setErrors(prev => ({ ...prev, location: '' }));
+    }
+    setShowLocationDropdown(false);
+  };
+
+  // File upload handling
+  const handleFileUpload = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setResumeFile(file);
+    }
+  };
+
+  const triggerFileInput = () => {
+    fileInputRef.current.click();
+  };
+
+  const removeResumeFile = () => {
+    setResumeFile(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
+  // Form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    // Validate interests
-    if (formData.interests.length === 0) {
-      alert('Please select at least one area of interest');
+    // Validate form
+    const isValid = validateForm();
+    
+    if (!isValid) {
+      // Scroll to the first error
+      const firstErrorField = Object.keys(errors)[0];
+      const element = document.querySelector(`[name="${firstErrorField}"]`);
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        element.focus();
+      }
       return;
     }
-
-    // Validate other degree
-    if (formData.degree === 'Other' && !formData.otherDegree.trim()) {
-      alert('Please specify your degree');
-      return;
-    }
-
+    
+    // Prepare form data for submission
+    const formData = {
+      personalInfo,
+      academicInfo,
+      professionalInfo,
+      careerStatus,
+      careerDetails,
+      otherInfo: {
+        ...otherInfo,
+        termsAccept: undefined
+      },
+      skills,
+      interests,
+      resumeFileName: resumeFile ? resumeFile.name : null
+    };
+    
     setLoading(true);
     
-    // Simulate progress
-    const interval = setInterval(() => {
-      setProgress(prev => {
-        if (prev >= 100) {
-          clearInterval(interval);
-          return 100;
-        }
-        return prev + 5;
-      });
-    }, 50);
-
     try {
-      // Prepare data for submission
-      const submissionData = {
-        ...formData,
-        profileImage,
-        resumeFile: resumeFile ? resumeFile.name : null
-      };
+      // Save profile to backend using STUDENT endpoint
+      const result = await saveProfileToBackend(formData);
+      
+      console.log('Student profile saved successfully:', result);
+      setShowSuccess(true);
+      
+      // Update local storage
+      localStorage.setItem('profileCompleted', 'true');
+      
+      // Redirect to dashboard after 3 seconds
+      setTimeout(() => {
+        navigate('/StudentDashboard');
+      }, 3000);
+      
+    } catch (error) {
+      console.error('Error submitting form:', error);
+      setMessage({
+        text: error.message || 'Failed to save profile. Please try again.',
+        type: 'error'
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
 
-      // In a real application, you would send this data to your backend
-      const response = await axios.post('/student/profile', submissionData, {
+  // ✅ CRITICAL: Save to STUDENT endpoint
+  const saveProfileToBackend = async (formData) => {
+    try {
+      const token = localStorage.getItem('token');
+      
+      const response = await fetch('http://localhost:5000/api/student/complete-profile', {
+        method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        }
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(formData)
       });
-
-      // Clear progress and show success
-      setTimeout(() => {
-        setLoading(false);
-        setShowSuccessModal(true);
-        clearInterval(interval);
-      }, 1000);
-
+      
+      const data = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(data.message || 'Failed to save profile');
+      }
+      
+      return data;
     } catch (error) {
-      console.error('Error submitting profile:', error);
-      setLoading(false);
-      clearInterval(interval);
-      alert('Error submitting profile. Please try again.');
+      console.error('Error saving profile:', error);
+      throw error;
     }
   };
 
-  const handleGoToDashboard = () => {
-    navigate('/dashboard');
-  };
-
-  const handleBack = () => {
-    if (window.confirm('Are you sure you want to go back? Your changes may not be saved.')) {
-      navigate(-1);
-    }
-  };
-
-  const getOrdinalSuffix = (num) => {
-    const j = num % 10;
-    const k = num % 100;
-    if (j === 1 && k !== 11) return "st";
-    if (j === 2 && k !== 12) return "nd";
-    if (j === 3 && k !== 13) return "rd";
-    return "th";
-  };
+  // Close dropdowns when clicking outside
+  useEffect(() => {
+    const handleClickOutside = () => {
+      setShowSkillDropdown(false);
+      setShowInterestDropdown(false);
+      setShowLocationDropdown(false);
+    };
+    
+    document.addEventListener('click', handleClickOutside);
+    return () => {
+      document.removeEventListener('click', handleClickOutside);
+    };
+  }, []);
 
   return (
-    <div className="min-h-screen bg-white p-4">
-      {/* Progress Bar */}
-      {loading && (
-        <div className="fixed top-0 left-0 h-1 bg-indigo-600 transition-all duration-300" 
-             style={{ width: `${progress}%` }}></div>
-      )}
-
-      {/* Success Modal */}
-      {showSuccessModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-xl p-8 max-w-md w-full mx-4 text-center">
-            <div className="success-checkmark">
-              <div className="check-icon">
-                <span className="icon-line line-tip"></span>
-                <span className="icon-line line-long"></span>
-                <div className="icon-circle"></div>
-                <div className="icon-fix"></div>
+    <div className="bg-gradient-to-br from-slate-50 to-blue-50 min-h-screen py-8 relative">
+      {/* Success Notification */}
+      {showSuccess && (
+        <div className="fixed top-4 right-4 z-50 animate-fade-in">
+          <div className="bg-green-50 border border-green-200 rounded-xl p-4 shadow-lg max-w-md">
+            <div className="flex items-start space-x-3">
+              <div className="bg-green-100 p-2 rounded-full">
+                <FaCheckCircle className="text-green-600 text-xl" />
               </div>
-            </div>
-            <h2 className="text-2xl font-bold text-gray-800 mt-4">Account Created Successfully!</h2>
-            <p className="text-gray-600 mt-2">Your student profile has been created. You can now connect with alumni.</p>
-            <div className="mt-6">
+              <div className="flex-1">
+                <h3 className="font-semibold text-green-800">Registration Successful!</h3>
+                <p className="text-green-700 text-sm mt-1">
+                  Your student profile has been created successfully. You can now connect with other students and alumni.
+                </p>
+              </div>
               <button 
-                onClick={handleGoToDashboard}
-                className="px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-lg transition duration-300 w-full"
+                onClick={() => setShowSuccess(false)}
+                className="text-green-600 hover:text-green-800 transition-colors duration-200"
               >
-                Go to Dashboard
+                <FaTimes />
               </button>
             </div>
           </div>
         </div>
       )}
 
-      <div className="max-w-4xl mx-auto bg-white rounded-xl shadow-xl p-6 md:p-8 mb-10">
-        <div className="mb-6">
-          <h1 className="text-2xl md:text-3xl font-bold text-gray-800">Complete Your Student Profile</h1>
-          <p className="text-gray-600">Help us personalize your experience and connect you with alumni</p>
+      {message.text && (
+        <div className={`fixed top-4 left-1/2 transform -translate-x-1/2 z-50 animate-fade-in ${
+          message.type === 'error' ? 'bg-red-50 border-red-200 text-red-700' : 'bg-green-50 border-green-200 text-green-700'
+        } border rounded-xl p-4 shadow-lg max-w-md`}>
+          <div className="flex items-start space-x-3">
+            <div className={`p-2 rounded-full ${
+              message.type === 'error' ? 'bg-red-100' : 'bg-green-100'
+            }`}>
+              {message.type === 'error' ? (
+                <FaExclamationCircle className="text-red-600 text-xl" />
+              ) : (
+                <FaCheckCircle className="text-green-600 text-xl" />
+              )}
+            </div>
+            <div className="flex-1">
+              <p className="text-sm">{message.text}</p>
+            </div>
+            <button 
+              onClick={() => setMessage({ text: '', type: '' })}
+              className="text-gray-600 hover:text-gray-800 transition-colors duration-200"
+            >
+              <FaTimes />
+            </button>
+          </div>
         </div>
+      )}
 
-        <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Profile Photo Section */}
-          <div className="bg-gray-50 p-4 rounded-lg">
-            <h2 className="text-lg font-medium text-gray-800 mb-4">Profile Photo</h2>
-            <div className="flex flex-col sm:flex-row items-center gap-6">
-              <div 
-                className="w-24 h-24 rounded-full bg-gray-200 flex items-center justify-center cursor-pointer relative overflow-hidden"
-                onClick={() => fileInputRef.current?.click()}
-              >
-                {profileImage ? (
-                  <img src={profileImage} alt="Profile" className="w-full h-full object-cover" />
-                ) : (
-                  <svg className="w-12 h-12 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd"></path>
-                  </svg>
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+        {/* Header */}
+        <div className="text-center mb-12">
+          <h1 className="text-4xl font-bold text-gray-900 mb-4">Student Profile Setup</h1>
+          <p className="text-lg text-gray-600">Complete your profile to connect with the student network</p>
+        </div>
+        
+        {/* Registration Form */}
+        <form onSubmit={handleSubmit} className="bg-white rounded-2xl shadow-xl p-8 space-y-12">
+          
+          {/* Section 1: Personal Information */}
+          <div className="space-y-6">
+            <div className="flex items-center space-x-4 mb-6">
+              <div className="bg-blue-100 p-3 rounded-full">
+                <FaUser className="text-blue-600 text-xl" />
+              </div>
+              <h2 className="text-2xl font-semibold text-gray-900">Personal Information</h2>
+            </div>
+            <div className="section-divider mb-8"></div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Full Name */}
+              <div className="space-y-2">
+                <label className="block text-sm font-medium text-gray-700">Full Name *</label>
+                <div className="relative">
+                  <FaUser className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                  <input 
+                    type="text" 
+                    name="fullName"
+                    value={personalInfo.fullName}
+                    onChange={handlePersonalInfoChange}
+                    onBlur={handleBlur}
+                    className={`w-full pl-10 pr-4 py-3 border ${errors.fullName ? 'border-red-500' : 'border-gray-300'} rounded-xl input-focus transition-all duration-200`} 
+                    placeholder="Enter your full name"
+                  />
+                </div>
+                {errors.fullName && (
+                  <p className="text-red-500 text-sm flex items-center mt-1">
+                    <FaExclamationCircle className="mr-1" />
+                    {errors.fullName}
+                  </p>
                 )}
               </div>
-              <div>
-                <label className="cursor-pointer inline-flex items-center px-4 py-2 border border-gray-300 rounded-lg bg-gray-50 hover:bg-gray-100 transition duration-200 mb-2">
-                  <svg className="w-5 h-5 mr-2 text-gray-500" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M4 5a2 2 0 00-2 2v8a2 2 0 002 2h12a2 2 0 002-2V7a2 2 0 00-2-2h-1.586a1 1 0 01-.707-.293l-1.121-1.121A2 2 0 0011.172 3H8.828a2 2 0 00-1.414.586L6.293 4.707A1 1 0 015.586 5H4zm6 9a3 3 0 100-6 3 3 0 000 6z" clipRule="evenodd"></path>
-                  </svg>
-                  Upload Photo
+              
+              {/* Gender */}
+              <div className="space-y-2">
+                <label className="block text-sm font-medium text-gray-700">Gender *</label>
+                <div className="relative">
+                  <FaVenusMars className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                  <select 
+                    name="gender"
+                    value={personalInfo.gender}
+                    onChange={handlePersonalInfoChange}
+                    onBlur={handleBlur}
+                    className={`w-full pl-10 pr-4 py-3 border ${errors.gender ? 'border-red-500' : 'border-gray-300'} rounded-xl input-focus transition-all duration-200 appearance-none bg-white`}
+                  >
+                    <option value="">Select Gender</option>
+                    <option value="male">Male</option>
+                    <option value="female">Female</option>
+                    <option value="other">Other</option>
+                    <option value="prefer-not-to-say">Prefer not to say</option>
+                  </select>
+                </div>
+                {errors.gender && (
+                  <p className="text-red-500 text-sm flex items-center mt-1">
+                    <FaExclamationCircle className="mr-1" />
+                    {errors.gender}
+                  </p>
+                )}
+              </div>
+              
+              {/* Date of Birth */}
+              <div className="space-y-2">
+                <label className="block text-sm font-medium text-gray-700">Date of Birth *</label>
+                <div className="relative">
+                  <FaCalendar className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
                   <input 
-                    type="file" 
-                    ref={fileInputRef}
-                    className="hidden" 
-                    accept="image/*"
-                    onChange={handleImageUpload}
+                    type="date" 
+                    name="dob"
+                    value={personalInfo.dob}
+                    onChange={handlePersonalInfoChange}
+                    onBlur={handleBlur}
+                    className={`w-full pl-10 pr-4 py-3 border ${errors.dob ? 'border-red-500' : 'border-gray-300'} rounded-xl input-focus transition-all duration-200`}
                   />
-                </label>
-                <p className="text-xs text-gray-500">JPG or PNG, max 2MB</p>
+                </div>
+                {errors.dob && (
+                  <p className="text-red-500 text-sm flex items-center mt-1">
+                    <FaExclamationCircle className="mr-1" />
+                    {errors.dob}
+                  </p>
+                )}
+              </div>
+              
+              {/* Personal Email */}
+              <div className="space-y-2">
+                <label className="block text-sm font-medium text-gray-700">Personal Email *</label>
+                <div className="relative">
+                  <FaEnvelope className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                  <input 
+                    type="email" 
+                    name="personalEmail"
+                    value={personalInfo.personalEmail}
+                    onChange={handlePersonalInfoChange}
+                    onBlur={handleBlur}
+                    className={`w-full pl-10 pr-4 py-3 border ${errors.personalEmail ? 'border-red-500' : 'border-gray-300'} rounded-xl input-focus transition-all duration-200`} 
+                    placeholder="your.email@example.com"
+                  />
+                </div>
+                {errors.personalEmail && (
+                  <p className="text-red-500 text-sm flex items-center mt-1">
+                    <FaExclamationCircle className="mr-1" />
+                    {errors.personalEmail}
+                  </p>
+                )}
+              </div>
+              
+              {/* Phone Number */}
+              <div className="space-y-2">
+                <label className="block text-sm font-medium text-gray-700">Phone Number *</label>
+                <div className="relative">
+                  <FaPhone className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                  <input 
+                    type="tel" 
+                    name="phone"
+                    value={personalInfo.phone}
+                    onChange={handlePersonalInfoChange}
+                    onBlur={handleBlur}
+                    className={`w-full pl-10 pr-4 py-3 border ${errors.phone ? 'border-red-500' : 'border-gray-300'} rounded-xl input-focus transition-all duration-200`} 
+                    placeholder="+1 (555) 123-4567"
+                  />
+                </div>
+                {errors.phone && (
+                  <p className="text-red-500 text-sm flex items-center mt-1">
+                    <FaExclamationCircle className="mr-1" />
+                    {errors.phone}
+                  </p>
+                )}
+              </div>
+              
+              {/* Location */}
+              <div className="space-y-2">
+                <label className="block text-sm font-medium text-gray-700">Location *</label>
+                <div className="relative">
+                  <FaMapMarkerAlt className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                  <input 
+                    type="text" 
+                    value={locationInput}
+                    onChange={handleLocationInputChange}
+                    onClick={(e) => e.stopPropagation()}
+                    onBlur={handleBlur}
+                    className={`w-full pl-10 pr-4 py-3 border ${errors.location ? 'border-red-500' : 'border-gray-300'} rounded-xl input-focus transition-all duration-200`} 
+                    placeholder="City, State, Country"
+                  />
+                  {showLocationDropdown && (
+                    <div 
+                      className="absolute top-full left-0 right-0 bg-white border border-gray-300 rounded-lg shadow-lg z-20 max-h-48 overflow-y-auto mt-1"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      {filteredLocations.map(location => (
+                        <div 
+                          key={location}
+                          className="px-4 py-2 hover:bg-gray-100 cursor-pointer border-b border-gray-100 last:border-b-0" 
+                          onClick={() => selectLocation(location)}
+                        >
+                          {location}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+                {errors.location && (
+                  <p className="text-red-500 text-sm flex items-center mt-1">
+                    <FaExclamationCircle className="mr-1" />
+                    {errors.location}
+                  </p>
+                )}
               </div>
             </div>
           </div>
-
-          {/* Personal Information */}
-          <div>
-            <h2 className="text-lg font-medium text-gray-800 mb-4">Personal Information</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label htmlFor="fullName" className="block text-sm font-medium text-gray-700 mb-1">Full Name*</label>
-                <input 
-                  type="text" 
-                  id="fullName"
-                  name="fullName"
-                  value={formData.fullName}
-                  onChange={handleInputChange}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" 
-                  required 
-                />
+          
+          {/* Section 2: Academic Information */}
+          <div className="space-y-6">
+            <div className="flex items-center space-x-4 mb-6">
+              <div className="bg-green-100 p-3 rounded-full">
+                <FaGraduationCap className="text-green-600 text-xl" />
+              </div>
+              <h2 className="text-2xl font-semibold text-gray-900">Academic Information</h2>
+            </div>
+            <div className="section-divider mb-8"></div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* College Email */}
+              <div className="space-y-2">
+                <label className="block text-sm font-medium text-gray-700">College Email *</label>
+                <div className="relative">
+                  <FaUniversity className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                  <input 
+                    type="email" 
+                    name="collegeEmail"
+                    value={academicInfo.collegeEmail}
+                    onChange={handleAcademicInfoChange}
+                    onBlur={handleBlur}
+                    className={`w-full pl-10 pr-4 py-3 border ${errors.collegeEmail ? 'border-red-500' : 'border-gray-300'} rounded-xl input-focus transition-all duration-200`} 
+                    placeholder="student@university.edu"
+                  />
+                </div>
+                {errors.collegeEmail && (
+                  <p className="text-red-500 text-sm flex items-center mt-1">
+                    <FaExclamationCircle className="mr-1" />
+                    {errors.collegeEmail}
+                  </p>
+                )}
               </div>
               
-              <div>
-                <label htmlFor="dob" className="block text-sm font-medium text-gray-700 mb-1">Date of Birth*</label>
-                <input 
-                  type="date" 
-                  id="dob"
-                  name="dob"
-                  value={formData.dob}
-                  onChange={handleInputChange}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" 
-                  required 
-                />
+              {/* Enrollment Number */}
+              <div className="space-y-2">
+                <label className="block text-sm font-medium text-gray-700">Enrollment Number *</label>
+                <div className="relative">
+                  <FaIdCard className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                  <input 
+                    type="text" 
+                    name="enrollmentNumber"
+                    value={academicInfo.enrollmentNumber}
+                    onChange={handleAcademicInfoChange}
+                    onBlur={handleBlur}
+                    className={`w-full pl-10 pr-4 py-3 border ${errors.enrollmentNumber ? 'border-red-500' : 'border-gray-300'} rounded-xl input-focus transition-all duration-200`} 
+                    placeholder="Enter enrollment number"
+                  />
+                </div>
+                {errors.enrollmentNumber && (
+                  <p className="text-red-500 text-sm flex items-center mt-1">
+                    <FaExclamationCircle className="mr-1" />
+                    {errors.enrollmentNumber}
+                  </p>
+                )}
               </div>
               
-              <div>
-                <label htmlFor="personalEmail" className="block text-sm font-medium text-gray-700 mb-1">Personal Email*</label>
-                <input 
-                  type="email" 
-                  id="personalEmail"
-                  name="personalEmail"
-                  value={formData.personalEmail}
-                  onChange={handleInputChange}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" 
-                  required 
-                />
+              {/* Degree */}
+              <div className="space-y-2">
+                <label className="block text-sm font-medium text-gray-700">Degree *</label>
+                <div className="relative">
+                  <FaCertificate className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                  <select 
+                    name="degree"
+                    value={academicInfo.degree}
+                    onChange={handleAcademicInfoChange}
+                    onBlur={handleBlur}
+                    className={`w-full pl-10 pr-4 py-3 border ${errors.degree ? 'border-red-500' : 'border-gray-300'} rounded-xl input-focus transition-all duration-200 appearance-none bg-white`}
+                  >
+                    <option value="">Select Degree</option>
+                    {degreeOptions.map(degree => (
+                      <option key={degree} value={degree.toLowerCase().replace(/\s+/g, '-')}>
+                        {degree}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                {errors.degree && (
+                  <p className="text-red-500 text-sm flex items-center mt-1">
+                    <FaExclamationCircle className="mr-1" />
+                    {errors.degree}
+                  </p>
+                )}
               </div>
               
-              <div>
-                <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-1">Phone Number</label>
-                <input 
-                  type="tel" 
-                  id="phone"
-                  name="phone"
-                  value={formData.phone}
-                  onChange={handleInputChange}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" 
-                />
+              {/* Branch */}
+              <div className="space-y-2">
+                <label className="block text-sm font-medium text-gray-700">Branch *</label>
+                <div className="relative">
+                  <FaCodeBranch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                  <select 
+                    name="branch"
+                    value={academicInfo.branch}
+                    onChange={handleAcademicInfoChange}
+                    onBlur={handleBlur}
+                    className={`w-full pl-10 pr-4 py-3 border ${errors.branch ? 'border-red-500' : 'border-gray-300'} rounded-xl input-focus transition-all duration-200 appearance-none bg-white`}
+                  >
+                    <option value="">Select Branch</option>
+                    {branchOptions.map(branch => (
+                      <option key={branch} value={branch.toLowerCase().replace(/\s+/g, '-')}>
+                        {branch}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                {errors.branch && (
+                  <p className="text-red-500 text-sm flex items-center mt-1">
+                    <FaExclamationCircle className="mr-1" />
+                    {errors.branch}
+                  </p>
+                )}
+              </div>
+              
+              {/* Graduation Year */}
+              <div className="space-y-2">
+                <label className="block text-sm font-medium text-gray-700">Graduation Year *</label>
+                <div className="relative">
+                  <FaCalendarAlt className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                  <select 
+                    name="graduationYear"
+                    value={academicInfo.graduationYear}
+                    onChange={handleAcademicInfoChange}
+                    onBlur={handleBlur}
+                    className={`w-full pl-10 pr-4 py-3 border ${errors.graduationYear ? 'border-red-500' : 'border-gray-300'} rounded-xl input-focus transition-all duration-200 appearance-none bg-white`}
+                  >
+                    <option value="">Select Year</option>
+                    {Array.from({ length: 10 }, (_, i) => {
+                      const year = new Date().getFullYear() + i;
+                      return (
+                        <option key={year} value={year}>
+                          {year}
+                        </option>
+                      );
+                    })}
+                  </select>
+                </div>
+                {errors.graduationYear && (
+                  <p className="text-red-500 text-sm flex items-center mt-1">
+                    <FaExclamationCircle className="mr-1" />
+                    {errors.graduationYear}
+                  </p>
+                )}
+              </div>
+              
+              {/* Expected Graduation Year - ✅ ADDED THIS FIELD */}
+              <div className="space-y-2">
+                <label className="block text-sm font-medium text-gray-700">Expected Graduation Year *</label>
+                <div className="relative">
+                  <FaCalendarAlt className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                  <select 
+                    name="expectedGraduationYear"
+                    value={academicInfo.expectedGraduationYear}
+                    onChange={handleAcademicInfoChange}
+                    onBlur={handleBlur}
+                    className={`w-full pl-10 pr-4 py-3 border ${errors.expectedGraduationYear ? 'border-red-500' : 'border-gray-300'} rounded-xl input-focus transition-all duration-200 appearance-none bg-white`}
+                  >
+                    <option value="">Select Year</option>
+                    {Array.from({ length: 10 }, (_, i) => {
+                      const year = new Date().getFullYear() + i;
+                      return (
+                        <option key={year} value={year}>
+                          {year}
+                        </option>
+                      );
+                    })}
+                  </select>
+                </div>
+                {errors.expectedGraduationYear && (
+                  <p className="text-red-500 text-sm flex items-center mt-1">
+                    <FaExclamationCircle className="mr-1" />
+                    {errors.expectedGraduationYear}
+                  </p>
+                )}
+              </div>
+              
+              {/* CGPA */}
+              <div className="space-y-2">
+                <label className="block text-sm font-medium text-gray-700">CGPA (Optional)</label>
+                <div className="relative">
+                  <FaGraduationCap className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                  <input 
+                    type="text" 
+                    name="cgpa"
+                    value={academicInfo.cgpa}
+                    onChange={handleAcademicInfoChange}
+                    className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl input-focus transition-all duration-200" 
+                    placeholder="e.g., 8.5 or 3.8"
+                  />
+                </div>
               </div>
             </div>
           </div>
-
-          {/* Academic Information */}
-          <div>
-            <h2 className="text-lg font-medium text-gray-800 mb-4">Academic Information</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label htmlFor="rollNumber" className="block text-sm font-medium text-gray-700 mb-1">Roll Number*</label>
-                <input 
-                  type="text" 
-                  id="rollNumber"
-                  name="rollNumber"
-                  value={formData.rollNumber}
-                  onChange={handleInputChange}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" 
-                  placeholder="e.g., 21CS10045" 
-                  required 
-                />
+          
+          {/* Section 3: Career Status */}
+          <div className="space-y-8">
+            <div className="flex items-center space-x-4 mb-6">
+              <div className="bg-purple-100 p-3 rounded-full">
+                <FaBriefcase className="text-purple-600 text-xl" />
+              </div>
+              <h2 className="text-2xl font-semibold text-gray-900">Career Status</h2>
+            </div>
+            <div className="section-divider mb-8"></div>
+            
+            <div className="space-y-6">
+              <div className="space-y-2">
+                <label className="block text-sm font-medium text-gray-700">Current Career Status *</label>
+                {errors.careerStatus && (
+                  <p className="text-red-500 text-sm flex items-center mb-2">
+                    <FaExclamationCircle className="mr-1" />
+                    {errors.careerStatus}
+                  </p>
+                )}
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setCareerStatus('studies');
+                      if (errors.careerStatus) {
+                        setErrors(prev => ({ ...prev, careerStatus: '' }));
+                      }
+                    }}
+                    className={`py-3 px-4 rounded-xl border transition-all duration-200 flex flex-col items-center justify-center ${
+                      careerStatus === 'studies'
+                        ? 'bg-blue-50 border-blue-500 text-blue-700'
+                        : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'
+                    }`}
+                  >
+                    <FaGraduation className="text-lg mb-1" />
+                    <span className="text-sm font-medium">Higher Studies</span>
+                  </button>
+                  
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setCareerStatus('not-working');
+                      if (errors.careerStatus) {
+                        setErrors(prev => ({ ...prev, careerStatus: '' }));
+                      }
+                    }}
+                    className={`py-3 px-4 rounded-xl border transition-all duration-200 flex flex-col items-center justify-center ${
+                      careerStatus === 'not-working'
+                        ? 'bg-blue-50 border-blue-500 text-blue-700'
+                        : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'
+                    }`}
+                  >
+                    <FaSearch className="text-lg mb-1" />
+                    <span className="text-sm font-medium">Not Working</span>
+                  </button>
+                </div>
               </div>
               
-              <div>
-                <label htmlFor="collegeEmail" className="block text-sm font-medium text-gray-700 mb-1">College Email ID*</label>
-                <input 
-                  type="email" 
-                  id="collegeEmail"
-                  name="collegeEmail"
-                  value={formData.collegeEmail}
-                  onChange={handleInputChange}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" 
-                  required 
-                />
+              {/* Career Goal for Not Working */}
+              {careerStatus === 'not-working' && (
+                <div className="bg-blue-50 border border-blue-200 rounded-xl p-6 space-y-4">
+                  <h3 className="text-lg font-semibold text-gray-900 flex items-center">
+                    <FaSearch className="text-blue-600 mr-2" />
+                    Career Focus Details
+                  </h3>
+                  
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <label className="block text-sm font-medium text-gray-700">Career Goal/Focus *</label>
+                      <textarea 
+                        name="careerGoal"
+                        value={careerDetails.careerGoal}
+                        onChange={handleCareerDetailsChange}
+                        onBlur={handleBlur}
+                        className={`w-full px-4 py-2 border ${errors.careerGoal ? 'border-red-500' : 'border-gray-300'} rounded-lg input-focus transition-all duration-200 resize-none`} 
+                        rows="3" 
+                        placeholder="Describe your career goals or focus areas..."
+                      ></textarea>
+                      {errors.careerGoal && (
+                        <p className="text-red-500 text-sm flex items-center mt-1">
+                          <FaExclamationCircle className="mr-1" />
+                          {errors.careerGoal}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+          
+          {/* Section 4: Skills & Interests */}
+          <div className="space-y-8">
+            <div className="flex items-center space-x-4 mb-6">
+              <div className="bg-purple-100 p-3 rounded-full">
+                <FaTools className="text-purple-600 text-xl" />
+              </div>
+              <h2 className="text-2xl font-semibold text-gray-900">Skills & Interests</h2>
+            </div>
+            <div className="section-divider mb-8"></div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Skills & Technologies */}
+              <div className="bg-gray-50 border border-gray-200 rounded-xl p-6 space-y-4">
+                <div className="flex items-center space-x-3">
+                  <FaTools className="text-purple-600 text-lg" />
+                  <h3 className="text-lg font-semibold text-gray-900">Skills & Technologies</h3>
+                </div>
+                
+                <div className="space-y-3">
+                  <div className="flex items-center space-x-2">
+                    <div className="relative flex-1">
+                      <FaWrench className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 z-10" />
+                      <input 
+                        type="text" 
+                        value={skillInput}
+                        onChange={handleSkillInputChange}
+                        onClick={(e) => e.stopPropagation()}
+                        className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg input-focus transition-all duration-200" 
+                        placeholder="Type a skill and press Enter" 
+                        autoComplete="off"
+                      />
+                      {showSkillDropdown && (
+                        <div 
+                          className="absolute top-full left-0 right-0 bg-white border border-gray-300 rounded-lg shadow-lg z-20 max-h-48 overflow-y-auto mt-1"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          {filteredSkills.map((skill, index) => (
+                            <div 
+                              key={index}
+                              className="px-4 py-2 hover:bg-gray-100 cursor-pointer border-b border-gray-100 last:border-b-0" 
+                              onClick={() => selectSkill(skill)}
+                            >
+                              {skill}
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                    <button 
+                      type="button" 
+                      onClick={addSkill}
+                      className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-3 rounded-lg transition-all duration-200"
+                    >
+                      <FaPlus />
+                    </button>
+                  </div>
+                  
+                  <div className="min-h-[60px] p-4 border border-gray-200 rounded-lg bg-white">
+                    {skills.length === 0 ? (
+                      <p className="text-gray-500 text-sm">No skills added yet. Type above and press Enter or click + to add.</p>
+                    ) : (
+                      <div className="flex flex-wrap gap-2">
+                        {skills.map((skill, index) => (
+                          <span key={index} className="inline-flex items-center gap-2 bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm">
+                            {skill}
+                            <button 
+                              type="button" 
+                              onClick={() => removeSkill(skill)} 
+                              className="text-blue-600 hover:text-blue-800"
+                            >
+                              ×
+                            </button>
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
               </div>
               
-              <div>
-                <label htmlFor="degree" className="block text-sm font-medium text-gray-700 mb-1">Degree*</label>
-                <select 
-                  id="degree"
-                  name="degree"
-                  value={formData.degree}
-                  onChange={handleInputChange}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" 
-                  required
-                >
-                  <option value="">Select degree</option>
-                  <option value="B.Tech">B.Tech / B.E.</option>
-                  <option value="M.Tech">M.Tech / M.E.</option>
-                  <option value="BCA">BCA</option>
-                  <option value="MCA">MCA</option>
-                  <option value="BSc">BSc</option>
-                  <option value="MSc">MSc</option>
-                  <option value="BBA">BBA</option>
-                  <option value="MBA">MBA</option>
-                  <option value="PhD">PhD</option>
-                  <option value="Other">Other</option>
-                </select>
-                {showOtherDegree && (
-                  <div className="mt-2">
+              {/* Areas of Interest */}
+              <div className="bg-gray-50 border border-gray-200 rounded-xl p-6 space-y-4">
+                <div className="flex items-center space-x-3">
+                  <FaStar className="text-purple-600 text-lg" />
+                  <h3 className="text-lg font-semibold text-gray-900">Areas of Interest</h3>
+                </div>
+                
+                <div className="space-y-3">
+                  <div className="flex items-center space-x-2">
+                    <div className="relative flex-1">
+                      <FaHeart className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 z-10" />
+                      <input 
+                        type="text" 
+                        value={interestInput}
+                        onChange={handleInterestInputChange}
+                        onClick={(e) => e.stopPropagation()}
+                        className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg input-focus transition-all duration-200" 
+                        placeholder="Type an interest and press Enter" 
+                        autoComplete="off"
+                      />
+                      {showInterestDropdown && (
+                        <div 
+                          className="absolute top-full left-0 right-0 bg-white border border-gray-300 rounded-lg shadow-lg z-20 max-h-48 overflow-y-auto mt-1"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          {filteredInterests.map((interest, index) => (
+                            <div 
+                              key={index}
+                              className="px-4 py-2 hover:bg-gray-100 cursor-pointer border-b border-gray-100 last:border-b-0" 
+                              onClick={() => selectInterest(interest)}
+                            >
+                              {interest}
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                    <button 
+                      type="button" 
+                      onClick={addInterest}
+                      className="bg-green-600 hover:bg-green-700 text-white px-4 py-3 rounded-lg transition-all duration-200"
+                    >
+                      <FaPlus />
+                    </button>
+                  </div>
+                  
+                  <div className="min-h-[60px] p-4 border border-gray-200 rounded-lg bg-white">
+                    {interests.length === 0 ? (
+                      <p className="text-gray-500 text-sm">No interests added yet. Type above and press Enter or click + to add.</p>
+                    ) : (
+                      <div className="flex flex-wrap gap-2">
+                        {interests.map((interest, index) => (
+                          <span key={index} className="inline-flex items-center gap-2 bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm">
+                            {interest}
+                            <button 
+                              type="button" 
+                              onClick={() => removeInterest(interest)} 
+                              className="text-green-600 hover:text-green-800"
+                            >
+                              ×
+                            </button>
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          {/* Section 5: Other Essentials */}
+          <div className="space-y-6">
+            <div className="flex items-center space-x-4 mb-6">
+              <div className="bg-orange-100 p-3 rounded-full">
+                <FaStar className="text-orange-600 text-xl" />
+              </div>
+              <h2 className="text-2xl font-semibold text-gray-900">Other Essentials</h2>
+            </div>
+            <div className="section-divider mb-8"></div>
+            
+            <div className="space-y-6">
+              <div className="space-y-2">
+                <label className="block text-sm font-medium text-gray-700">Bio</label>
+                <div className="relative">
+                  <FaUserEdit className="absolute left-3 top-4 text-gray-400" />
+                  <textarea 
+                    name="bio"
+                    value={otherInfo.bio}
+                    onChange={handleOtherInfoChange}
+                    className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl input-focus transition-all duration-200 resize-none" 
+                    rows="4" 
+                    placeholder="Tell us about yourself, your interests, and what you're passionate about..."
+                  ></textarea>
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* LinkedIn ID */}
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium text-gray-700">LinkedIn ID</label>
+                  <div className="relative">
+                    <FaLinkedin className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
                     <input 
-                      type="text" 
-                      id="otherDegree"
-                      name="otherDegree"
-                      value={formData.otherDegree}
-                      onChange={handleInputChange}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" 
-                      placeholder="Please specify your degree" 
+                      type="url" 
+                      name="linkedin"
+                      value={otherInfo.linkedin}
+                      onChange={handleOtherInfoChange}
+                      className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl input-focus transition-all duration-200" 
+                      placeholder="https://linkedin.com/in/yourprofile"
                     />
                   </div>
-                )}
+                </div>
+                
+                {/* GitHub ID */}
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium text-gray-700">GitHub ID</label>
+                  <div className="relative">
+                    <FaGithub className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                    <input 
+                      type="url" 
+                      name="github"
+                      value={otherInfo.github}
+                      onChange={handleOtherInfoChange}
+                      className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl input-focus transition-all duration-200" 
+                      placeholder="https://github.com/yourusername"
+                    />
+                  </div>
+                </div>
+                
+                {/* Portfolio */}
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium text-gray-700">Portfolio</label>
+                  <div className="relative">
+                    <FaGlobe className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                    <input 
+                      type="url" 
+                      name="portfolio"
+                      value={otherInfo.portfolio}
+                      onChange={handleOtherInfoChange}
+                      className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl input-focus transition-all duration-200" 
+                      placeholder="https://yourportfolio.com"
+                    />
+                  </div>
+                </div>
+                
+                {/* Resume Upload */}
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium text-gray-700">Resume Upload</label>
+                  <div className="relative">
+                    <input 
+                      type="file" 
+                      ref={fileInputRef}
+                      onChange={handleFileUpload}
+                      accept=".pdf,.doc,.docx" 
+                      className="hidden"
+                    />
+                    <div className="flex items-center">
+                      <button 
+                        type="button" 
+                        onClick={triggerFileInput}
+                        className="flex-1 flex items-center justify-center h-12 border-2 border-dashed border-gray-300 rounded-l-xl hover:border-blue-400 transition-colors duration-200"
+                      >
+                        <div className="flex items-center space-x-2 text-gray-500">
+                          <FaUpload />
+                          <span className="text-sm">
+                            {resumeFile ? resumeFile.name : 'Choose file or drag here'}
+                          </span>
+                        </div>
+                      </button>
+                      {resumeFile && (
+                        <button 
+                          type="button" 
+                          onClick={removeResumeFile}
+                          className="bg-red-100 hover:bg-red-200 text-red-600 h-12 px-4 rounded-r-xl transition-colors duration-200"
+                          title="Remove file"
+                        >
+                          <FaTimes />
+                        </button>
+                      )}
+                    </div>
+                    <p className="text-xs text-gray-500 mt-1">Accepted formats: PDF, DOC, DOCX (Max 5MB)</p>
+                  </div>
+                </div>
               </div>
-              
-              <div>
-                <label htmlFor="branch" className="block text-sm font-medium text-gray-700 mb-1">Branch/Specialization*</label>
+            </div>
+          </div>
+          
+          {/* Terms and Policy Agreement */}
+          <div className="bg-gray-50 border border-gray-200 rounded-xl p-6 space-y-4">
+            <div className="flex items-center space-x-3">
+              <FaShieldAlt className="text-blue-600 text-lg" />
+              <h3 className="text-lg font-semibold text-gray-900">Terms & Privacy</h3>
+            </div>
+            
+            <div className="space-y-4">
+              <div className="flex items-start space-x-3">
                 <input 
-                  type="text" 
-                  id="branch"
-                  name="branch"
-                  value={formData.branch}
-                  onChange={handleInputChange}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" 
-                  placeholder="e.g., Computer Science, Mechanical" 
-                  required 
+                  type="checkbox" 
+                  id="termsAccept"
+                  name="termsAccept"
+                  checked={otherInfo.termsAccept}
+                  onChange={handleOtherInfoChange}
+                  onBlur={handleBlur}
+                  className={`mt-1 h-4 w-4 text-blue-600 ${errors.termsAccept ? 'border-red-500' : 'border-gray-300'} rounded focus:ring-blue-500 focus:ring-2`}
                 />
+                <label htmlFor="termsAccept" className="text-sm text-gray-700 leading-relaxed">
+                  I agree to the{' '}
+                  <button 
+                    type="button"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      // Handle terms of service click
+                    }}
+                    className="text-blue-600 hover:text-blue-800 underline font-medium"
+                  >
+                    Terms of Service
+                  </button>{' '}
+                  and{' '}
+                  <button 
+                    type="button"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      // Handle privacy policy click
+                    }}
+                    className="text-blue-600 hover:text-blue-800 underline font-medium"
+                  >
+                    Privacy Policy
+                  </button>
+                  . I understand that my information will be used to connect me with the student network and may be shared with other verified members. *
+                </label>
+              </div>
+              {errors.termsAccept && (
+                <p className="text-red-500 text-sm flex items-center mt-1">
+                  <FaExclamationCircle className="mr-1" />
+                  {errors.termsAccept}
+                </p>
+              )}
+              
+              <div className="flex items-start space-x-3">
+                <input 
+                  type="checkbox" 
+                  id="emailConsent"
+                  name="emailConsent"
+                  checked={otherInfo.emailConsent}
+                  onChange={handleOtherInfoChange}
+                  className="mt-1 h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
+                />
+                <label htmlFor="emailConsent" className="text-sm text-gray-700 leading-relaxed">
+                  I would like to receive updates about student events, networking opportunities, and relevant career information via email. (Optional)
+                </label>
               </div>
               
-              <div>
-                <label htmlFor="currentYear" className="block text-sm font-medium text-gray-700 mb-1">Current Year*</label>
-                <select 
-                  id="currentYear"
-                  name="currentYear"
-                  value={formData.currentYear}
-                  onChange={handleInputChange}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" 
-                  required
-                >
-                  <option value="">Select current year</option>
-                  <option value="1">1st Year</option>
-                  <option value="2">2nd Year</option>
-                  <option value="3">3rd Year</option>
-                  <option value="4">4th Year</option>
-                  <option value="5">5th Year</option>
-                </select>
-              </div>
-              
-              <div>
-                <label htmlFor="graduationYear" className="block text-sm font-medium text-gray-700 mb-1">Expected Graduation Year*</label>
-                <select 
-                  id="graduationYear"
-                  name="graduationYear"
-                  value={formData.graduationYear}
-                  onChange={handleInputChange}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" 
-                  required
-                >
-                  <option value="">Select year</option>
-                  <option value="2024">2024</option>
-                  <option value="2025">2025</option>
-                  <option value="2026">2026</option>
-                  <option value="2027">2027</option>
-                  <option value="2028">2028</option>
-                </select>
-              </div>
-            </div>
-          </div>
-
-          {/* Professional Information */}
-          <div>
-            <h2 className="text-lg font-medium text-gray-800 mb-4">Professional Information</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label htmlFor="linkedin" className="block text-sm font-medium text-gray-700 mb-1">LinkedIn Profile</label>
-                <div className="flex">
-                  <span className="inline-flex items-center px-3 text-sm text-gray-500 bg-gray-100 border border-r-0 border-gray-300 rounded-l-lg">
-                    linkedin.com/in/
-                  </span>
-                  <input 
-                    type="text" 
-                    id="linkedin"
-                    name="linkedin"
-                    value={formData.linkedin}
-                    onChange={handleInputChange}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-r-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" 
-                    placeholder="username" 
-                  />
+              <div className="bg-blue-100 p-4 rounded-lg">
+                <div className="flex items-start space-x-2">
+                  <FaInfoCircle className="text-blue-600 mt-0.5" />
+                  <div className="text-sm text-blue-800">
+                    <p className="font-medium mb-1">Your Privacy Matters</p>
+                    <p>We protect your personal information and only share it with verified members for networking purposes. You can update your privacy preferences anytime after registration.</p>
+                  </div>
                 </div>
               </div>
-              
-              <div>
-                <label htmlFor="github" className="block text-sm font-medium text-gray-700 mb-1">GitHub Profile</label>
-                <div className="flex">
-                  <span className="inline-flex items-center px-3 text-sm text-gray-500 bg-gray-100 border border-r-0 border-gray-300 rounded-l-lg">
-                    github.com/
-                  </span>
-                  <input 
-                    type="text" 
-                    id="github"
-                    name="github"
-                    value={formData.github}
-                    onChange={handleInputChange}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-r-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" 
-                    placeholder="username" 
-                  />
-                </div>
-              </div>
-              
-              <div className="md:col-span-2">
-                <label htmlFor="resume" className="block text-sm font-medium text-gray-700 mb-1">Resume/CV</label>
-                <label className="cursor-pointer inline-flex items-center px-4 py-2 border border-gray-300 rounded-lg bg-gray-50 hover:bg-gray-100 transition duration-200 w-full justify-center">
-                  <svg className="w-5 h-5 mr-2 text-gray-500" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clipRule="evenodd"></path>
-                  </svg>
-                  {resumeFile ? resumeFile.name : 'Upload Resume'}
-                  <input 
-                    type="file" 
-                    ref={resumeInputRef}
-                    id="resume"
-                    className="hidden" 
-                    accept=".pdf,.doc,.docx"
-                    onChange={handleResumeUpload}
-                  />
-                </label>
-                <p className="text-xs text-gray-500 mt-1">PDF, DOC, or DOCX, max 5MB</p>
-              </div>
             </div>
           </div>
-
-          {/* Technical Skills */}
-          <div>
-            <h2 className="text-lg font-medium text-gray-800 mb-4">Technical Skills</h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
-              {['java', 'python', 'javascript', 'html_css', 'react', 'angular', 'node', 'sql', 'nosql', 'aws', 'docker', 'git'].map(skill => (
-                <label key={skill} className="inline-flex items-center">
-                  <input 
-                    type="checkbox" 
-                    name="skills"
-                    value={skill}
-                    checked={formData.skills.includes(skill)}
-                    onChange={handleInputChange}
-                    className="rounded text-indigo-600 focus:ring-indigo-500 h-4 w-4" 
-                  />
-                  <span className="ml-2 text-sm text-gray-700 capitalize">
-                    {skill === 'html_css' ? 'HTML/CSS' : 
-                     skill === 'nosql' ? 'NoSQL' : 
-                     skill === 'aws' ? 'AWS' : 
-                     skill === 'node' ? 'Node.js' : skill}
-                  </span>
-                </label>
-              ))}
-            </div>
-            <div className="mt-2">
-              <label htmlFor="otherSkills" className="block text-sm font-medium text-gray-700 mb-1">Other Skills</label>
-              <input 
-                type="text" 
-                id="otherSkills"
-                name="otherSkills"
-                value={formData.otherSkills}
-                onChange={handleInputChange}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" 
-                placeholder="Enter any other skills, separated by commas" 
-              />
-            </div>
-          </div>
-
-          {/* Areas of Interest */}
-          <div>
-            <h2 className="text-lg font-medium text-gray-800 mb-4">Areas of Interest</h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
-              {[
-                {value: 'ai_ml', label: 'AI/Machine Learning'},
-                {value: 'web_dev', label: 'Web Development'},
-                {value: 'mobile_dev', label: 'Mobile Development'},
-                {value: 'cloud', label: 'Cloud Computing'},
-                {value: 'data_science', label: 'Data Science'},
-                {value: 'cybersecurity', label: 'Cybersecurity'},
-                {value: 'iot', label: 'Internet of Things'},
-                {value: 'blockchain', label: 'Blockchain'},
-                {value: 'ar_vr', label: 'AR/VR'},
-                {value: 'ui_ux', label: 'UI/UX Design'},
-                {value: 'devops', label: 'DevOps'},
-                {value: 'robotics', label: 'Robotics'}
-              ].map(interest => (
-                <label key={interest.value} className="inline-flex items-center">
-                  <input 
-                    type="checkbox" 
-                    name="interests"
-                    value={interest.value}
-                    checked={formData.interests.includes(interest.value)}
-                    onChange={handleInputChange}
-                    className="rounded text-indigo-600 focus:ring-indigo-500 h-4 w-4" 
-                  />
-                  <span className="ml-2 text-sm text-gray-700">{interest.label}</span>
-                </label>
-              ))}
-            </div>
-            <div className="mt-2">
-              <label htmlFor="otherInterests" className="block text-sm font-medium text-gray-700 mb-1">Other Interests</label>
-              <input 
-                type="text" 
-                id="otherInterests"
-                name="otherInterests"
-                value={formData.otherInterests}
-                onChange={handleInputChange}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" 
-                placeholder="Enter any other interests, separated by commas" 
-              />
-            </div>
-          </div>
-
-          {/* Career Goals */}
-          <div>
-            <h2 className="text-lg font-medium text-gray-800 mb-4">Career Goals</h2>
-            <div>
-              <textarea 
-                id="careerGoals"
-                name="careerGoals"
-                value={formData.careerGoals}
-                onChange={handleInputChange}
-                rows="3" 
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" 
-                placeholder="Briefly describe your career aspirations..." 
-              ></textarea>
-            </div>
-          </div>
-
-          {/* Terms Agreement */}
-          <div className="pt-2">
-            <label className="flex items-start">
-              <input 
-                type="checkbox" 
-                name="terms"
-                checked={formData.terms}
-                onChange={handleInputChange}
-                className="rounded text-indigo-600 focus:ring-indigo-500 h-4 w-4 mt-1" 
-                required 
-              />
-              <span className="ml-2 text-sm text-gray-700">I agree to the <a href="#" className="text-indigo-600 hover:text-indigo-800">Terms of Service</a> and <a href="#" className="text-indigo-600 hover:text-indigo-800">Privacy Policy</a></span>
-            </label>
-          </div>
-
-          {/* Form Actions */}
-          <div className="flex flex-col sm:flex-row justify-between gap-4 pt-4">
-            <button 
-              type="button" 
-              onClick={handleBack}
-              className="order-2 sm:order-1 px-6 py-3 border border-gray-300 text-indigo-600 font-medium rounded-lg hover:bg-gray-50 transition duration-300"
-            >
-              Back
-            </button>
+          
+          {/* Submit Button */}
+          <div className="flex justify-end pt-8">
             <button 
               type="submit" 
               disabled={loading}
-              className="order-1 sm:order-2 px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-lg transition duration-300 disabled:opacity-50"
+              className={`bg-blue-600 hover:bg-blue-700 text-white font-semibold px-12 py-4 rounded-xl transition-all duration-200 transform hover:scale-105 shadow-lg hover:shadow-xl flex items-center space-x-3 ${
+                loading ? 'opacity-75 cursor-not-allowed' : ''
+              }`}
             >
-              {loading ? 'Creating Account...' : 'Create Account'}
+              {loading ? (
+                <>
+                  <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  <span className="text-lg">Saving...</span>
+                </>
+              ) : (
+                <>
+                  <span className="text-lg">Complete Registration</span>
+                  <FaArrowRight />
+                </>
+              )}
             </button>
           </div>
         </form>
       </div>
-
+      
       <style jsx>{`
-        .success-checkmark {
-          width: 80px;
-          height: 80px;
-          margin: 0 auto;
-          position: relative;
+        .section-divider {
+          background: linear-gradient(90deg, #3b82f6 0%, #e5e7eb 50%, #3b82f6 100%);
+          height: 2px;
         }
-        
-        .success-checkmark .check-icon {
-          width: 80px;
-          height: 80px;
-          position: relative;
-          border-radius: 50%;
-          box-sizing: content-box;
-          border: 4px solid #4CAF50;
+        .input-focus:focus {
+          border-color: #3b82f6;
+          box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
         }
-        
-        .success-checkmark .check-icon::before {
-          top: 3px;
-          left: -2px;
-          width: 30px;
-          transform-origin: 100% 50%;
-          border-radius: 100px 0 0 100px;
+        @keyframes fade-in {
+          from { opacity: 0; transform: translateY(-10px); }
+          to { opacity: 1; transform: translateY(0); }
         }
-        
-        .success-checkmark .check-icon::after {
-          top: 0;
-          left: 30px;
-          width: 60px;
-          transform-origin: 0 50%;
-          border-radius: 0 100px 100px 0;
-          animation: rotate-circle 4.25s ease-in;
-        }
-        
-        .success-checkmark .check-icon::before, .success-checkmark .check-icon::after {
-          content: '';
-          height: 100px;
-          position: absolute;
-          background: #FFFFFF;
-          transform: rotate(-45deg);
-        }
-        
-        .success-checkmark .check-icon .icon-line {
-          height: 5px;
-          background-color: #4CAF50;
-          display: block;
-          border-radius: 2px;
-          position: absolute;
-          z-index: 10;
-        }
-        
-        .success-checkmark .check-icon .icon-line.line-tip {
-          top: 46px;
-          left: 14px;
-          width: 25px;
-          transform: rotate(45deg);
-          animation: icon-line-tip 0.75s;
-        }
-        
-        .success-checkmark .check-icon .icon-line.line-long {
-          top: 38px;
-          right: 8px;
-          width: 47px;
-          transform: rotate(-45deg);
-          animation: icon-line-long 0.75s;
-        }
-        
-        .success-checkmark .check-icon .icon-circle {
-          top: -4px;
-          left: -4px;
-          z-index: 10;
-          width: 80px;
-          height: 80px;
-          border-radius: 50%;
-          position: absolute;
-          box-sizing: content-box;
-          border: 4px solid rgba(76, 175, 80, .5);
-        }
-        
-        .success-checkmark .check-icon .icon-fix {
-          top: 8px;
-          width: 5px;
-          left: 26px;
-          z-index: 1;
-          height: 85px;
-          position: absolute;
-          transform: rotate(-45deg);
-          background-color: #FFFFFF;
-        }
-        
-        @keyframes rotate-circle {
-          0% { transform: rotate(-45deg); }
-          5% { transform: rotate(-45deg); }
-          12% { transform: rotate(-405deg); }
-          100% { transform: rotate(-405deg); }
-        }
-        
-        @keyframes icon-line-tip {
-          0% { width: 0; left: 1px; top: 19px; }
-          54% { width: 0; left: 1px; top: 19px; }
-          70% { width: 50px; left: -8px; top: 37px; }
-          84% { width: 17px; left: 21px; top: 48px; }
-          100% { width: 25px; left: 14px; top: 46px; }
-        }
-        
-        @keyframes icon-line-long {
-          0% { width: 0; right: 46px; top: 54px; }
-          65% { width: 0; right: 46px; top: 54px; }
-          84% { width: 55px; right: 0px; top: 35px; }
-          100% { width: 47px; right: 8px; top: 38px; }
+        .animate-fade-in {
+          animation: fade-in 0.3s ease-out forwards;
         }
       `}</style>
     </div>
   );
 };
 
-export default studentprofile;
+export default StudentProfile;

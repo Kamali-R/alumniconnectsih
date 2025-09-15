@@ -5,16 +5,19 @@ import Register from './Register';
 import VerifyOtp from './VerifyOtp';
 import PasswordResetFlow from './password';
 import Login from './Login';
-import AlumniDashboard from './dashboard';
+import AlumniDashboard from './Dashboard';
+import StudentDashboard from './StudentDashboard';
 import AlumniConnectProfile from './AlumniProfile';
-import GoogleAuthHandler from './GoogleAuthHandler'; // Make sure to import this
+import StudentProfilePage from './studentprofile';
+import GoogleAuthHandler from './GoogleAuthHandler';
+import Dashboard from './Dashboard'; // Import the new Dashboard component
 import './index.css';
 
 function App() {
   const [userData, setUserData] = useState(null);
   
   return (
-    <Router>c
+    <Router>
       <div className="App">
         <Routes>
           <Route path="/" element={<HomePage />} />
@@ -30,9 +33,18 @@ function App() {
           />
           <Route path="/VerifyOtp" element={<VerifyOtp userData={userData} />} />
           <Route path="/forgot-password" element={<PasswordResetFlow />} />
+          
+          {/* Alumni Routes */}
           <Route path="/alumni-profile" element={<AlumniConnectProfile />} />
-          <Route path="/dashboard" element={<AlumniDashboard />} />
+          <Route path="/alumni-dashboard" element={<AlumniDashboard />} />
+          
+          {/* Student Routes */}
+          <Route path="/student-profile" element={<StudentProfilePage />} />
+          <Route path="/student-dashboard" element={<StudentDashboard />} />
          
+          {/* Main dashboard route that redirects based on user role */}
+          <Route path="/dashboard" element={<Dashboard />} />
+          
           {/* Add Google Auth Handler route */}
           <Route path="/auth/google/callback" element={<GoogleAuthHandler />} />
         </Routes>

@@ -60,6 +60,10 @@ const userSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Alumni'
   },
+  studentProfile: {  // ✅ Add student profile reference
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Student'
+  },
   graduationYear: { type: Number },
   lastLogin: { type: Date },
   otp: String,

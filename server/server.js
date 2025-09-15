@@ -11,6 +11,7 @@ import protectedRoutes from './routes/protectedRoutes.js';
 import contactRoutes from './routes/contactRoutes.js';
 // Load Google OAuth config
 import './config/googleAuth.js';
+import studentRoutes from './routes/studentRoutes.js';
 
 dotenv.config();
 
@@ -52,6 +53,11 @@ app.use('/', authRoutes);
 app.use('/api', protectedRoutes);
 app.use('/api', contactRoutes);
 app.use('/api', alumniRoutes);
+app.use('/', authRoutes);
+app.use('/api', protectedRoutes);
+app.use('/api', contactRoutes);
+app.use('/api', alumniRoutes);
+app.use('/api', studentRoutes);
 
 // ✅ Root Route
 app.get('/', (req, res) => {

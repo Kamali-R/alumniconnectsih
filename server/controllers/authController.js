@@ -4,6 +4,7 @@ import bcrypt from 'bcryptjs';
 import sendEmail from '../utils/sendEmail.js';
 import jwt from 'jsonwebtoken';
 import Alumni from '../models/Alumni.js';
+import Student from '../models/Student.js';
 // Add this to your authController.js
 export const checkUser = async (req, res) => {
   try {
@@ -98,54 +99,98 @@ export const verifyOtp = async (req, res) => {
 };
 // Complete profile function
 // Complete profile function
+// Update completeProfile function to handle both roles
 export const completeProfile = async (req, res) => {
   try {
     const userId = req.user.id;
     const userData = req.body;
+    const userRole = req.user.role; // Get user role from authenticated user
     
-    console.log('Completing profile for user:', userId);
+    console.log('Completing profile for user:', userId, 'Role:', userRole);
     
-    // Check if alumni profile already exists
-    let alumniProfile = await Alumni.findOne({ userId });
-    
-    if (alumniProfile) {
-      // Update existing alumni profile
-      alumniProfile = await Alumni.findOneAndUpdate(
-        { userId },
-        { ...userData, status: 'complete' },
-        { new: true, runValidators: true }
-      );
-    } else {
-      // Create new alumni profile
-      alumniProfile = new Alumni({
+    if (userRole === 'alumni') {
+      // Alumni profile completion logic
+      let alumniProfile = await Alumni.findOne({ userId });
+      
+      if (alumniProfile) {
+        alumniProfile = await Alumni.findOneAndUpdate(
+          { userId },
+          { ...userData, status: 'complete' },
+          { new: true, runValidators: true }
+        );
+      } else {
+        alumniProfile = new Alumni({
+          userId,
+          ...userData,
+          status: 'complete'
+        });
+        await alumniProfile.save();
+      }
+      
+      // Update User document
+      const updatedUser = await User.findByIdAndUpdate(
         userId,
-        ...userData,
-        status: 'complete'
+        { 
+          profileCompleted: true,
+          alumniProfile: alumniProfile._id,
+          ...(userData.personalInfo?.fullName && {
+            name: userData.personalInfo.fullName
+          })
+        },
+        { new: true }
+      ).select('-password');
+      
+      console.log('Alumni profile completion successful for user:', userId);
+      
+      res.status(200).json({
+        message: 'Alumni profile saved successfully',
+        user: updatedUser,
+        profile: alumniProfile
       });
-      await alumniProfile.save();
+      
+    } else if (userRole === 'student') {
+      // Student profile completion logic
+      let studentProfile = await Student.findOne({ userId });
+      
+      if (studentProfile) {
+        studentProfile = await Student.findOneAndUpdate(
+          { userId },
+          { ...userData, status: 'complete' },
+          { new: true, runValidators: true }
+        );
+      } else {
+        studentProfile = new Student({
+          userId,
+          ...userData,
+          status: 'complete'
+        });
+        await studentProfile.save();
+      }
+      
+      // Update User document
+      const updatedUser = await User.findByIdAndUpdate(
+        userId,
+        { 
+          profileCompleted: true,
+          studentProfile: studentProfile._id,
+          ...(userData.personalInfo?.fullName && {
+            name: userData.personalInfo.fullName
+          })
+        },
+        { new: true }
+      ).select('-password');
+      
+      console.log('Student profile completion successful for user:', userId);
+      
+      res.status(200).json({
+        message: 'Student profile saved successfully',
+        user: updatedUser,
+        profile: studentProfile
+      });
+      
+    } else {
+      return res.status(400).json({ message: 'Invalid user role' });
     }
-    
-    // Update User document to mark profileCompleted = true and link alumni profile
-    const updatedUser = await User.findByIdAndUpdate(
-      userId,
-      { 
-        profileCompleted: true,
-        alumniProfile: alumniProfile._id,
-        // Update user name if provided in profile
-        ...(userData.fullName && {
-          name: userData.fullName
-        })
-      },
-      { new: true }
-    ).select('-password');
-    
-    console.log('Profile completion successful for user:', userId);
-    
-    res.status(200).json({
-      message: 'Alumni profile saved successfully',
-      user: updatedUser,
-      alumni: alumniProfile
-    });
   } catch (error) {
     console.error('Complete profile error:', error);
     res.status(500).json({ message: 'Server error during profile completion' });

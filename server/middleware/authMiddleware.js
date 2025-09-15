@@ -4,15 +4,18 @@ import User from '../models/User.js';
 const auth = async (req, res, next) => {
   try {
     // Get token from header
+    console.log('Auth middleware: Checking authentication');
     const authHeader = req.header('Authorization');
     
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      console.log('Auth middleware: No token provided');
       return res.status(401).json({ message: 'No token provided' });
     }
     
     const token = authHeader.substring(7); // Remove 'Bearer ' prefix
     
     if (!token) {
+      console.log('Auth middleware: No token after removing Bearer');
       return res.status(401).json({ message: 'No token provided' });
     }
     
@@ -37,6 +40,7 @@ const auth = async (req, res, next) => {
       profileCompleted: user.profileCompleted
     };
     
+     console.log('Auth middleware: Authentication successful');
     next();
   } catch (error) {
     console.error('Auth middleware error:', error);

@@ -121,7 +121,7 @@ const AlumniConnectProfile = () => {
   ];
   
   const branchOptions = [
-    'Computer Science', 'Computer Science & Engineering', 'Information Technology',
+    'Computer Science', 'Computer Science & Engineering', 'Information Science & Engineering',
     'Electrical Engineering', 'Electrical & Electronics Engineering', 'Electronics & Communication Engineering',
     'Electronics & Instrumentation Engineering', 'Mechanical Engineering', 'Mechanical & Automation Engineering',
     'Civil Engineering', 'Chemical Engineering', 'Aerospace Engineering', 'Biotechnology',
@@ -647,7 +647,7 @@ const saveProfileToBackend = async (formData) => {
   try {
     const token = localStorage.getItem('token');
     
-    const response = await fetch('http://localhost:5000/api/alumni/profile', {
+    const response = await fetch('http://localhost:5000/api/alumni/complete-profile', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

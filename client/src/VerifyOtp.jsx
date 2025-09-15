@@ -57,26 +57,34 @@ const handleVerify = async (e) => {
     localStorage.setItem('otpVerified', 'true');
     localStorage.setItem('userEmail', userData.email);
     
-    setTimeout(() => {
-      // Check if profile needs to be completed
-      if (response.data.user && response.data.user.profileCompleted) {
-        // Profile already completed, go to dashboard
-        if (response.data.user.role === 'student') {
-          navigate('/student-dashboard');
-        } else {
-          navigate('/dashboard');
-        }
-      } else {
-        // Navigate to profile completion page
-        navigate('/alumni-profile', { 
-          state: { 
-            userData: userData || response.data.user, 
-            verified: true,
-            role: userData?.role || response.data.user?.role 
-          } 
-        });
-      }
-    }, 2000);
+// In VerifyOtp.jsx - FIX THIS PART
+setTimeout(() => {
+  if (response.data.user && response.data.user.profileCompleted) {
+    // Go to dashboard if profile already completed
+    navigate(response.data.user.role === 'student' ? '/student-dashboard' : '/dashboard');
+  } else {
+    // ✅ FIX: Check role and go to correct profile page
+    const userRole = userData?.role || response.data.user?.role;
+    
+    if (userRole === 'student') {
+      navigate('/student-profile', { 
+        state: { 
+          userData: userData || response.data.user, 
+          verified: true,
+          role: userRole 
+        } 
+      });
+    } else {
+      navigate('/alumni-profile', { 
+        state: { 
+          userData: userData || response.data.user, 
+          verified: true,
+          role: userRole 
+        } 
+      });
+    }
+  }
+}, 2000);
     
   } catch (error) {
     setMessage({ 

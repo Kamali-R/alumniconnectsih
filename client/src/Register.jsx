@@ -58,7 +58,7 @@ const Register = ({setUserData}) => {
   };
   const checkUserExists = async (email) => {
     try {
-      const response = await axios.get(`http://localhost:5000/api/check-user?email=${email}`);
+      const response = await axios.get('http://localhost:5000/api/check-user?email=${email}');
       return response.data.exists;
     } catch (error) {
       console.error('Error checking user:', error);
@@ -255,4 +255,4 @@ const handleSubmit = async (e) => {
   );
 };
 
-export default Register; 
+export default Register;

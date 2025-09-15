@@ -48,7 +48,7 @@ passport.use(
           user = new User({
             name: name,
             email: email,
-            role: 'alumni', // Default role for Google signups
+            role: req.query.role || 'alumni', // Default role for Google signups
             googleId: profile.id,
             isVerified: true, // Auto-verify Google users
             profileCompleted: false, // They'll need to complete profile
