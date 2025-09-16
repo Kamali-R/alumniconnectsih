@@ -2,6 +2,7 @@ import User from '../models/User.js';
 import Alumni from '../models/Alumni.js';
 import Recruiter from '../models/Recruiter.js';
 import Admin from '../models/Admin.js';
+import bcrypt from 'bcryptjs'; // Add this at the top
 
 // Get dashboard statistics
 export const getDashboardStats = async (req, res) => {

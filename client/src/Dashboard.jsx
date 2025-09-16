@@ -8,6 +8,7 @@ import AlumniMentorshipPlatform from './AlumniMentorship';
 import AlumniEventPortal from './AlumniEventPortal';
 import AlumniMessages from './Messages';
 import NewsAndAchievements from './NewsAndAchievements';
+import DonationPage from './DonationPage';
 
 const AlumniConnectDashboard = () => {
   const navigate = useNavigate();
@@ -442,6 +443,13 @@ const AlumniConnectDashboard = () => {
           {activeSection === 'news' && (
             <div className={`content-section ${fadeAnimation ? 'fade-in' : ''}`}>
               <NewsAndAchievements/>
+            </div>
+          )}
+          
+          {/* Mentorship Section */}
+          {activeSection === 'donations' && (
+            <div className={`content-section ${fadeAnimation ? 'fade-in' : ''}`}>
+              <DonationPage/>
             </div>
           )}
           

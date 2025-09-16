@@ -268,3 +268,64 @@ export const resetPassword = async (req, res) => {
     res.status(500).json({ message: 'Server error during password reset' });
   }
 }; 
+// Add this to your authController.js
+export const registerRecruiter = async (req, res) => {
+  try {
+    const { name, email, password, companyInfo, personalInfo } = req.body;
+    
+    // Check if user already exists
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      return res.status(400).json({ message: 'User already exists' });
+    }
+    
+    // Create user
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const newUser = new User({
+      name,
+      email,
+      password: hashedPassword,
+      role: 'recruiter',
+      isVerified: false,
+      profileCompleted: false
+    });
+    
+    await newUser.save();
+    
+    // Create recruiter profile
+    const recruiterProfile = new Recruiter({
+      userId: newUser._id,
+      companyInfo,
+      personalInfo,
+      status: 'pending'
+    });
+    
+    await recruiterProfile.save();
+    
+    // Generate token
+    const token = jwt.sign(
+      { 
+        id: newUser._id, 
+        role: newUser.role,
+        profileCompleted: newUser.profileCompleted
+      },
+      process.env.JWT_SECRET,
+      { expiresIn: '2h' }
+    );
+    
+    res.status(201).json({
+      message: 'Recruiter registered successfully. Please complete your profile.',
+      token,
+      user: {
+        id: newUser._id,
+        name: newUser.name,
+        email: newUser.email,
+        role: newUser.role,
+        profileCompleted: newUser.profileCompleted
+      }
+    });
+  } catch (error) {
+    console.error('Register recruiter error:', error);
+    res.status(500).json({ message: 'Server error during registration' });
+  }
+};
