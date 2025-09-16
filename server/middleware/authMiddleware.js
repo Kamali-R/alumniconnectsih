@@ -18,14 +18,16 @@ const auth = async (req, res, next) => {
     
     // Verify token
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    console.log('Token decoded successfully:', { id: decoded.id, email: decoded.email });
     
     // Get user from database to ensure they still exist
     const user = await User.findById(decoded.id).select('-password');
     
     if (!user) {
-      console.error('User not found for token ID:', decoded.id);
       return res.status(401).json({ message: 'User not found' });
+    }
+    
+    if (!user.isActive) {
+      return res.status(401).json({ message: 'Account deactivated' });
     }
     
     // Add user to request object
@@ -51,4 +53,28 @@ const auth = async (req, res, next) => {
   }
 };
 
+// Admin middleware
+const requireAdmin = (req, res, next) => {
+  if (req.user.role !== 'admin') {
+    return res.status(403).json({ message: 'Admin access required' });
+  }
+  next();
+};
+
+// Recruiter middleware
+const requireRecruiter = (req, res, next) => {
+  if (req.user.role !== 'recruiter') {
+    return res.status(403).json({ message: 'Recruiter access required' });
+  }
+  next();
+};
+
+// Alumni/Student middleware
+const requireAlumni = (req, res, next) => {
+  if (req.user.role !== 'alumni' && req.user.role !== 'student') {
+    return res.status(403).json({ message: 'Alumni/Student access required' });
+  }
+  next();
+};
 export default auth;
+export { auth,requireAdmin, requireRecruiter, requireAlumni };

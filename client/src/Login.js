@@ -49,25 +49,47 @@ const [showPwd, setShowPwd] = useState(false);
     setMessage('Login successful! Redirecting...');
     
     // Redirect based on profile completion
-    setTimeout(() => {
-      if (response.data.user.profileCompleted) {
-        // If profile completed, redirect based on role
-        if (response.data.user.role === 'student') {
-          navigate('/student-dashboard');
-        } else {
-          navigate('/dashboard');
+   // Redirect based on role and profile completion
+setTimeout(() => {
+  if (response.data.user.profileCompleted) {
+    // If profile completed, redirect based on role
+    switch(response.data.user.role) {
+      case 'student':
+        navigate('/student-dashboard');
+        break;
+      case 'alumni':
+        navigate('/dashboard');
+        break;
+      case 'recruiter':
+        navigate('/recruiter-dashboard');
+        break;
+      case 'admin':
+        navigate('/admin-dashboard');
+        break;
+      default:
+        navigate('/dashboard');
+    }
+  } else {
+    // Redirect to appropriate profile completion page based on role
+    if (response.data.user.role === 'recruiter') {
+      navigate('/recruiter-profile', {
+        state: {
+          userData: response.data.user,
+          verified: true,
+          role: response.data.user.role
         }
-      } else {
-        // Redirect to profile completion page
-        navigate('/alumni-profile', {
-          state: {
-            userData: response.data.user,
-            verified: true,
-            role: response.data.user.role
-          }
-        });
-      }
-    }, 1000);
+      });
+    } else {
+      navigate('/alumni-profile', {
+        state: {
+          userData: response.data.user,
+          verified: true,
+          role: response.data.user.role
+        }
+      });
+    }
+  }
+}, 1000);
       
     } catch (error) {
       console.error('Login error:', error);
