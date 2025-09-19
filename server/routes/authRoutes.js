@@ -2,6 +2,7 @@ import passport from 'passport';
 import jwt from 'jsonwebtoken';
 import User from '../models/User.js';
 import express from 'express';
+import { registerRecruiter } from '../controllers/authController.js';
 import {
   sendOtp,
   verifyOtp,
@@ -13,13 +14,24 @@ import {
   checkUser
 } from '../controllers/authController.js';
 import auth from '../middleware/authMiddleware.js';
-
+import { requireAdmin, requireRecruiter } from '../middleware/authMiddleware.js';
+import { createAdmin } from '../controllers/adminController.js';
+import { saveRecruiterProfile, getRecruiterProfile, searchAlumni } from '../controllers/recruiterController.js';
 const router = express.Router();
 
 // Registration & Login Routes
 router.post('/send-otp', sendOtp);
 router.post('/verify-otp', verifyOtp);
 router.post('/login', login);
+
+// Add these routes
+// Create admin manually (protected)
+router.post('/create-admin', auth, requireAdmin, createAdmin);
+
+// Recruiter profile routes
+router.post('/recruiter/profile', auth, requireRecruiter, saveRecruiterProfile);
+router.get('/recruiter/profile', auth, requireRecruiter, getRecruiterProfile);
+router.get('/recruiter/search-alumni', auth, requireRecruiter, searchAlumni);
 
 // Profile completion route
 router.post('/complete-profile', auth, completeProfile);
@@ -28,6 +40,7 @@ router.post('/complete-profile', auth, completeProfile);
 router.post('/forgot-password', forgotPassword);
 router.post('/verify-reset-otp', verifyResetOtp);
 router.post('/reset-password', resetPassword);
+router.post('/register/recruiter', registerRecruiter);
 // In your routes file
 router.get('/api/check-user', checkUser);
 // Google OAuth Routes

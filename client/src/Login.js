@@ -1,4 +1,4 @@
- import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
 import './index.css';
@@ -9,7 +9,7 @@ const Login = ({ setIsAuthenticated }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   // eslint-disable-next-line no-unused-vars
-const [showPwd, setShowPwd] = useState(false);
+  const [showPwd, setShowPwd] = useState(false);
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(false);
   
@@ -29,7 +29,8 @@ const [showPwd, setShowPwd] = useState(false);
     }
   }, [location]);
   
- const handleLogin = async (e) => {
+  // In your handleLogin function in Login.js
+const handleLogin = async (e) => {
   e.preventDefault();
   setLoading(true);
   setMessage('');
@@ -40,49 +41,83 @@ const [showPwd, setShowPwd] = useState(false);
       password,
     });
     
+    // DEBUG: Check what's returned from the backend
+    console.log('Login response:', {
+      role: response.data.user.role,
+      profileCompleted: response.data.user.profileCompleted,
+      user: response.data.user
+    });
+    
     // Save token and user data
     localStorage.setItem('token', response.data.token);
     localStorage.setItem('user', JSON.stringify(response.data.user));
     localStorage.setItem('userRole', response.data.user.role);
     localStorage.setItem('profileCompleted', response.data.user.profileCompleted ? 'true' : 'false');
     
+    // DEBUG: Check what's stored
+    console.log('Stored role:', localStorage.getItem('userRole'));
+    console.log('Stored profileCompleted:', localStorage.getItem('profileCompleted'));
+    
     setMessage('Login successful! Redirecting...');
     
-    // Redirect based on profile completion
+    // Redirect based on role - FIXED ADMIN REDIRECTION
     setTimeout(() => {
       if (response.data.user.profileCompleted) {
         // If profile completed, redirect based on role
-        if (response.data.user.role === 'student') {
-          navigate('/student-dashboard');
-        } else {
-          navigate('/dashboard');
+        switch(response.data.user.role) {
+          case 'student':
+            navigate('/student-dashboard');
+            break;
+          case 'alumni':
+            navigate('/dashboard');
+            break;
+          case 'recruiter':
+            navigate('/recruiter-dashboard');
+            break;
+          case 'admin': // ADD THIS CASE FOR ADMIN
+            navigate('/admin-dashboard');
+            break;
+          default:
+            navigate('/dashboard');
         }
       } else {
-        // Redirect to profile completion page
-        navigate('/alumni-profile', {
-          state: {
-            userData: response.data.user,
-            verified: true,
-            role: response.data.user.role
-          }
-        });
+        // Redirect to appropriate profile completion page based on role
+        if (response.data.user.role === 'recruiter') {
+          navigate('/recruiter-profile', {
+            state: {
+              userData: response.data.user,
+              verified: true,
+              role: response.data.user.role
+            }
+          });
+        } else if (response.data.user.role === 'admin') {
+          // Admin doesn't need profile completion, redirect to admin dashboard
+          navigate('/admin-dashboard');
+        } else {
+          navigate('/alumni-profile', {
+            state: {
+              userData: response.data.user,
+              verified: true,
+              role: response.data.user.role
+            }
+          });
+        }
       }
     }, 1000);
-      
-    } catch (error) {
-      console.error('Login error:', error);
-      if (error.response) {
-        setMessage(error.response.data.message);
-      } else if (error.request) {
-        setMessage("Network error. Please check your connection.");
-      } else {
-        setMessage("Something went wrong. Please try again.");
-      }
-    } finally {
-      setLoading(false);
+    
+  } catch (error) {
+    console.error('Login error:', error);
+    if (error.response) {
+      setMessage(error.response.data.message);
+    } else if (error.request) {
+      setMessage("Network error. Please check your connection.");
+    } else {
+      setMessage("Something went wrong. Please try again.");
     }
-  };
-  
+  } finally {
+    setLoading(false);
+  }
+};
   const handleGoogleLogin = () => {
     console.log('Initiating Google login...');
     setMessage('Redirecting to Google...');
@@ -235,7 +270,7 @@ const [showPwd, setShowPwd] = useState(false);
                 padding: '12px',
                 width: '100%',
                 backgroundColor: loading ? '#f0f0f0' : '#f5f5f5',
-                border: '1px solid #ccc',
+                border: '1px solid ',
                 borderRadius: '6px',
                 fontSize: '16px',
                 display: 'flex',

@@ -30,10 +30,11 @@ const userSchema = new mongoose.Schema({
   role: {
     type: String,
     enum: {
-      values: ['student', 'alumni'],
-      message: 'Role must be either student or alumni'
+      values: ['student', 'alumni', 'recruiter', 'admin'],
+      message: 'Role must be student, alumni, recruiter, or admin'
     },
-    required: [true, 'Role is required']
+    required: [true, 'Role is required'],
+    default: 'alumni'
   },
   googleId: { type: String },
   isVerified: {
@@ -60,6 +61,10 @@ const userSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Alumni'
   },
+  recruiterProfile: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Recruiter'
+  },
   graduationYear: { type: Number },
   lastLogin: { type: Date },
   otp: String,
@@ -69,6 +74,14 @@ const userSchema = new mongoose.Schema({
     enum: ['local', 'google'],
     default: 'local',
   },
+  isActive: {
+    type: Boolean,
+    default: true
+  },
+  permissions: {
+    type: [String],
+    default: []
+  }
 }, { timestamps: true });
 
 export default mongoose.model('User', userSchema);

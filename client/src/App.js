@@ -9,6 +9,8 @@ import AlumniDashboard from './dashboard';
 import AlumniConnectProfile from './AlumniProfile';
 import GoogleAuthHandler from './GoogleAuthHandler'; // Make sure to import this
 import './index.css';
+import RecruiterDashboard from './recruiterdashboard';
+import AdminDashboard from './AdminDashboard';
 
 function App() {
   const [userData, setUserData] = useState(null);
@@ -35,6 +37,8 @@ function App() {
          
           {/* Add Google Auth Handler route */}
           <Route path="/auth/google/callback" element={<GoogleAuthHandler />} />
+          <Route path="/recruiter-dashboard" element={<RecruiterDashboard />} /> 
+          <Route path="/admin-dashboard" element={<AdminDashboard />} /> 
         </Routes>
       </div>
     </Router>

@@ -4,6 +4,11 @@ import axios from 'axios';
 import AlumniProfilePage from './profile';
 import AlumniNetworkingHub from './NetworkingHub';
 import AlumniJobDashboard from './AlumniJobDashboard';
+import AlumniMentorshipPlatform from './AlumniMentorship';
+import AlumniEventPortal from './AlumniEventPortal';
+import AlumniMessages from './Messages';
+import NewsAndAchievements from './NewsAndAchievements';
+import DonationPage from './DonationPage';
 
 const AlumniConnectDashboard = () => {
   const navigate = useNavigate();
@@ -49,7 +54,7 @@ const AlumniConnectDashboard = () => {
       navigate('/student-dashboard');
     }
   }, [navigate]);
-
+  
   // Navigation items
   const navItems = [
     { id: 'dashboard', label: 'Dashboard', icon: (
@@ -252,6 +257,9 @@ const AlumniConnectDashboard = () => {
     },
   ];
   
+  // Define sections with dedicated components
+  const dedicatedSections = ['dashboard', 'profile', 'networking', 'jobs', 'mentorship'];
+  
   return (
     <div className="flex h-screen bg-gray-100">
       {/* Sidebar */}
@@ -397,33 +405,58 @@ const AlumniConnectDashboard = () => {
             </div>
           )}
           
-          {/* Networking Hub Section - Fixed */}
+          {/* Networking Hub Section */}
           {activeSection === 'networking' && (
             <div className={`content-section ${fadeAnimation ? 'fade-in' : ''}`}>
               <AlumniNetworkingHub />
             </div>
           )}
-          {/* Networking Hub Section - Fixed */}
+          
+          {/* Jobs Section */}
           {activeSection === 'jobs' && (
             <div className={`content-section ${fadeAnimation ? 'fade-in' : ''}`}>
               <AlumniJobDashboard />
             </div>
           )}
           
-          {/* Other Sections (Placeholders) */}
-          {activeSection !== 'dashboard' && activeSection !== 'profile' && activeSection !== 'networking' && activeSection!=='AlumniJobDashboard' && (
-            <div className="content-section p-8">
-              <h1 className="text-3xl font-bold text-gray-900 mb-6">
-                {navItems.find(item => item.id === activeSection)?.label}
-              </h1>
-              <div className="bg-white rounded-xl shadow p-8">
-                <p className="text-gray-600">This section is under development.</p>
-              </div>
+          {/* Mentorship Section */}
+          {activeSection === 'mentorship' && (
+            <div className={`content-section ${fadeAnimation ? 'fade-in' : ''}`}>
+              <AlumniMentorshipPlatform />
             </div>
           )}
+          
+          {/* Mentorship Section */}
+          {activeSection === 'events' && (
+            <div className={`content-section ${fadeAnimation ? 'fade-in' : ''}`}>
+              <AlumniEventPortal/>
+            </div>
+          )}
+          {/* Mentorship Section */}
+          {activeSection === 'messages' && (
+            <div className={`content-section ${fadeAnimation ? 'fade-in' : ''}`}>
+              <AlumniMessages/>
+            </div>
+          )}
+          
+          {/* Mentorship Section */}
+          {activeSection === 'news' && (
+            <div className={`content-section ${fadeAnimation ? 'fade-in' : ''}`}>
+              <NewsAndAchievements/>
+            </div>
+          )}
+          
+          {/* Mentorship Section */}
+          {activeSection === 'donations' && (
+            <div className={`content-section ${fadeAnimation ? 'fade-in' : ''}`}>
+              <DonationPage/>
+            </div>
+          )}
+          
         </main>
       </div>
     </div>
   );
 };
+
 export default AlumniConnectDashboard;
