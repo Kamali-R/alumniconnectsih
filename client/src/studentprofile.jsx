@@ -399,7 +399,7 @@ const StudentProfile = () => {
       
       // Redirect to dashboard after 3 seconds
       setTimeout(() => {
-        navigate('/StudentDashboard');
+        navigate('/student-dashboard');
       }, 3000);
       
     } catch (error) {

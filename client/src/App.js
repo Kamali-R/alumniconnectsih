@@ -12,6 +12,7 @@ import StudentProfilePage from './studentprofile';
 import GoogleAuthHandler from './GoogleAuthHandler';
 import Dashboard from './Dashboard'; // Import the new Dashboard component
 import './index.css';
+import AlumniDirectory from './alumnidirectory';
 
 function App() {
   const [userData, setUserData] = useState(null);
@@ -41,6 +42,7 @@ function App() {
           {/* Student Routes */}
           <Route path="/student-profile" element={<StudentProfilePage />} />
           <Route path="/student-dashboard" element={<StudentDashboard />} />
+          <Route path="/alumni-directory" element={<AlumniDirectory />} />
          
           {/* Main dashboard route that redirects based on user role */}
           <Route path="/dashboard" element={<Dashboard />} />
